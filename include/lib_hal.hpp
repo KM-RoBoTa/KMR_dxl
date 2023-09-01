@@ -1,0 +1,130 @@
+/**
+ * Project: KM-Robota library
+ *****************************************************************************
+ * @file            lib_hal.hpp
+ * @brief           Header for lib_hal.cpp file
+ *****************************************************************************
+ * @copyright
+ * Copyright 2021-2023 Laura Paez Coy and Kamilo Melo                    \n
+ * This code is under MIT licence: https://opensource.org/licenses/MIT
+ * @authors  Laura.Paez@KM-RoBota.com, 04-2023
+ * @authors  Kamilo.Melo@KM-RoBota.com, 05-2023
+ *****************************************************************************
+ */
+
+#ifndef LIB_HAL_HPP
+#define LIB_HAL_HPP
+
+#include <string>
+#include <iostream>
+#include <cstdint>
+#include <vector>
+
+
+
+/**
+ * @brief   Structure saving the info of a data field in the control table (address + byte length + parametrized unit)
+ */
+struct Motor_data_field {
+    std::uint8_t address;
+    std::uint8_t length;
+    float unit;
+};
+
+
+/**
+ * @brief   Structure used to store info from a YAML::Node during parsing the motors' control tables
+ */
+struct Data_node {
+    std::string field_name;
+    int address;
+    int length;
+    float unit;
+};
+
+/**
+ * @brief   Structure used to store info from a YAML::Node during motor config parsing
+ */
+struct Motor_node {
+    std::string model_name;
+    int id;
+};
+
+/**
+ * @brief       Enumerate of all dynamixel motor models (not necessarily used in the project)
+ * @attention   If a new model is added, this enum needs to be updated,
+ *              as well as the function "string2Motors_models" in the .cpp
+ */
+enum Motor_models
+{
+    MX_64R, NBR_MODELS, UNDEF_M
+};
+
+/**
+ * @brief   Structure saving the info of a single motor: both config-wise (ID + model + scanned model)
+ *          and occupied addresses (indir_address_offset and indir_data_offset)
+ */
+struct Motor {
+    int id;
+    Motor_models model;
+
+    uint8_t indir_address_offset = 0;
+    uint8_t indir_data_offset = 0;
+    int scanned_model = 0;
+};
+
+/**
+ * @brief   Enumerate of all data fields in a dynamixel motor
+ */
+enum Fields
+{
+    MODEL_NBR, MODEL_INFO, FIRMWARE, ID, BAUDRATE, RETURN_DELAY, DRIVE_MODE, OP_MODE,
+    SHADOW_ID, PROTOCOL, HOMING_OFFSET, MOVE_THRESHOLD, TEMP_LIMIT, MAX_VOLT_LIMIT,
+    MIN_VOLT_LIMIT, PWM_LIMIT, CURRENT_LIMIT, ACC_LIMIT, VEL_LIMIT, MAX_POS_LIMIT, 
+    MIN_POS_LIMIT, SHUTDOWN,
+    TRQ_ENABLE, LED, STATUS_RETURN, REGISTERED, HARDWARE_ERROR, VEL_I_GAIN, VEL_P_GAIN, POS_D_GAIN,
+    POS_I_GAIN, POS_P_GAIN, FF_2ND_GAIN, FF_1ST_GAIN, BUS_WATCHDOG, GOAL_PWM, GOAL_CURRENT, GOAL_VELOCITY,
+    PROFILE_ACC, PROFILE_VEL, GOAL_POS, REALTIME_TICK, MOVING, MOVING_STATUS, PRESENT_PWM,
+    PRESENT_CURRENT, PRESENT_VEL, PRESENT_POS, VEL_TRAJECTORY, POS_TRAJECTORY, PRESENT_INPUT_VOLT, PRESENT_TEMP,
+    INDIR_ADD_1, INDIR_DATA_1, INDIR_ADD_2, INDIR_DATA_2,
+    NBR_FIELDS, UNDEF_F
+};
+
+
+class LibHal {
+    private:
+        std::vector<std::string> m_unique_motor_models_list;   // List of unique motor models used in the robot
+
+        void populate_control_table();
+        void parse_motor_config(char* config_file);
+        Motor_models string2Motors_models(const std::string& str);
+        Fields string2Fields(const std::string& str);
+        void dataNode2Motor_data_field(Data_node& data_node, Motor_data_field& motor_data_field);
+        void motorNode2Motor(Motor_node& motor_node, Motor& motor);
+        void update_unique_models_list(std::string motor_model_string);
+        Motor_models getModelFromID(int id);
+
+
+    public:
+        int m_tot_nbr_motors;   // Number of motors used in the robot
+        Motor* m_motors_list;     // 
+        std::vector<int> m_all_IDs;
+        Motor_data_field** m_control_table; 
+
+        LibHal();
+        ~LibHal();
+        std::vector<int> init(char* motor_config_file);
+        void get_ID_list_from_motors_list();
+        Motor_data_field getControlParametersFromID(int id, Fields field); 
+        int getMotorsListIndexFromID(int id);
+        Motor getMotorFromID(int id);
+        void addMotorOffsetFromID(int id, uint8_t data, std::string field_name);
+};
+
+
+
+
+
+
+#endif
+

@@ -1,0 +1,219 @@
+/**
+ * KM-Robota library
+ ******************************************************************************
+ * @file            lib_dxl_reader.cpp
+ * @brief           Defines the dxlReader class
+ ******************************************************************************
+ * @copyright
+ * Copyright 2021-2023 Laura Paez Coy and Kamilo Melo                    \n
+ * This code is under MIT licence: https://opensource.org/licenses/MIT  !!!!!
+ * @authors  Laura.Paez@KM-RoBota.com, 04-2023  !!!
+ * @authors  Kamilo.Melo@KM-RoBota.com, 05-2023
+ ******************************************************************************
+ */
+
+#include "lib_dxl_reader.hpp"
+#include "dynamixel_sdk/dynamixel_sdk.h"
+#include "lib_hal.hpp"
+#include <algorithm>
+#include <cstdint>
+
+using namespace std;
+
+
+/**
+ * @brief       Constructor for LibDxlReader
+ */
+LibDxlReader::LibDxlReader(vector<Fields> list_fields, vector<int> ids, dynamixel::PortHandler *portHandler,
+                            dynamixel::PacketHandler *packetHandler, LibHal hal, bool forceIndirect)
+{
+    portHandler_ = portHandler;
+    packetHandler_ = packetHandler;
+    m_hal = hal;
+    m_ids = ids;
+
+    m_list_fields = list_fields;
+
+    getDataByteSize();
+
+    if (list_fields.size() == 1 && !forceIndirect) {
+        m_isIndirectHandler = false;
+        checkMotorCompatibility(list_fields[0]);
+    }
+
+    else {
+        m_isIndirectHandler = true;
+        checkMotorCompatibility(INDIR_DATA_1);
+        setIndirectAddresses();
+    }
+
+    // Debug
+/*     cout << endl;
+    cout << "Sync reader start address: " << (int) m_data_address << endl;
+    cout << "Byte length of the sync reader: " << (int) m_data_byte_size << endl; */
+
+    m_groupSyncReader = new dynamixel::GroupSyncRead(portHandler_, packetHandler_, m_data_address, m_data_byte_size);
+
+    // Create the table to save parametrized data (to be read or sent)
+    m_dataFromMotor = new float *[m_ids.size()]; 
+    for (int i=0; i<m_ids.size(); i++)
+        m_dataFromMotor[i] = new float[m_list_fields.size()];
+
+    cout << "Dxl reader created!" << endl;
+
+}
+
+
+/**
+ * @brief Destructor
+ */
+LibDxlReader::~LibDxlReader()
+{
+    cout << "The Dxl Reader object is being deleted" << endl;
+}
+
+/*
+ *****************************************************************************
+ *                             Data reading
+ ****************************************************************************/
+void LibDxlReader::clearParam()
+{
+    m_groupSyncReader->clearParam();
+}
+
+bool LibDxlReader::addParam(uint8_t id)
+{
+    bool dxl_addparam_result = m_groupSyncReader->addParam(id);
+    return dxl_addparam_result;
+}
+
+
+void LibDxlReader::syncRead(vector<int> ids)
+{
+    int dxl_comm_result = COMM_TX_FAIL;             // Communication result
+    bool dxl_addparam_result = 0;
+
+    clearParam();    
+
+    for (int i=0; i<ids.size(); i++){
+        dxl_addparam_result = addParam(ids[i]);
+        if (dxl_addparam_result != true) {
+            cout << "Adding parameters failed for ID = " << ids[i] << endl;
+            exit(1);
+        }
+    }
+
+    dxl_comm_result = m_groupSyncReader->txRxPacket();
+    if (dxl_comm_result != COMM_SUCCESS){
+        cout << packetHandler_->getTxRxResult(dxl_comm_result) << endl;
+        exit(1);
+    }
+
+    checkReadSuccessful(ids);
+    populateOutputMatrix(ids);
+}
+
+void LibDxlReader::checkReadSuccessful(vector<int> ids)
+{
+    // Check if groupsyncread data of Dyanamixel is available
+    bool dxl_getdata_result = false;
+    Fields field;
+    int field_idx = 0;
+    int field_length = 0;
+    uint8_t offset = 0;
+
+    for (int i=0; i<ids.size(); i++){
+        for (int j=0; j<m_list_fields.size(); j++){
+            field = m_list_fields[j];
+            getFieldPosition(field, field_idx, field_length);
+
+            dxl_getdata_result = m_groupSyncReader->isAvailable(ids[i], m_data_address + offset, field_length);
+
+            if (dxl_getdata_result != true)
+            {
+                fprintf(stderr, "[ID:%03d] groupSyncRead getdata failed \n", ids[i]);
+                exit(1);
+            }
+
+            offset += field_length;
+        }
+
+        offset = 0;
+    }
+}
+
+void LibDxlReader::populateOutputMatrix(vector<int> ids)
+{
+    Fields field;
+    int field_idx = 0;
+    int field_length = 0;
+    uint8_t offset = 0;
+    int32_t paramData;
+    float units, data;
+    int id = 0, row = 0, col = 0;
+
+    for (int i=0; i<ids.size(); i++){
+        for (int j=0; j<m_list_fields.size(); j++){
+            field = m_list_fields[j];
+            id = ids[i];
+
+            getFieldPosition(field, field_idx, field_length);
+            units = m_hal.getControlParametersFromID(id, field).unit;
+
+            paramData = m_groupSyncReader->getData(id, m_data_address + offset, field_length);
+
+            // Transform data from parametrized value to SI units
+            if (field != GOAL_POS && field != PRESENT_POS &&
+                field != MIN_POS_LIMIT && field != MAX_POS_LIMIT &&
+                field != HOMING_OFFSET) {
+                data = paramData * units;        
+            }
+            else
+                data = position2Angle(paramData, id, units);
+
+            // Save the converted value into the output matrix
+            for (row=0; row<ids.size(); row++){
+                for(col=0; col<m_list_fields.size(); col++){
+                    if (ids[row] == id && m_list_fields[col] == field)
+                        goto fill_matrix;
+                }
+            }
+
+            fill_matrix:
+            m_dataFromMotor[row][col] = data;
+            
+            // Offset for the data address
+            offset += field_length;
+        }
+
+        offset = 0;
+    }
+}
+
+
+/**
+ * @brief       Convert position into angle based on motor model 
+ * @param[in]   position Position to be converted
+ * @param[in]   id ID of the motor
+ * @param[in]   units Conversion units between the position and the angle
+ * @return      Angle position [rad] of the query motor
+ */
+float LibDxlReader::position2Angle(int32_t position, int id, float units)
+{
+    float angle;
+
+    int motor_idx = m_hal.getMotorsListIndexFromID(id);
+    int model = m_hal.m_motors_list[motor_idx].scanned_model;
+
+    if (model == 1030 || model == 1000 || model == 311){
+    	int Model_max_position = 4095;
+        
+        angle = ((float) position - Model_max_position/2) * units;
+    }
+    else {
+        cout << "This model is unknown, cannot calculate angle from position!" << endl;
+        return (1);
+    }
+
+    return angle;
+}
