@@ -16,10 +16,12 @@
 #define LIB_ROBOT_HPP
 
 #include "dynamixel_sdk/dynamixel_sdk.h"
-#include "lib_controller.hpp"
 #include "lib_hal.hpp"
 #include "lib_dxl_writer.hpp"
 #include "lib_dxl_reader.hpp"
+
+namespace KMR::dxl
+{
 
 class LibRobot {
     protected:
@@ -46,5 +48,5 @@ class LibRobot {
         void disableMotors(std::vector<int> ids);
 };
 
-
+}
 #endif

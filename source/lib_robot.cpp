@@ -16,7 +16,6 @@
 #include <iostream>
 
 #include "lib_robot.hpp"
-//#include "lib_controller.hpp"
 #include "lib_dxl_writer.hpp"
 #include "lib_dxl_reader.hpp"
 
@@ -27,6 +26,9 @@
 
 
 using namespace std;
+
+namespace KMR::dxl
+{
 
 
 /**
@@ -166,4 +168,4 @@ void LibRobot::disableMotors(vector<int> ids)
     m_motor_enabler->syncWrite(ids);    
 }
 
-
+}

@@ -20,7 +20,8 @@
 #include <cstdint>
 #include <vector>
 
-
+namespace KMR::dxl
+{
 
 /**
  * @brief   Structure saving the info of a data field in the control table (address + byte length + parametrized unit)
@@ -121,9 +122,7 @@ class LibHal {
         void addMotorOffsetFromID(int id, uint8_t data, std::string field_name);
 };
 
-
-
-
+}
 
 
 #endif

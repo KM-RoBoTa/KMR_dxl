@@ -19,6 +19,8 @@
 #include "lib_hal.hpp"
 #include <cstdint>
 
+namespace KMR::dxl
+{
 
 class LibDxlHandler{
     public:        
@@ -47,4 +49,5 @@ class LibDxlHandler{
         virtual void clearParam() = 0;  // Pure Virtual Function
 };
 
+}
 #endif

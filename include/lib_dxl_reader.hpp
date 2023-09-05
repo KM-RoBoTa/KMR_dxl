@@ -18,6 +18,8 @@
 
 #include "lib_dxl_handler.hpp"
 
+namespace KMR::dxl
+{
 
 class LibDxlReader: public LibDxlHandler {
     protected:
@@ -40,6 +42,6 @@ class LibDxlReader: public LibDxlHandler {
         void syncRead(std::vector<int> ids);
 };
 
-
+}
 
 #endif

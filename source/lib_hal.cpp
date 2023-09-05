@@ -30,6 +30,8 @@
 
 using namespace std;
 
+
+
 /**
  * @todo Add notable functions?
  */
@@ -46,10 +48,10 @@ namespace YAML
      * @retval      Void
      */
     template <>
-    struct convert<Data_node>
+    struct convert<KMR::dxl::Data_node>
     {
 
-        static bool decode(const Node &node, Data_node &data_node)
+        static bool decode(const Node &node, KMR::dxl::Data_node &data_node)
         {
 
             data_node.field_name = node["field"].as<std::string>();
@@ -69,10 +71,10 @@ namespace YAML
      * @retval      Void
      */
     template <>
-    struct convert<Motor_node>
+    struct convert<KMR::dxl::Motor_node>
     {
 
-        static bool decode(const Node &node, Motor_node &motor_node)
+        static bool decode(const Node &node, KMR::dxl::Motor_node &motor_node)
         {
 
             motor_node.id = node["ID"].as<int>();
@@ -82,6 +84,8 @@ namespace YAML
     };
 }
 
+namespace KMR::dxl
+{
 /**
  * @brief       Constructor for LibHal
  */
@@ -136,7 +140,7 @@ void LibHal::populate_control_table()
 
     for (int i = 0; i < m_unique_motor_models_list.size(); i++)
     {
-        string config_file = (string) "../KM-R_library/config/motor_models/" + m_unique_motor_models_list[i];
+        string config_file = (string) "../Dynamixel/KMR_dxl/config/motor_models/" + m_unique_motor_models_list[i];
 
         // Open the yaml config file
         YAML::Node config = YAML::LoadFile(config_file);
@@ -508,5 +512,7 @@ void LibHal::addMotorOffsetFromID(int id, uint8_t data_length, std::string field
         std::cout << "Cannot change that motor field!" << std::endl;
         exit(1);
     }
+
+}
 
 }

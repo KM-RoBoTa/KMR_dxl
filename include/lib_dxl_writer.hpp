@@ -20,7 +20,8 @@
 #include <cstdint>
 #include "lib_dxl_handler.hpp"
 
-
+namespace KMR::dxl
+{
 
 class LibDxlWriter: public LibDxlHandler {
     private:
@@ -110,5 +111,5 @@ void LibDxlWriter::addDataToWrite(std::vector<T> data, Fields field, std::vector
     } */
 }
 
-
+}
 #endif

@@ -21,6 +21,9 @@
 
 using namespace std;
 
+namespace KMR::dxl
+{
+
 /**
  * @brief       Constructor for LibDxlWriter
  */
@@ -183,4 +186,6 @@ void LibDxlWriter::populateDataParam(int32_t data, int motor_idx, int field_idx,
     }
     else
         cout<< "Wrong number of parameters to populate the parametrized matrix!" <<endl;
+}
+
 }

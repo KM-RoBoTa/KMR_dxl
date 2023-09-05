@@ -24,6 +24,8 @@
 
 using namespace std;
 
+namespace KMR::dxl
+{
 
 /*
  *****************************************************************************
@@ -244,3 +246,4 @@ int LibDxlHandler::getMotorIndexFromID(int id)
     return idx; 
 }
 
+}

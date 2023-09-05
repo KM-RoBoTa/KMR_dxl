@@ -20,6 +20,8 @@
 
 using namespace std;
 
+namespace KMR::dxl
+{
 
 /**
  * @brief       Constructor for LibDxlReader
@@ -216,4 +218,6 @@ float LibDxlReader::position2Angle(int32_t position, int id, float units)
     }
 
     return angle;
+}
+
 }
