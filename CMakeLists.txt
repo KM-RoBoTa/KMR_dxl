@@ -6,11 +6,11 @@ set(CMAKE_CXX_STANDARD 20)
 
 # Source files
 add_library(KMR_dxl 
-            source/kmr_dxl_robot.cpp
-            source/kmr_dxl_handler.cpp
-            source/kmr_dxl_reader.cpp
-            source/kmr_dxl_writer.cpp
-            source/kmr_dxl_hal.cpp)
+            source/KMR_dxl_robot.cpp
+            source/KMR_dxl_handler.cpp
+            source/KMR_dxl_reader.cpp
+            source/KMR_dxl_writer.cpp
+            source/KMR_dxl_hal.cpp)
 
 # Directories containing header files
 target_include_directories(KMR_dxl PUBLIC include)
