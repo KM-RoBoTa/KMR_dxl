@@ -23,7 +23,7 @@
  ******************************************************************************
  */
 
-#include "kmr_dxl_hal.hpp"
+#include "KMR_dxl_hal.hpp"
 #include "yaml-cpp/yaml.h"
 #include <iostream>
 #include <cstdint>

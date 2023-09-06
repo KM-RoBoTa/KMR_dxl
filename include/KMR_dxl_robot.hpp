@@ -15,10 +15,8 @@
 #ifndef KMR_DXL_ROBOT_HPP
 #define KMR_DXL_ROBOT_HPP
 
-#include "dynamixel_sdk/dynamixel_sdk.h"
-#include "kmr_dxl_hal.hpp"
-#include "kmr_dxl_writer.hpp"
-#include "kmr_dxl_reader.hpp"
+#include "KMR_dxl_writer.hpp"
+#include "KMR_dxl_reader.hpp"
 
 namespace KMR::dxl
 {

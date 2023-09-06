@@ -15,10 +15,7 @@
 #include <cstdint>
 #include <iostream>
 
-#include "kmr_dxl_robot.hpp"
-#include "kmr_dxl_writer.hpp"
-#include "kmr_dxl_reader.hpp"
-
+#include "KMR_dxl_robot.hpp"
 
 #define PROTOCOL_VERSION            2.0
 #define ENABLE                      1

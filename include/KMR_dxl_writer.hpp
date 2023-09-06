@@ -16,10 +16,7 @@
 #define KMR_DXL_WRITER_HPP
 
 #include <cstdint>
-
-#include "dynamixel_sdk/dynamixel_sdk.h"
-#include "kmr_dxl_hal.hpp"
-#include "kmr_dxl_handler.hpp"
+#include "KMR_dxl_handler.hpp"
 
 namespace KMR::dxl
 {

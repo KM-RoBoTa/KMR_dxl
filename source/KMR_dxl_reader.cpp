@@ -12,9 +12,7 @@
  ******************************************************************************
  */
 
-#include "kmr_dxl_reader.hpp"
-#include "dynamixel_sdk/dynamixel_sdk.h"
-#include "kmr_dxl_hal.hpp"
+#include "KMR_dxl_reader.hpp"
 #include <algorithm>
 #include <cstdint>
 
