@@ -12,9 +12,9 @@
  ******************************************************************************
  */
 
-#include "lib_dxl_handler.hpp"
+#include "kmr_dxl_handler.hpp"
 #include "dynamixel_sdk/dynamixel_sdk.h"
-#include "lib_hal.hpp"
+#include "kmr_dxl_hal.hpp"
 #include <algorithm>
 #include <cstdint>
 
@@ -22,10 +22,15 @@
 #define PARAM_OFFSET                1
 #define POS_DATA_SIZE               4
 
-using namespace std;
+
+using std::cout;
+using std::endl;
+using std::vector;
 
 namespace KMR::dxl
 {
+
+
 
 /*
  *****************************************************************************
@@ -36,9 +41,9 @@ namespace KMR::dxl
 /**
  * @brief       Check if the motors are compatible: same address for data storing. \n 
  *              For indirect handling, also find the first common address for every motor
- * @retval      Void
+ * @retval      void
  */
-void LibDxlHandler::checkMotorCompatibility(Fields field)
+void Handler::checkMotorCompatibility(Fields field)
 {
     uint8_t address = -1;
     uint8_t address_prev = -1;
@@ -92,7 +97,7 @@ void LibDxlHandler::checkMotorCompatibility(Fields field)
  * @brief       Set the indirect addresses: link the direct field address to an indirect address
  * @retval      Void
  */
-void LibDxlHandler::setIndirectAddresses()
+void Handler::setIndirectAddresses()
 {
     Motor_data_field motor_field; 
     uint8_t dxl_error = 0;  
@@ -141,7 +146,7 @@ void LibDxlHandler::setIndirectAddresses()
  *              Also check if the motors are field-compatible (same data lengths required for a given field)
  * @retval      Void
  */
-void LibDxlHandler::getDataByteSize()
+void Handler::getDataByteSize()
 {
     Fields field;
     uint8_t length = 0, length_prev = 0;
@@ -193,7 +198,7 @@ void LibDxlHandler::getDataByteSize()
  * @param[in]   ids List of query motors
  * @retval      Void
  */
-void LibDxlHandler::checkIDvalidity(vector<int> ids)
+void Handler::checkIDvalidity(vector<int> ids)
 {
     for(int i=0; i<ids.size(); i++){
         if ( find(m_ids.begin(), m_ids.end(), ids[i]) == m_ids.end() ) {
@@ -208,7 +213,7 @@ void LibDxlHandler::checkIDvalidity(vector<int> ids)
  * @param[in]   field Query control field
  * @retval      Void
  */
-void LibDxlHandler::checkFieldValidity(Fields field)
+void Handler::checkFieldValidity(Fields field)
 {
     if ( find(m_list_fields.begin(), m_list_fields.end(), field) == m_list_fields.end() ) {
         cout << "Error: field " << field << " is not handled by this handler!" << endl;  
@@ -221,7 +226,7 @@ void LibDxlHandler::checkFieldValidity(Fields field)
  * @param[in]   field Query control field
  * @retval      Index of the field to be written/read
  */
-void LibDxlHandler::getFieldPosition(Fields field, int& field_idx, int& field_length)
+void Handler::getFieldPosition(Fields field, int& field_idx, int& field_length)
 {
     for (int i=0; i<m_list_fields.size(); i++){
         if (m_list_fields[i] == field){
@@ -236,7 +241,7 @@ void LibDxlHandler::getFieldPosition(Fields field, int& field_idx, int& field_le
  * @param[in]   id Query motor
  * @retval      Index of the motor in the list of handled motors
  */
-int LibDxlHandler::getMotorIndexFromID(int id)
+int Handler::getMotorIndexFromID(int id)
 {
     int idx = 0;
 

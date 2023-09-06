@@ -1,8 +1,8 @@
 /**
  * KM-Robota library
  ******************************************************************************
- * @file            lib_robot.hpp
- * @brief           Header for the lib_robot.cpp file.
+ * @file            kmr_dxl_robot.hpp
+ * @brief           Header for the kmr_dxl_robot.cpp file.
  ******************************************************************************
  * @copyright
  * Copyright 2021-2023 Laura Paez Coy and Kamilo Melo                    \n
@@ -12,23 +12,23 @@
  ******************************************************************************
  */
 
-#ifndef LIB_ROBOT_HPP
-#define LIB_ROBOT_HPP
+#ifndef KMR_DXL_ROBOT_HPP
+#define KMR_DXL_ROBOT_HPP
 
 #include "dynamixel_sdk/dynamixel_sdk.h"
-#include "lib_hal.hpp"
-#include "lib_dxl_writer.hpp"
-#include "lib_dxl_reader.hpp"
+#include "kmr_dxl_hal.hpp"
+#include "kmr_dxl_writer.hpp"
+#include "kmr_dxl_reader.hpp"
 
 namespace KMR::dxl
 {
 
-class LibRobot {
+class BaseRobot {
     protected:
         dynamixel::PortHandler   *portHandler_;
         dynamixel::PacketHandler *packetHandler_;
 
-        LibDxlWriter *m_motor_enabler;
+        Writer *m_motor_enabler;
 
         void init_comm(const char *port_name, int baudrate, float protocol_version);
         void check_comm();
@@ -36,11 +36,11 @@ class LibRobot {
         
     public:
         int *scanned_motor_models;
-        LibHal m_hal;  // to put private asap @todo
+        Hal m_hal;  // to put private asap @todo
         std::vector<int> m_all_IDs;
 
-        LibRobot(std::vector<int> all_ids, const char *port_name, int baudrate, LibHal hal);
-        ~LibRobot();
+        BaseRobot(std::vector<int> all_ids, const char *port_name, int baudrate, Hal hal);
+        ~BaseRobot();
        
         void enableMotors();
         void enableMotors(std::vector<int> ids);

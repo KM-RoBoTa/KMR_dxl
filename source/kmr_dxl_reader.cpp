@@ -1,8 +1,8 @@
 /**
  * KM-Robota library
  ******************************************************************************
- * @file            lib_dxl_reader.cpp
- * @brief           Defines the dxlReader class
+ * @file            kmr_dxl_reader.cpp
+ * @brief           Defines the Reader class
  ******************************************************************************
  * @copyright
  * Copyright 2021-2023 Laura Paez Coy and Kamilo Melo                    \n
@@ -12,13 +12,15 @@
  ******************************************************************************
  */
 
-#include "lib_dxl_reader.hpp"
+#include "kmr_dxl_reader.hpp"
 #include "dynamixel_sdk/dynamixel_sdk.h"
-#include "lib_hal.hpp"
+#include "kmr_dxl_hal.hpp"
 #include <algorithm>
 #include <cstdint>
 
-using namespace std;
+using std::cout;
+using std::endl;
+using std::vector;
 
 namespace KMR::dxl
 {
@@ -26,8 +28,8 @@ namespace KMR::dxl
 /**
  * @brief       Constructor for LibDxlReader
  */
-LibDxlReader::LibDxlReader(vector<Fields> list_fields, vector<int> ids, dynamixel::PortHandler *portHandler,
-                            dynamixel::PacketHandler *packetHandler, LibHal hal, bool forceIndirect)
+Reader::Reader(vector<Fields> list_fields, vector<int> ids, dynamixel::PortHandler *portHandler,
+                            dynamixel::PacketHandler *packetHandler, Hal hal, bool forceIndirect)
 {
     portHandler_ = portHandler;
     packetHandler_ = packetHandler;
@@ -69,7 +71,7 @@ LibDxlReader::LibDxlReader(vector<Fields> list_fields, vector<int> ids, dynamixe
 /**
  * @brief Destructor
  */
-LibDxlReader::~LibDxlReader()
+Reader::~Reader()
 {
     cout << "The Dxl Reader object is being deleted" << endl;
 }
@@ -78,19 +80,19 @@ LibDxlReader::~LibDxlReader()
  *****************************************************************************
  *                             Data reading
  ****************************************************************************/
-void LibDxlReader::clearParam()
+void Reader::clearParam()
 {
     m_groupSyncReader->clearParam();
 }
 
-bool LibDxlReader::addParam(uint8_t id)
+bool Reader::addParam(uint8_t id)
 {
     bool dxl_addparam_result = m_groupSyncReader->addParam(id);
     return dxl_addparam_result;
 }
 
 
-void LibDxlReader::syncRead(vector<int> ids)
+void Reader::syncRead(vector<int> ids)
 {
     int dxl_comm_result = COMM_TX_FAIL;             // Communication result
     bool dxl_addparam_result = 0;
@@ -115,7 +117,7 @@ void LibDxlReader::syncRead(vector<int> ids)
     populateOutputMatrix(ids);
 }
 
-void LibDxlReader::checkReadSuccessful(vector<int> ids)
+void Reader::checkReadSuccessful(vector<int> ids)
 {
     // Check if groupsyncread data of Dyanamixel is available
     bool dxl_getdata_result = false;
@@ -144,7 +146,7 @@ void LibDxlReader::checkReadSuccessful(vector<int> ids)
     }
 }
 
-void LibDxlReader::populateOutputMatrix(vector<int> ids)
+void Reader::populateOutputMatrix(vector<int> ids)
 {
     Fields field;
     int field_idx = 0;
@@ -200,7 +202,7 @@ void LibDxlReader::populateOutputMatrix(vector<int> ids)
  * @param[in]   units Conversion units between the position and the angle
  * @return      Angle position [rad] of the query motor
  */
-float LibDxlReader::position2Angle(int32_t position, int id, float units)
+float Reader::position2Angle(int32_t position, int id, float units)
 {
     float angle;
 

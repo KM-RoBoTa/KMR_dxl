@@ -1,8 +1,8 @@
 /**
  * Project: KM-Robota library
  *****************************************************************************
- * @file            lib_hal.hpp
- * @brief           Header for lib_hal.cpp file
+ * @file            kmr_dxl_hal.hpp
+ * @brief           Header for kmr_dxl_hal.cpp file
  *****************************************************************************
  * @copyright
  * Copyright 2021-2023 Laura Paez Coy and Kamilo Melo                    \n
@@ -12,8 +12,8 @@
  *****************************************************************************
  */
 
-#ifndef LIB_HAL_HPP
-#define LIB_HAL_HPP
+#ifndef KMR_DXL_HAL_HPP
+#define KMR_DXL_HAL_HPP
 
 #include <string>
 #include <iostream>
@@ -92,34 +92,34 @@ enum Fields
 };
 
 
-class LibHal {
-    private:
-        std::vector<std::string> m_unique_motor_models_list;   // List of unique motor models used in the robot
+class Hal {
+private:
+    std::vector<std::string> m_unique_motor_models_list;   // List of unique motor models used in the robot
 
-        void populate_control_table();
-        void parse_motor_config(char* config_file);
-        Motor_models string2Motors_models(const std::string& str);
-        Fields string2Fields(const std::string& str);
-        void dataNode2Motor_data_field(Data_node& data_node, Motor_data_field& motor_data_field);
-        void motorNode2Motor(Motor_node& motor_node, Motor& motor);
-        void update_unique_models_list(std::string motor_model_string);
-        Motor_models getModelFromID(int id);
+    void populate_control_table();
+    void parse_motor_config(char* config_file);
+    Motor_models string2Motors_models(const std::string& str);
+    Fields string2Fields(const std::string& str);
+    void dataNode2Motor_data_field(Data_node& data_node, Motor_data_field& motor_data_field);
+    void motorNode2Motor(Motor_node& motor_node, Motor& motor);
+    void update_unique_models_list(std::string motor_model_string);
+    Motor_models getModelFromID(int id);
 
 
-    public:
-        int m_tot_nbr_motors;   // Number of motors used in the robot
-        Motor* m_motors_list;     // 
-        std::vector<int> m_all_IDs;
-        Motor_data_field** m_control_table; 
+public:
+    int m_tot_nbr_motors;   // Number of motors used in the robot
+    Motor* m_motors_list;     // 
+    std::vector<int> m_all_IDs;
+    Motor_data_field** m_control_table; 
 
-        LibHal();
-        ~LibHal();
-        std::vector<int> init(char* motor_config_file);
-        void get_ID_list_from_motors_list();
-        Motor_data_field getControlParametersFromID(int id, Fields field); 
-        int getMotorsListIndexFromID(int id);
-        Motor getMotorFromID(int id);
-        void addMotorOffsetFromID(int id, uint8_t data, std::string field_name);
+    Hal();
+    ~Hal();
+    std::vector<int> init(char* motor_config_file);
+    void get_ID_list_from_motors_list();
+    Motor_data_field getControlParametersFromID(int id, Fields field); 
+    int getMotorsListIndexFromID(int id);
+    Motor getMotorFromID(int id);
+    void addMotorOffsetFromID(int id, uint8_t data, std::string field_name);
 };
 
 }

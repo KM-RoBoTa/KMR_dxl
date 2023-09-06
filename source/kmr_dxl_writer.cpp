@@ -1,8 +1,8 @@
 /**
  * KM-Robota library
  ******************************************************************************
- * @file            lib_dxl_writer.cpp
- * @brief           Defines the dxlWriter class
+ * @file            kmr_dxl_writer.cpp
+ * @brief           Defines the Writer class
  ******************************************************************************
  * @copyright
  * Copyright 2021-2023 Laura Paez Coy and Kamilo Melo                    \n
@@ -12,12 +12,15 @@
  ******************************************************************************
  */
 
-#include "lib_dxl_writer.hpp"
+#include "kmr_dxl_writer.hpp"
 #include "dynamixel_sdk/dynamixel_sdk.h"
-#include "lib_hal.hpp"
+#include "kmr_dxl_hal.hpp"
 #include <algorithm>
 #include <cstdint>
 
+using std::cout;
+using std::endl;
+using std::vector;
 
 using namespace std;
 
@@ -27,8 +30,8 @@ namespace KMR::dxl
 /**
  * @brief       Constructor for LibDxlWriter
  */
-LibDxlWriter::LibDxlWriter(vector<Fields> list_fields, vector<int> ids, dynamixel::PortHandler *portHandler,
-                            dynamixel::PacketHandler *packetHandler, LibHal hal, bool forceIndirect)
+Writer::Writer(vector<Fields> list_fields, vector<int> ids, dynamixel::PortHandler *portHandler,
+                            dynamixel::PacketHandler *packetHandler, Hal hal, bool forceIndirect)
 {
     portHandler_ = portHandler;
     packetHandler_ = packetHandler;
@@ -68,7 +71,7 @@ LibDxlWriter::LibDxlWriter(vector<Fields> list_fields, vector<int> ids, dynamixe
 /**
  * @brief Destructor
  */
-LibDxlWriter::~LibDxlWriter()
+Writer::~Writer()
 {
     cout << "The Dxl Writer object is being deleted" << endl;
 }
@@ -78,18 +81,18 @@ LibDxlWriter::~LibDxlWriter()
  *****************************************************************************
  *                             Data writing
  ****************************************************************************/
-void LibDxlWriter::clearParam()
+void Writer::clearParam()
 {
     m_groupSyncWriter->clearParam();
 }
 
-bool LibDxlWriter::addParam(uint8_t id, uint8_t* data)
+bool Writer::addParam(uint8_t id, uint8_t* data)
 {
     bool dxl_addparam_result = m_groupSyncWriter->addParam(id, data);
     return dxl_addparam_result;
 }
 
-void LibDxlWriter::syncWrite(vector<int> ids)
+void Writer::syncWrite(vector<int> ids)
 {
     bool dxl_addparam_result;
     int dxl_comm_result = COMM_TX_FAIL;   
@@ -126,7 +129,7 @@ void LibDxlWriter::syncWrite(vector<int> ids)
  * @param[in]   isRadians Boolean flag for the angle's units, true if radians (radians by default)
  * @return      Position value corresponding to the joint angle (0 degrees or rad -> mid-position)
  */
-int LibDxlWriter::angle2Position(float angle, int id)
+int Writer::angle2Position(float angle, int id)
 {
 /*     cout << endl;
     cout << "Angle at start: " << angle << endl; */
@@ -154,7 +157,7 @@ int LibDxlWriter::angle2Position(float angle, int id)
     return position;
 }
 
-void LibDxlWriter::bindParameter(int lower_bound, int upper_bound, int& param)
+void Writer::bindParameter(int lower_bound, int upper_bound, int& param)
 {
     if (param > upper_bound)
         param = upper_bound;
@@ -169,7 +172,7 @@ void LibDxlWriter::bindParameter(int lower_bound, int upper_bound, int& param)
  * @param[out]  param_array Transformed data into the required shape, which will be sent to motors
  * @retval      void
  */
-void LibDxlWriter::populateDataParam(int32_t data, int motor_idx, int field_idx, int field_length)
+void Writer::populateDataParam(int32_t data, int motor_idx, int field_idx, int field_length)
 {
     if (field_length == 4) {
         m_dataParam[motor_idx][field_idx+0] = DXL_LOBYTE(DXL_LOWORD(data));

@@ -23,7 +23,7 @@
  ******************************************************************************
  */
 
-#include "lib_hal.hpp"
+#include "kmr_dxl_hal.hpp"
 #include "yaml-cpp/yaml.h"
 #include <iostream>
 #include <cstdint>
@@ -40,56 +40,57 @@ using namespace std;
 namespace YAML
 {
 
-    /**
-     * @brief       Overload YAML::Node.as to be usable with our Data_node structure: \n
-     *              Convert YAML::Node to Data_node
-     * @param[in]   node YAML:Node read by the YAML parser
-     * @param[out]  data_node Instance of Data_node containing the info gotten from node
-     * @retval      Void
-     */
-    template <>
-    struct convert<KMR::dxl::Data_node>
+/**
+ * @brief       Overload YAML::Node.as to be usable with our Data_node structure: \n
+ *              Convert YAML::Node to Data_node
+ * @param[in]   node YAML:Node read by the YAML parser
+ * @param[out]  data_node Instance of Data_node containing the info gotten from node
+ * @retval      Void
+ */
+template <>
+struct convert<KMR::dxl::Data_node>
+{
+
+    static bool decode(const Node &node, KMR::dxl::Data_node &data_node)
     {
 
-        static bool decode(const Node &node, KMR::dxl::Data_node &data_node)
-        {
+        data_node.field_name = node["field"].as<std::string>();
+        data_node.address = node["address"].as<int>();
+        data_node.length = node["length"].as<int>();
+        data_node.unit = node["unit"].as<float>();
 
-            data_node.field_name = node["field"].as<std::string>();
-            data_node.address = node["address"].as<int>();
-            data_node.length = node["length"].as<int>();
-            data_node.unit = node["unit"].as<float>();
+        return true;
+    }
+};
 
-            return true;
-        }
-    };
+/**
+ * @brief       Overload YAML::Node.as to be usable with our Motor_node structure: \n
+ *              Convert YAML::Node to Motor_node
+ * @param[in]   node YAML:Node read by the YAML parser
+ * @param[out]  motor_node Instance of Motor_node containing the info gotten from node
+ * @retval      Void
+ */
+template <>
+struct convert<KMR::dxl::Motor_node>
+{
 
-    /**
-     * @brief       Overload YAML::Node.as to be usable with our Motor_node structure: \n
-     *              Convert YAML::Node to Motor_node
-     * @param[in]   node YAML:Node read by the YAML parser
-     * @param[out]  motor_node Instance of Motor_node containing the info gotten from node
-     * @retval      Void
-     */
-    template <>
-    struct convert<KMR::dxl::Motor_node>
+    static bool decode(const Node &node, KMR::dxl::Motor_node &motor_node)
     {
 
-        static bool decode(const Node &node, KMR::dxl::Motor_node &motor_node)
-        {
-
-            motor_node.id = node["ID"].as<int>();
-            motor_node.model_name = node["model"].as<string>();
-            return true;
-        }
-    };
+        motor_node.id = node["ID"].as<int>();
+        motor_node.model_name = node["model"].as<string>();
+        return true;
+    }
+};
 }
 
 namespace KMR::dxl
 {
+    
 /**
  * @brief       Constructor for LibHal
  */
-LibHal::LibHal()
+Hal::Hal()
 {
     m_tot_nbr_motors = -1;
     m_control_table = new Motor_data_field *[NBR_MODELS];
@@ -105,7 +106,7 @@ LibHal::LibHal()
  * @param[in]   motor_config_file Configuration file of the motors in the project
  * @retval      Void
  */
-vector<int> LibHal::init(char *motor_config_file)
+vector<int> Hal::init(char *motor_config_file)
 {
     parse_motor_config(motor_config_file);
     populate_control_table();
@@ -118,7 +119,7 @@ vector<int> LibHal::init(char *motor_config_file)
 /**
  * @brief       Destructor for LibHal
  */
-LibHal::~LibHal()
+Hal::~Hal()
 {
     cout << "The Hal object is being deleted" << endl;
 }
@@ -132,7 +133,7 @@ LibHal::~LibHal()
  * @brief       Populate the control table's data fields
  * @retval      Void
  */
-void LibHal::populate_control_table()
+void Hal::populate_control_table()
 {
     Data_node data_node;
     Motor_data_field motor_data_field;
@@ -179,7 +180,7 @@ void LibHal::populate_control_table()
  * @param[in]   str String to be converted into the enumerate value
  * @retval      Motors_models enumerate value
  */
-Motor_models LibHal::string2Motors_models(const string &str)
+Motor_models Hal::string2Motors_models(const string &str)
 {
     if (str == "MX_64R")
         return MX_64R;
@@ -198,7 +199,7 @@ Motor_models LibHal::string2Motors_models(const string &str)
  * @param[in]   str String to be converted into the enumerate value
  * @retval      Fields enumerate value
  */
-Fields LibHal::string2Fields(const string &str)
+Fields Hal::string2Fields(const string &str)
 {
     if (str == "MODEL_NBR")
         return MODEL_NBR;
@@ -324,7 +325,7 @@ Fields LibHal::string2Fields(const string &str)
  * @param[out]  motor_data_field Motor_data_field instance to store the info from the node
  * @retval      Void
  */
-void LibHal::dataNode2Motor_data_field(Data_node &data_node, Motor_data_field &motor_data_field)
+void Hal::dataNode2Motor_data_field(Data_node &data_node, Motor_data_field &motor_data_field)
 {
     motor_data_field.address = (std::uint8_t)data_node.address;
     motor_data_field.length = (std::uint8_t)data_node.length;
@@ -337,7 +338,7 @@ void LibHal::dataNode2Motor_data_field(Data_node &data_node, Motor_data_field &m
  * @param[out]  motor Motor instance to store the info from the node
  * @retval      Void
  */
-void LibHal::motorNode2Motor(Motor_node &motor_node, Motor &motor)
+void Hal::motorNode2Motor(Motor_node &motor_node, Motor &motor)
 {
     motor.id = motor_node.id;
     motor.model = string2Motors_models(motor_node.model_name);
@@ -353,7 +354,7 @@ void LibHal::motorNode2Motor(Motor_node &motor_node, Motor &motor)
  * @param[in]   config_file Yaml config file for the motors in the robot
  * @return      List of all motors IDs
  */
-void LibHal::parse_motor_config(char *config_file)
+void Hal::parse_motor_config(char *config_file)
 {
     Motor_node motor_node;
     Motor motor;
@@ -390,7 +391,7 @@ void LibHal::parse_motor_config(char *config_file)
  * @param[in]   str Model of the currently querried motor
  * @retval      Void
  */
-void LibHal::update_unique_models_list(string motor_model_string)
+void Hal::update_unique_models_list(string motor_model_string)
 {
     string filename = motor_model_string + (string) ".yaml";
     bool model_in_list = false;
@@ -414,7 +415,7 @@ void LibHal::update_unique_models_list(string motor_model_string)
  * @brief       Extract the list of all motor IDs from the motors list
  * @return      void
  */
-void LibHal::get_ID_list_from_motors_list()
+void Hal::get_ID_list_from_motors_list()
 {
     m_all_IDs = vector<int> (m_tot_nbr_motors);
 
@@ -431,7 +432,7 @@ void LibHal::get_ID_list_from_motors_list()
  * @param[in]   field Control field of the query
  * @retval      Control parameters (address and byte size) of the query field
  */
-Motor_data_field LibHal::getControlParametersFromID(int id, Fields field)
+Motor_data_field Hal::getControlParametersFromID(int id, Fields field)
 {
     Motor_models model = getModelFromID(id);
     Motor_data_field params = m_control_table[model][field];
@@ -444,7 +445,7 @@ Motor_data_field LibHal::getControlParametersFromID(int id, Fields field)
  * @param[in]   id ID of the query motor
  * @retval      Model of the query motor
  */
-Motor_models LibHal::getModelFromID(int id)
+Motor_models Hal::getModelFromID(int id)
 {
     Motor_models motor_model = NBR_MODELS;
 
@@ -464,7 +465,7 @@ Motor_models LibHal::getModelFromID(int id)
  * @param[in]   id ID of the query motor
  * @retval      Model of the query motor
  */
-int LibHal::getMotorsListIndexFromID(int id)
+int Hal::getMotorsListIndexFromID(int id)
 {
     int i;
     for (i=0; i < m_tot_nbr_motors; i++)
@@ -483,7 +484,7 @@ int LibHal::getMotorsListIndexFromID(int id)
  * @param[in]   id ID of the query motor
  * @retval      The Motor structure of the query motor
  */
-Motor LibHal::getMotorFromID(int id)
+Motor Hal::getMotorFromID(int id)
 {
     int motor_idx = getMotorsListIndexFromID(id);
     Motor motor = m_motors_list[motor_idx];
@@ -499,7 +500,7 @@ Motor LibHal::getMotorFromID(int id)
  * @param[in]   field_name Type of field that was just assigned an indirect address (address or data)
  * @retval      void
  */
-void LibHal::addMotorOffsetFromID(int id, uint8_t data_length, std::string field_name)
+void Hal::addMotorOffsetFromID(int id, uint8_t data_length, std::string field_name)
 {
     int motor_idx = getMotorsListIndexFromID(id);
 
@@ -509,7 +510,7 @@ void LibHal::addMotorOffsetFromID(int id, uint8_t data_length, std::string field
     else if (field_name == "indir_data_offset")
         m_motors_list[motor_idx].indir_data_offset += data_length;
     else{
-        std::cout << "Cannot change that motor field!" << std::endl;
+        cout << "Cannot change that motor field!" << endl;
         exit(1);
     }
 

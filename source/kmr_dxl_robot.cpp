@@ -1,8 +1,8 @@
 /**
  * KM-Robota library
  ******************************************************************************
- * @file            lib_robot.cpp
- * @brief           Defines the LibRobot class
+ * @file            kmr_dxl_robot.cpp
+ * @brief           Defines the BaseRobot class
  ******************************************************************************
  * @copyright
  * Copyright 2021-2023 Laura Paez Coy and Kamilo Melo                    \n
@@ -15,9 +15,9 @@
 #include <cstdint>
 #include <iostream>
 
-#include "lib_robot.hpp"
-#include "lib_dxl_writer.hpp"
-#include "lib_dxl_reader.hpp"
+#include "kmr_dxl_robot.hpp"
+#include "kmr_dxl_writer.hpp"
+#include "kmr_dxl_reader.hpp"
 
 
 #define PROTOCOL_VERSION            2.0
@@ -38,7 +38,7 @@ namespace KMR::dxl
  * @param[in]   baudrate Baudrate of the port handling communication with motors
  * @param[in]   port_name Name of the port handling communication with motors
  */
-LibRobot::LibRobot(vector<int> all_ids, const char *port_name, int baudrate, LibHal hal)
+BaseRobot::BaseRobot(vector<int> all_ids, const char *port_name, int baudrate, Hal hal)
 {
     m_hal = hal;
     m_all_IDs = all_ids;
@@ -47,7 +47,7 @@ LibRobot::LibRobot(vector<int> all_ids, const char *port_name, int baudrate, Lib
     init_comm(port_name, baudrate, PROTOCOL_VERSION);
 
     // Writing handler, taking care of enabling/disabling motors
-    m_motor_enabler = new LibDxlWriter(vector<Fields>{TRQ_ENABLE}, m_all_IDs, portHandler_, packetHandler_, m_hal, 0);
+    m_motor_enabler = new Writer(vector<Fields>{TRQ_ENABLE}, m_all_IDs, portHandler_, packetHandler_, m_hal, 0);
 
     // Ping each motor to validate the communication is working
     check_comm();
@@ -58,7 +58,7 @@ LibRobot::LibRobot(vector<int> all_ids, const char *port_name, int baudrate, Lib
 /**
  * @brief Destructor
  */
-LibRobot::~LibRobot()
+BaseRobot::~BaseRobot()
 {
     cout << "The Robot object is being deleted" << endl;
 }
@@ -71,7 +71,7 @@ LibRobot::~LibRobot()
  * @param[in]   protocol_version Protocol version, for the communication (U2D2)
  * @retval      void
  */
-void LibRobot::init_comm(const char *port_name, int baudrate, float protocol_version)
+void BaseRobot::init_comm(const char *port_name, int baudrate, float protocol_version)
 {
     portHandler_ = dynamixel::PortHandler::getPortHandler(port_name);
     if (!portHandler_->openPort()) {
@@ -95,7 +95,7 @@ void LibRobot::init_comm(const char *port_name, int baudrate, float protocol_ver
  * @brief       Ping each motor to validate the communication is working
  * @retval      void
  */
-void LibRobot::check_comm()
+void BaseRobot::check_comm()
 {
     bool result = false;
     uint16_t model_number = 0;
@@ -130,7 +130,7 @@ void LibRobot::check_comm()
  * @brief       Enable all the motors
  * @retval      void
  */
-void LibRobot::enableMotors()
+void BaseRobot::enableMotors()
 {
     m_motor_enabler->addDataToWrite(vector<int>{ENABLE}, TRQ_ENABLE, m_all_IDs);
     m_motor_enabler->syncWrite(m_all_IDs);
@@ -141,7 +141,7 @@ void LibRobot::enableMotors()
  * @param[in]   ids List of motor ids to be enabled
  * @retval      void
  */
-void LibRobot::enableMotors(vector<int> ids)
+void BaseRobot::enableMotors(vector<int> ids)
 {
     m_motor_enabler->addDataToWrite(vector<int>{ENABLE}, TRQ_ENABLE, ids);
     m_motor_enabler->syncWrite(ids);    
@@ -151,7 +151,7 @@ void LibRobot::enableMotors(vector<int> ids)
  * @brief       Disable all the motors
  * @retval      void
  */
-void LibRobot::disableMotors()
+void BaseRobot::disableMotors()
 {
     m_motor_enabler->addDataToWrite(vector<int>{DISABLE}, TRQ_ENABLE, m_all_IDs);
     m_motor_enabler->syncWrite(m_all_IDs);
@@ -162,7 +162,7 @@ void LibRobot::disableMotors()
  * @param[in]   ids List of motor ids to be disabled
  * @retval      void
  */
-void LibRobot::disableMotors(vector<int> ids)
+void BaseRobot::disableMotors(vector<int> ids)
 {
     m_motor_enabler->addDataToWrite(vector<int>{DISABLE}, TRQ_ENABLE, ids);
     m_motor_enabler->syncWrite(ids);    
