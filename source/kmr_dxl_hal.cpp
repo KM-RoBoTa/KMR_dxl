@@ -106,10 +106,10 @@ Hal::Hal()
  * @param[in]   motor_config_file Configuration file of the motors in the project
  * @retval      Void
  */
-vector<int> Hal::init(char *motor_config_file)
+vector<int> Hal::init(char *motor_config_file, char* path_to_KMR_dxl)
 {
     parse_motor_config(motor_config_file);
-    populate_control_table();
+    populate_control_table(path_to_KMR_dxl);
     get_ID_list_from_motors_list();
 
     return m_all_IDs;
@@ -133,7 +133,7 @@ Hal::~Hal()
  * @brief       Populate the control table's data fields
  * @retval      Void
  */
-void Hal::populate_control_table()
+void Hal::populate_control_table(char* path_to_KMR_dxl)
 {
     Data_node data_node;
     Motor_data_field motor_data_field;
@@ -141,7 +141,7 @@ void Hal::populate_control_table()
 
     for (int i = 0; i < m_unique_motor_models_list.size(); i++)
     {
-        string config_file = (string) "../Dynamixel/KMR_dxl/config/motor_models/" + m_unique_motor_models_list[i];
+        string config_file = (string)path_to_KMR_dxl + (string)"/config/motor_models/" + m_unique_motor_models_list[i];
 
         // Open the yaml config file
         YAML::Node config = YAML::LoadFile(config_file);

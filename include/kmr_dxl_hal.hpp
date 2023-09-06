@@ -96,7 +96,7 @@ class Hal {
 private:
     std::vector<std::string> m_unique_motor_models_list;   // List of unique motor models used in the robot
 
-    void populate_control_table();
+    void populate_control_table(char* path_to_KMR_dxl);
     void parse_motor_config(char* config_file);
     Motor_models string2Motors_models(const std::string& str);
     Fields string2Fields(const std::string& str);
@@ -114,7 +114,7 @@ public:
 
     Hal();
     ~Hal();
-    std::vector<int> init(char* motor_config_file);
+    std::vector<int> init(char* motor_config_file, char* path_to_KMR_dxl);
     void get_ID_list_from_motors_list();
     Motor_data_field getControlParametersFromID(int id, Fields field); 
     int getMotorsListIndexFromID(int id);
