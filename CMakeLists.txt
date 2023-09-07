@@ -16,7 +16,7 @@ add_library(KMR_dxl
 target_include_directories(KMR_dxl PUBLIC include)
 
 # Locations of the used libraries
-target_link_directories(KMR_dxl PRIVATE /usr/local/include/dynamixel_sdk)
+target_link_directories(KMR_dxl PUBLIC /usr/local/lib)
 
 # Link the used libraries: dynamixel and yaml-cpp
 target_link_libraries(KMR_dxl yaml-cpp dxl_x64_cpp)
