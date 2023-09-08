@@ -45,6 +45,7 @@ BaseRobot::BaseRobot(vector<int> all_ids, const char *port_name, int baudrate, H
 
     // Writing handler, taking care of enabling/disabling motors
     m_motor_enabler = new Writer(vector<Fields>{TRQ_ENABLE}, m_all_IDs, portHandler_, packetHandler_, m_hal, 0);
+    m_controlMode_setter = new Writer(vector<Fields>{OP_MODE}, m_all_IDs, portHandler_, packetHandler_, m_hal, 0);
 
     // Ping each motor to validate the communication is working
     check_comm();
@@ -164,5 +165,49 @@ void BaseRobot::disableMotors(vector<int> ids)
     m_motor_enabler->addDataToWrite(vector<int>{DISABLE}, TRQ_ENABLE, ids);
     m_motor_enabler->syncWrite(ids);    
 }
+
+
+/*
+******************************************************************************
+ *                Reset necessary motors in multiturn mode
+ ****************************************************************************/
+
+void BaseRobot::setMultiturnControl_singleMotor(int id, Motor motor)
+{
+    disableMotors(vector<int>{id});
+    m_controlMode_setter->addDataToWrite(vector<int>{motor.control_modes.multiturn_control}, OP_MODE, vector<int>{id});
+    m_controlMode_setter->syncWrite(vector<int>{id});
+    enableMotors(vector<int>{id});
+}
+
+void BaseRobot::setPositionControl_singleMotor(int id, Motor motor)
+{
+    disableMotors(vector<int>{id});
+    int pos_control = motor.control_modes.position_control;
+    m_controlMode_setter->addDataToWrite(vector<int>{motor.control_modes.position_control}, OP_MODE, vector<int>{id});
+    m_controlMode_setter->syncWrite(vector<int>{id});
+    enableMotors(vector<int>{id});
+}
+
+
+void BaseRobot::resetMultiturnMotors()
+{
+    Motor motor;
+    int id;
+
+    for(int i=0; i<m_all_IDs.size(); i++) {
+        id = m_all_IDs[i];
+        motor = m_hal.getMotorFromID(id);
+        if (motor.toReset) {
+            setPositionControl_singleMotor(id, motor);
+            setMultiturnControl_singleMotor(id, motor);
+
+            m_hal.updateResetStatus(id, 0);
+
+            cout << "Motor is over limit and reset" << endl;
+        }
+    }
+}
+
 
 }

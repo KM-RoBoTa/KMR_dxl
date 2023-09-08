@@ -16,6 +16,9 @@
 #include <algorithm>
 #include <cstdint>
 
+#define MULTITURN_MAX   6144
+#define MULTITURN_MIN   -2048
+
 using std::cout;
 using std::endl;
 using std::vector;
@@ -137,12 +140,19 @@ int Writer::angle2Position(float angle, int id)
     int motor_idx = m_hal.getMotorsListIndexFromID(id);
     int model = m_hal.m_motors_list[motor_idx].scanned_model;
     float units = m_hal.getControlParametersFromID(id, GOAL_POS).unit;
+    Motor motor = m_hal.getMotorFromID(id);
 
     if (model == 1030 || model == 1000 || model == 311){
     	int Model_max_position = 4095;
         int Model_min_position = 0;
 		position = angle/units + Model_max_position/2 + 0.5;
-        bindParameter(Model_min_position, Model_max_position, position);
+
+        if (!motor.multiturn)
+            bindParameter(Model_min_position, Model_max_position, position);
+        else {
+            if (multiturnOverLimit(position))
+                m_hal.updateResetStatus(id, 1);
+        }
     }
     else {
         cout << "This model is unknown, cannot calculate position from angle!" << endl;
@@ -188,5 +198,16 @@ void Writer::populateDataParam(int32_t data, int motor_idx, int field_idx, int f
     else
         cout<< "Wrong number of parameters to populate the parametrized matrix!" <<endl;
 }
+
+
+bool Writer::multiturnOverLimit(int position)
+{
+    if (position > MULTITURN_MAX || position < MULTITURN_MIN)
+        return true;
+    else
+        return false;
+}
+
+
 
 }

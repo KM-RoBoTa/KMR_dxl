@@ -67,12 +67,6 @@ void Handler::checkMotorCompatibility(Fields field)
 
     m_data_address = address + biggest_data_offset;
 
-    // debug
-    cout << endl;
-    cout << "Success! Motors are compatible" << endl;
-    cout << "Data address: " << (int) m_data_address << endl;
-    cout << "Data byte size: " << (int) m_data_byte_size << endl;
-
     // Now that we have the guarantee that all indirect data begin at the same address and we found the first 
     // available common address for all motors for indirect handling, update their offset (already assigned memory)
     if (m_isIndirectHandler){
@@ -170,20 +164,6 @@ void Handler::getDataByteSize()
         m_data_byte_size += length;
 
     }
-
-    // Debug
-    cout << endl;
-    cout << "get Data byte size finished: " << endl;
-    for (int i=0; i<m_list_fields.size(); i++)
-        cout << "field: " << m_list_fields[i];
-    cout << endl;
-    for (int i=0; i<m_field_lengths.size(); i++)
-        cout << "field length: " << m_field_lengths[i];
-    cout << endl;
-    for (int i=0; i<m_field_indices.size(); i++)
-        cout << "field index: " << m_field_indices[i];
-
-    cout << endl;
 }
 
 /*

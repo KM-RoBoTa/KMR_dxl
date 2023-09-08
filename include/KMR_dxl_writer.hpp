@@ -32,6 +32,8 @@ private:
     void populateDataParam(int32_t data, int motor_idx, int field_idx, int field_length);
     void clearParam();
     bool addParam(uint8_t id, uint8_t *data);
+    bool multiturnOverLimit(int position);
+
 
 public:
     Writer(std::vector<Fields> list_fields, std::vector<int> ids, dynamixel::PortHandler *portHandler,
@@ -87,6 +89,8 @@ void Writer::addDataToWrite(std::vector<T> data, Fields field, std::vector<int> 
         }
         else
             param_data = angle2Position(current_data, id);
+
+
 
         populateDataParam(param_data, motor_idx, field_idx, field_length);
     }

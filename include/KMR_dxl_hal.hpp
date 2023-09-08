@@ -49,6 +49,7 @@ struct Data_node {
 struct Motor_node {
     std::string model_name;
     int id;
+    int multiturn;
 };
 
 /**
@@ -61,6 +62,15 @@ enum Motor_models
     MX_64R, NBR_MODELS, UNDEF_M
 };
 
+struct Control_modes {
+    uint8_t current_control;
+    uint8_t velocity_control;
+    uint8_t position_control;
+    uint8_t multiturn_control;    
+    uint8_t current_based_position_control;
+    uint8_t PWM_control;
+};
+
 /**
  * @brief   Structure saving the info of a single motor: both config-wise (ID + model + scanned model)
  *          and occupied addresses (indir_address_offset and indir_data_offset)
@@ -68,10 +78,13 @@ enum Motor_models
 struct Motor {
     int id;
     Motor_models model;
+    int multiturn;
+    Control_modes control_modes;
 
     uint8_t indir_address_offset = 0;
     uint8_t indir_data_offset = 0;
     int scanned_model = 0;
+    int toReset = 0;
 };
 
 /**
@@ -104,13 +117,14 @@ private:
     void motorNode2Motor(Motor_node& motor_node, Motor& motor);
     void update_unique_models_list(std::string motor_model_string);
     Motor_models getModelFromID(int id);
-
+    void saveControlValuesToMotors();
 
 public:
     int m_tot_nbr_motors;   // Number of motors used in the robot
     Motor* m_motors_list;     // 
     std::vector<int> m_all_IDs;
     Motor_data_field** m_control_table; 
+    Control_modes* m_controlModesPerModel;
 
     Hal();
     ~Hal();
@@ -120,6 +134,7 @@ public:
     int getMotorsListIndexFromID(int id);
     Motor getMotorFromID(int id);
     void addMotorOffsetFromID(int id, uint8_t data, std::string field_name);
+    void updateResetStatus(int id, int status);
 };
 
 }

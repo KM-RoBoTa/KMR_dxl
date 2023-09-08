@@ -27,9 +27,13 @@ class BaseRobot {
         dynamixel::PacketHandler *packetHandler_;
 
         Writer *m_motor_enabler;
+        Writer *m_controlMode_setter;
+
 
         void init_comm(const char *port_name, int baudrate, float protocol_version);
         void check_comm();
+        void setMultiturnControl_singleMotor(int id, Motor motor);
+        void setPositionControl_singleMotor(int id, Motor motor);
 
         
     public:
@@ -44,6 +48,7 @@ class BaseRobot {
         void enableMotors(std::vector<int> ids);
         void disableMotors();
         void disableMotors(std::vector<int> ids);
+        void resetMultiturnMotors();
 };
 
 }

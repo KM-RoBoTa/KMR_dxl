@@ -8,6 +8,13 @@
 
 # EEPROM
 model_name: MX_64R    # !!!! The underscore instead of hyphen very important
+operating_modes:
+  - current_control: 0
+    velocity_control: 1
+    position_control: 3
+    multiturn_control: 4
+    current_based_position_control: 5
+    PWM_control: 16 
 motor_data: 
   - field: MODEL_NBR
     address: 0

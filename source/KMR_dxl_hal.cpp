@@ -31,7 +31,6 @@
 using namespace std;
 
 
-
 /**
  * @todo Add notable functions?
  */
@@ -79,9 +78,37 @@ struct convert<KMR::dxl::Motor_node>
 
         motor_node.id = node["ID"].as<int>();
         motor_node.model_name = node["model"].as<string>();
+        motor_node.multiturn = node["multiturn"].as<int>();
         return true;
     }
 };
+
+
+/**
+ * @brief       Overload YAML::Node.as to be usable with our Control_modes structure: \n
+ *              Convert YAML::Node to Control_modes
+ * @param[in]   node YAML:Node read by the YAML parser
+ * @param[out]  motor_node Instance of Control_modes containing the info gotten from node
+ * @retval      Void
+ */
+template <>
+struct convert<KMR::dxl::Control_modes>
+{
+
+    static bool decode(const Node &node, KMR::dxl::Control_modes &control_modes)
+    {
+
+        control_modes.current_control = (uint8_t) node["current_control"].as<int>();
+        control_modes.current_based_position_control = (uint8_t) node["current_based_position_control"].as<int>();
+        control_modes.multiturn_control = (uint8_t) node["multiturn_control"].as<int>();
+        control_modes.velocity_control = (uint8_t) node["velocity_control"].as<int>();
+        control_modes.position_control = (uint8_t) node["position_control"].as<int>();
+        control_modes.PWM_control = (uint8_t) node["PWM_control"].as<int>();
+
+        return true;
+    }
+};
+
 }
 
 namespace KMR::dxl
@@ -97,6 +124,8 @@ Hal::Hal()
     for (int i = 0; i < NBR_MODELS; i++)
         m_control_table[i] = new Motor_data_field[NBR_FIELDS];
 
+    m_controlModesPerModel = new Control_modes[NBR_MODELS];
+
     cout << "Hal created" << endl;
 }
 
@@ -111,6 +140,8 @@ vector<int> Hal::init(char *motor_config_file, char* path_to_KMR_dxl)
     parse_motor_config(motor_config_file);
     populate_control_table(path_to_KMR_dxl);
     get_ID_list_from_motors_list();
+
+    saveControlValuesToMotors();
 
     return m_all_IDs;
 }
@@ -151,6 +182,9 @@ void Hal::populate_control_table(char* path_to_KMR_dxl)
         string motor_model_string = config["model_name"].as<string>();
         Motor_models motor_model = string2Motors_models(motor_model_string);
 
+        Control_modes control_modes = config["operating_modes"][0].as<Control_modes>();
+        m_controlModesPerModel[motor_model] = control_modes;
+
         // Read the motor_data nodes: get the name, address and length of each data field of the motor
         for (int j = 0; j < config["motor_data"].size(); j++)
         {
@@ -164,6 +198,7 @@ void Hal::populate_control_table(char* path_to_KMR_dxl)
             m_control_table[motor_model][col] = motor_data_field;
         }
     }
+
 
     /// @todo Debug for the control table
     /*     for (int i=0; i<NBR_MODELS; i++){
@@ -342,6 +377,7 @@ void Hal::motorNode2Motor(Motor_node &motor_node, Motor &motor)
 {
     motor.id = motor_node.id;
     motor.model = string2Motors_models(motor_node.model_name);
+    motor.multiturn = motor_node.multiturn;
 }
 
 
@@ -374,7 +410,6 @@ void Hal::parse_motor_config(char *config_file)
     // Read the motors nodes: get the ID and model for each motor
     for (int i = 0; i < config["motors"].size(); i++)
     {
-
         motor_node = config["motors"][i].as<Motor_node>();
 
         // Convert the read node and update the list of used models
@@ -515,5 +550,37 @@ void Hal::addMotorOffsetFromID(int id, uint8_t data_length, std::string field_na
     }
 
 }
+
+/**
+ * @brief       Update a motor's "to reset" status
+ * @param[in]   id ID of the query motor
+ * @retval      void
+ */
+void Hal::updateResetStatus(int id, int status)
+{
+    int idx = getMotorsListIndexFromID(id);
+    m_motors_list[idx].toReset = status;
+}
+
+
+void Hal::saveControlValuesToMotors()
+{
+    int idx, id, model;
+
+    for (int i=0; i<m_tot_nbr_motors; i++){
+        id = m_all_IDs[i];
+        idx = getMotorsListIndexFromID(id);
+        model = m_motors_list[idx].model;
+
+        m_motors_list[idx].control_modes.current_based_position_control = 
+                            m_controlModesPerModel[model].current_based_position_control;
+        m_motors_list[idx].control_modes.position_control = m_controlModesPerModel[model].position_control;
+        m_motors_list[idx].control_modes.current_control = m_controlModesPerModel[model].current_control;
+        m_motors_list[idx].control_modes.multiturn_control = m_controlModesPerModel[model].multiturn_control;
+        m_motors_list[idx].control_modes.PWM_control = m_controlModesPerModel[model].PWM_control;
+        m_motors_list[idx].control_modes.velocity_control= m_controlModesPerModel[model].velocity_control;
+    }
+}
+       
 
 }

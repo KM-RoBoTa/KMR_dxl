@@ -44,6 +44,20 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 
+# vscode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/*.code-snippets
+
+# Local History for Visual Studio Code
+.history/
+
+# Built Visual Studio Code Extensions
+*.vsix
+
 # Build folder
 build/
-.vscode/.clang-format
+
