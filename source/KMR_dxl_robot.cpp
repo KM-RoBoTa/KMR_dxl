@@ -15,6 +15,8 @@
 #include <cstdint>
 #include <iostream>
 
+
+#include <unistd.h>  // Provides sleep function for linux
 #include "KMR_dxl_robot.hpp"
 
 #define PROTOCOL_VERSION            2.0
@@ -171,25 +173,37 @@ void BaseRobot::disableMotors(vector<int> ids)
 ******************************************************************************
  *                Reset necessary motors in multiturn mode
  ****************************************************************************/
-
+/**
+ * @brief       Set single motor to multiturn mode. Used for multiturn reset
+ * @param[in]   id Motor id to get set to multiturn mode
+ * @param[in]   motor Query motor 
+ * @retval      void
+ */
 void BaseRobot::setMultiturnControl_singleMotor(int id, Motor motor)
 {
-    disableMotors(vector<int>{id});
     m_controlMode_setter->addDataToWrite(vector<int>{motor.control_modes.multiturn_control}, OP_MODE, vector<int>{id});
     m_controlMode_setter->syncWrite(vector<int>{id});
-    enableMotors(vector<int>{id});
 }
 
+/**
+ * @brief       Set single motor to position control mode. Used for multiturn reset
+ * @param[in]   id Motor id to get set to conotrl position mode
+ * @param[in]   motor Query motor 
+ * @retval      void
+ */
 void BaseRobot::setPositionControl_singleMotor(int id, Motor motor)
 {
-    disableMotors(vector<int>{id});
     int pos_control = motor.control_modes.position_control;
     m_controlMode_setter->addDataToWrite(vector<int>{motor.control_modes.position_control}, OP_MODE, vector<int>{id});
     m_controlMode_setter->syncWrite(vector<int>{id});
-    enableMotors(vector<int>{id});
 }
 
 
+/**
+ * @brief       Reset multiturn motors flagged as needing a reset. Use after a "write" function
+ * @retval      void
+ * @note        In order to avoid undefined behavior, the sleep delay may be necessary before resetting
+ */
 void BaseRobot::resetMultiturnMotors()
 {
     Motor motor;
@@ -199,12 +213,15 @@ void BaseRobot::resetMultiturnMotors()
         id = m_all_IDs[i];
         motor = m_hal.getMotorFromID(id);
         if (motor.toReset) {
+
+            usleep(200000);
+
+            disableMotors(vector<int>{id});
             setPositionControl_singleMotor(id, motor);
-            setMultiturnControl_singleMotor(id, motor);
+            setMultiturnControl_singleMotor(id, motor);    
+            enableMotors(vector<int>{id});
 
             m_hal.updateResetStatus(id, 0);
-
-            cout << "Motor is over limit and reset" << endl;
         }
     }
 }

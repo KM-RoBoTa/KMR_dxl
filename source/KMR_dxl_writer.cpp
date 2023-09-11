@@ -53,11 +53,6 @@ Writer::Writer(vector<Fields> list_fields, vector<int> ids, dynamixel::PortHandl
         setIndirectAddresses();
     }
 
-    // Debug
-/*     cout << endl;
-    cout << "Sync writer start address: " << (int) m_data_address << endl;
-    cout << "Byte length: " << (int) m_data_byte_size << endl; */
-
     m_groupSyncWriter = new dynamixel::GroupSyncWrite(portHandler_, packetHandler_, m_data_address, m_data_byte_size);
 
     // Create the table to save parametrized data (to be read or sent)
@@ -158,9 +153,6 @@ int Writer::angle2Position(float angle, int id)
         cout << "This model is unknown, cannot calculate position from angle!" << endl;
         return (1);
     }
-
-/*     cout << "Equivalent position: " << position << endl;
-    cout << endl; */
 
     return position;
 }
