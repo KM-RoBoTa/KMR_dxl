@@ -20,3 +20,9 @@ target_link_directories(KMR_dxl PUBLIC /usr/local/lib)
 
 # Link the used libraries: dynamixel and yaml-cpp
 target_link_libraries(KMR_dxl yaml-cpp dxl_x64_cpp)
+
+# Generate Docs
+option(BUILD_DOCS "Generate Docs" ON)
+if(BUILD_DOCS)
+	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/docs)  # path to docs' cmakelists
+endif()
