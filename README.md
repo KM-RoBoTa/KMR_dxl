@@ -6,7 +6,7 @@ Dependencies:
 - dynamixel API
 - yaml-cpp
 
-How to use: go to the KMR_dxl folder, then:
+How to use: go to the KMR_dxl folder, then: 
 ```bash
 mkdir build
 cd build

@@ -1,5 +1,4 @@
 /**
- * Project: KM-Robota library
  *****************************************************************************
  * @file            kmr_dxl_hal.hpp
  * @brief           Header for kmr_dxl_hal.cpp file
@@ -25,7 +24,7 @@ namespace KMR::dxl
 {
 
 /**
- * @brief   Structure saving the info of a data field in the control table (address + byte length + parametrized unit)
+ * @brief   Structure saving the info of a data field
  */
 struct Motor_data_field {
     std::uint8_t address;

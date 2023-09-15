@@ -1,5 +1,4 @@
 /**
- * KM-Robota library
  ******************************************************************************
  * @file            lib_hal.cpp
  * @brief           Parse motor models files and create the control table
@@ -32,11 +31,6 @@
 using namespace std;
 
 
-/**
- * @todo Add notable functions?
- */
-
-
 namespace YAML
 {
 
@@ -44,8 +38,8 @@ namespace YAML
  * @brief       Overload YAML::Node.as to be usable with our Data_node structure: \n
  *              Convert YAML::Node to Data_node
  * @param[in]   node YAML:Node read by the YAML parser
- * @param[out]  data_node Instance of Data_node containing the info gotten from node
- * @retval      Void
+ * @param[out]  data_node Instance of Data_node to store the info gotten from node
+ * @retval      void
  */
 template <>
 struct convert<KMR::dxl::Data_node>
@@ -67,8 +61,8 @@ struct convert<KMR::dxl::Data_node>
  * @brief       Overload YAML::Node.as to be usable with our Motor_node structure: \n
  *              Convert YAML::Node to Motor_node
  * @param[in]   node YAML:Node read by the YAML parser
- * @param[out]  motor_node Instance of Motor_node containing the info gotten from node
- * @retval      Void
+ * @param[out]  motor_node Instance of Motor_node to store the info gotten from node
+ * @retval      void
  */
 template <>
 struct convert<KMR::dxl::Motor_node>
@@ -76,7 +70,6 @@ struct convert<KMR::dxl::Motor_node>
 
     static bool decode(const Node &node, KMR::dxl::Motor_node &motor_node)
     {
-
         motor_node.id = node["ID"].as<int>();
         motor_node.model_name = node["model"].as<string>();
         motor_node.multiturn = node["multiturn"].as<int>();
@@ -89,8 +82,8 @@ struct convert<KMR::dxl::Motor_node>
  * @brief       Overload YAML::Node.as to be usable with our Control_modes structure: \n
  *              Convert YAML::Node to Control_modes
  * @param[in]   node YAML:Node read by the YAML parser
- * @param[out]  motor_node Instance of Control_modes containing the info gotten from node
- * @retval      Void
+ * @param[out]  motor_node Instance of Control_modes to contain the info gotten from node
+ * @retval      void
  */
 template <>
 struct convert<KMR::dxl::Control_modes>
@@ -116,7 +109,7 @@ namespace KMR::dxl
 {
     
 /**
- * @brief       Constructor for LibHal
+ * @brief       Constructor for Hal
  */
 Hal::Hal()
 {
@@ -127,21 +120,27 @@ Hal::Hal()
 
     m_controlModesPerModel = new Control_modes[NBR_MODELS];
 
-    cout << "Hal created" << endl;
+    cout << "[KMR::dxl] Hal created" << endl;
 }
 
 /**
- * @brief       Initialize the hal: parse motor config file and create the control table
- * @note        Vital function
+ * @brief       Initialize the hal: parse motor config file and create the control table. 
+ *              To call immediately after the constructor   
  * @param[in]   motor_config_file Configuration file of the motors in the project
- * @retval      Void
+ * @return      Vector of all motor IDs 
  */
 vector<int> Hal::init(char *motor_config_file, char* path_to_KMR_dxl)
 {
+    // Parse the motor config specific to the current project
     parse_motor_config(motor_config_file);
+
+    // Create the control table for all models
     populate_control_table(path_to_KMR_dxl);
+
+    // Extract the list of motor IDs
     get_ID_list_from_motors_list();
 
+    // Save operating modes values to motors
     saveControlValuesToMotors();
 
     return m_all_IDs;
@@ -149,21 +148,22 @@ vector<int> Hal::init(char *motor_config_file, char* path_to_KMR_dxl)
 
 
 /**
- * @brief       Destructor for LibHal
+ * @brief       Destructor for Hal
  */
 Hal::~Hal()
 {
-    cout << "The Hal object is being deleted" << endl;
+    cout << "[KMR::dxl] The Hal object is being deleted" << endl;
 }
 
 
 /*****************************************************************************
- *              Creation of the control table (not project-specific)
+ *                   Creation of the control table
  ****************************************************************************/
 
 /**
- * @brief       Populate the control table's data fields
- * @retval      Void
+ * @brief       Populate the control table's data fields for all motor models in the project
+ * @param[in]   path_to_KMR_dxl Path from the working directory (build) to this library's folder
+ * @retval      void
  */
 void Hal::populate_control_table(char* path_to_KMR_dxl)
 {
@@ -171,27 +171,30 @@ void Hal::populate_control_table(char* path_to_KMR_dxl)
     Motor_data_field motor_data_field;
     Fields col;
 
+    // For each motor model, open its config file and populate the control table
     for (int i = 0; i < m_unique_motor_models_list.size(); i++)
     {
-        string config_file = (string)path_to_KMR_dxl + (string)"/config/motor_models/" + m_unique_motor_models_list[i];
+        string config_file = (string)path_to_KMR_dxl + (string)"/config/motor_models/"
+                             + m_unique_motor_models_list[i];
 
         // Open the yaml config file
         YAML::Node config = YAML::LoadFile(config_file);
-        cout << "Yaml file open: " << config_file << endl;
+        cout << "[KMR::dxl] Motor model file open: " << config_file << endl;
 
         // Read and convert the first line to get the motor model name
         string motor_model_string = config["model_name"].as<string>();
         Motor_models motor_model = string2Motors_models(motor_model_string);
 
+        // Read the values to set control modes
         Control_modes control_modes = config["operating_modes"][0].as<Control_modes>();
         m_controlModesPerModel[motor_model] = control_modes;
 
-        // Read the motor_data nodes: get the name, address and length of each data field of the motor
+        // Read the motor_data nodes: get the name, address, length and unit of each data field
         for (int j = 0; j < config["motor_data"].size(); j++)
         {
             data_node = config["motor_data"][j].as<Data_node>();
 
-            // Convert the read node
+            // Convert the read node into our structures
             col = string2Fields(data_node.field_name);
             dataNode2Motor_data_field(data_node, motor_data_field);
 
@@ -199,20 +202,15 @@ void Hal::populate_control_table(char* path_to_KMR_dxl)
             m_control_table[motor_model][col] = motor_data_field;
         }
     }
-
-
-    /// @todo Debug for the control table
-    /*     for (int i=0; i<NBR_MODELS; i++){
-            for (int j=0; j<NBR_FIELDS; j++){
-                cout << (int)m_control_table[i][j].address << endl;
-            }
-            cout << endl;
-        } */
 }
+
+/*****************************************************************************
+ *          Conversions from nodes/strings to our structures/enumerates
+ ****************************************************************************/
 
 /**
  * @brief       Convert a string to Motors_models enumerate
- * @attention   This function needs to be updated if new motor model added
+ * @attention   This function needs to be updated if new motor model added, as well as the enum
  * @param[in]   str String to be converted into the enumerate value
  * @retval      Motors_models enumerate value
  */
@@ -359,7 +357,7 @@ Fields Hal::string2Fields(const string &str)
  * @brief       Convert a Data_node instance to a Motor_data_field instance
  * @param[in]   data_node Data_node instance to be converted
  * @param[out]  motor_data_field Motor_data_field instance to store the info from the node
- * @retval      Void
+ * @retval      void
  */
 void Hal::dataNode2Motor_data_field(Data_node &data_node, Motor_data_field &motor_data_field)
 {
@@ -372,7 +370,7 @@ void Hal::dataNode2Motor_data_field(Data_node &data_node, Motor_data_field &moto
  * @brief       Convert a Motor_node instance to a Motor instance
  * @param[in]   motor_node Motor_node instance to be converted
  * @param[out]  motor Motor instance to store the info from the node
- * @retval      Void
+ * @retval      void
  */
 void Hal::motorNode2Motor(Motor_node &motor_node, Motor &motor)
 {
@@ -387,9 +385,9 @@ void Hal::motorNode2Motor(Motor_node &motor_node, Motor &motor)
  ****************************************************************************/
 
 /**
- * @brief       Parse the motor configuration file and return the list of motors (ID + model)
+ * @brief       Parse the motor configuration file and populate the list of motors
  * @param[in]   config_file Yaml config file for the motors in the robot
- * @return      List of all motors IDs
+ * @return      void
  */
 void Hal::parse_motor_config(char *config_file)
 {
@@ -398,17 +396,19 @@ void Hal::parse_motor_config(char *config_file)
 
     // Open the yaml config file
     YAML::Node config = YAML::LoadFile(config_file);
-    cout << "Yaml file open: " << config_file << endl;
+    cout << "[KMR::dxl] Project motor config file open: " << config_file << endl;
 
     // Read and convert the first line to get the number of motors in the robot
     m_tot_nbr_motors = config["nbr_motors"].as<int>();
-    if (m_tot_nbr_motors != config["motors"].size())
-        cout << "ERROR in the number of motors in the config file!!" << endl;
+    if (m_tot_nbr_motors != config["motors"].size()) {
+        cout << "[KMR::dxl] ERROR in the number of motors in the config file!!" << endl;
+        exit(1);
+    }
 
     // Create the list of motors (NB: had to use malloc because the struct. does not have a constructor)
     m_motors_list = (Motor *)malloc(m_tot_nbr_motors * sizeof(Motor));
 
-    // Read the motors nodes: get the ID and model for each motor
+    // Read the motors nodes: get the ID, model and multiturn mode for each motor
     for (int i = 0; i < config["motors"].size(); i++)
     {
         motor_node = config["motors"][i].as<Motor_node>();
@@ -424,8 +424,8 @@ void Hal::parse_motor_config(char *config_file)
 
 /**
  * @brief       Create the list of unique motor models used in the robot
- * @param[in]   str Model of the currently querried motor
- * @retval      Void
+ * @param[in]   motor_model_string Model of the currently querried motor
+ * @retval      void
  */
 void Hal::update_unique_models_list(string motor_model_string)
 {
@@ -460,6 +460,11 @@ void Hal::get_ID_list_from_motors_list()
         m_all_IDs[i] = m_motors_list[i].id;
     }
 }
+
+
+/*****************************************************************************
+ *                     Query functions from outside
+ ****************************************************************************/
 
 /**
  * @brief       Get control parameters of a specific control field from motor ID
