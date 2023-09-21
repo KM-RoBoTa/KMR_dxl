@@ -1,8 +1,7 @@
 /**
- * KM-Robota library
  ******************************************************************************
- * @file            lib_dxl_handler.cpp
- * @brief           Defines the dxlHandler class
+ * @file            KMR_dxl_handler.cpp
+ * @brief           Defines the Handler class
  ******************************************************************************
  * @copyright
  * Copyright 2021-2023 Laura Paez Coy and Kamilo Melo                    \n
@@ -26,9 +25,9 @@ using std::cout;
 using std::endl;
 using std::vector;
 
+
 namespace KMR::dxl
 {
-
 
 
 /*
@@ -38,8 +37,9 @@ namespace KMR::dxl
 
 
 /**
- * @brief       Check if the motors are compatible: same address for data storing. \n 
+ * @brief       Check if the motors are compatible for a given field: same address for data storing. \n 
  *              For indirect handling, also find the first common address for every motor
+ * @param[in]   field Control field that the handler is taking care of
  * @retval      void
  */
 void Handler::checkMotorCompatibility(Fields field)
@@ -70,25 +70,16 @@ void Handler::checkMotorCompatibility(Fields field)
 
     // Now that we have the guarantee that all indirect data begin at the same address and we found the first 
     // available common address for all motors for indirect handling, update their offset (already assigned memory)
-    if (m_isIndirectHandler){
-
-        cout << endl;
-
-        for (int i=0; i<m_ids.size();i++) {
+    if (m_isIndirectHandler) {
+        for (int i=0; i<m_ids.size();i++)
             m_hal.addMotorOffsetFromID(m_ids[i], (uint8_t) (biggest_data_offset + m_data_byte_size), "indir_data_offset");
-
-            // Debug
-            //cout << "Motor: " << m_ids[i] << " data offset: " << (int) m_hal.getMotorFromID(m_ids[i]).indir_data_offset << endl;
-        }
-        
     }
 
-    cout << endl;
 }
 
 /**
  * @brief       Set the indirect addresses: link the direct field address to an indirect address
- * @retval      Void
+ * @retval      void
  */
 void Handler::setIndirectAddresses()
 {
@@ -106,15 +97,7 @@ void Handler::setIndirectAddresses()
         for (int i=0; i<m_list_fields.size(); i++){
             motor_field = m_hal.getControlParametersFromID(id, m_list_fields.at(i));
 
-            for (int j=0; j<motor_field.length; j++){
-
-                // debug
-/*                 cout << "Motor ID: " << id << ", field: " << m_list_fields[i] << endl;
-                cout << "Indir address start: " << (int)indir_address_start << endl;
-                cout << "Indir address offset (2): " << (int)m_hal.getMotorFromID(id).indir_address_offset<< endl;
-                cout << "Param address start (pos): " << (int)motor_field.address << endl;
-                cout << "Param address offset (by 1): " << (int)param_address_offset << endl;
-                cout << endl; */
+            for (int j=0; j<motor_field.length; j++) {
 
                 dxl_comm_result = packetHandler_->write2ByteTxRx(portHandler_, id, 
                                                                 indir_address_start + m_hal.getMotorFromID(id).indir_address_offset,
@@ -137,7 +120,7 @@ void Handler::setIndirectAddresses()
 /**
  * @brief       Calculate and store the byte length of data read/written by the handler. \n 
  *              Also check if the motors are field-compatible (same data lengths required for a given field)
- * @retval      Void
+ * @retval      void
  */
 void Handler::getDataByteSize()
 {
@@ -175,7 +158,7 @@ void Handler::getDataByteSize()
 /**
  * @brief       Check if query motors are handled by this specific handler
  * @param[in]   ids List of query motors
- * @retval      Void
+ * @retval      void
  */
 void Handler::checkIDvalidity(vector<int> ids)
 {
@@ -190,7 +173,7 @@ void Handler::checkIDvalidity(vector<int> ids)
 /**
  * @brief       Check if query field is handled by this specific handler
  * @param[in]   field Query control field
- * @retval      Void
+ * @retval      void
  */
 void Handler::checkFieldValidity(Fields field)
 {
@@ -204,6 +187,7 @@ void Handler::checkFieldValidity(Fields field)
  * @brief       Get the index for reading/writing a certain field in a m_data_byte_size array
  * @param[in]   field Query control field
  * @retval      Index of the field to be written/read
+ * @todo is it used?
  */
 void Handler::getFieldPosition(Fields field, int& field_idx, int& field_length)
 {

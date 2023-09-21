@@ -21,6 +21,11 @@
 namespace KMR::dxl
 {
 
+/**
+ * @brief       Custom Reader class that contains a dynamixel::GroupSyncRead object
+ * @details 	This custom Reader class simplifies greatly the creation of dynamixel reading handlers. \n 
+ * 				It takes care automatically of address assignment, even for indirect address handling. 
+ */
 class Reader : public Handler
 {
 protected:

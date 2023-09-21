@@ -25,7 +25,8 @@ namespace KMR::dxl
 {
 
 /**
- * @brief       Constructor for LibDxlReader
+ * @brief       Constructor for a Reader handler
+ * @param[in]   list_fields 
  */
 Reader::Reader(vector<Fields> list_fields, vector<int> ids, dynamixel::PortHandler *portHandler,
                             dynamixel::PacketHandler *packetHandler, Hal hal, bool forceIndirect)
@@ -50,11 +51,6 @@ Reader::Reader(vector<Fields> list_fields, vector<int> ids, dynamixel::PortHandl
         setIndirectAddresses();
     }
 
-    // Debug
-/*     cout << endl;
-    cout << "Sync reader start address: " << (int) m_data_address << endl;
-    cout << "Byte length of the sync reader: " << (int) m_data_byte_size << endl; */
-
     m_groupSyncReader = new dynamixel::GroupSyncRead(portHandler_, packetHandler_, m_data_address, m_data_byte_size);
 
     // Create the table to save parametrized data (to be read or sent)
@@ -72,25 +68,38 @@ Reader::Reader(vector<Fields> list_fields, vector<int> ids, dynamixel::PortHandl
  */
 Reader::~Reader()
 {
-    cout << "The Dxl Reader object is being deleted" << endl;
+    //cout << "The Dxl Reader object is being deleted" << endl;
 }
 
 /*
  *****************************************************************************
  *                             Data reading
  ****************************************************************************/
+
+/**
+ * @brief   Clear the parameters list: no motors added
+ */
 void Reader::clearParam()
 {
     m_groupSyncReader->clearParam();
 }
 
+/**
+ * @brief       Add a motor to the list of motors who will read
+ * @param[in]   id ID of the motor
+ * @retval      bool: true if motor added successfully
+ */
 bool Reader::addParam(uint8_t id)
 {
     bool dxl_addparam_result = m_groupSyncReader->addParam(id);
     return dxl_addparam_result;
 }
 
-
+/**
+ * @brief       Read the handled fields of input motors
+ * @param[in]   ids List of motors whose fields will be read 
+ * @retval      void
+ */
 void Reader::syncRead(vector<int> ids)
 {
     int dxl_comm_result = COMM_TX_FAIL;             // Communication result
@@ -98,6 +107,7 @@ void Reader::syncRead(vector<int> ids)
 
     clearParam();    
 
+    // Add the input motors to the reading list
     for (int i=0; i<ids.size(); i++){
         dxl_addparam_result = addParam(ids[i]);
         if (dxl_addparam_result != true) {
@@ -106,6 +116,7 @@ void Reader::syncRead(vector<int> ids)
         }
     }
 
+    // Read the motors' sensors
     dxl_comm_result = m_groupSyncReader->txRxPacket();
     if (dxl_comm_result != COMM_SUCCESS){
         cout << packetHandler_->getTxRxResult(dxl_comm_result) << endl;
@@ -116,6 +127,12 @@ void Reader::syncRead(vector<int> ids)
     populateOutputMatrix(ids);
 }
 
+
+/**
+ * @brief       Check if read data from motors is available
+ * @param[in]   ids List of motors whose fields have just been read
+ * @retval      void
+ */
 void Reader::checkReadSuccessful(vector<int> ids)
 {
     // Check if groupsyncread data of Dyanamixel is available
@@ -145,6 +162,13 @@ void Reader::checkReadSuccessful(vector<int> ids)
     }
 }
 
+
+/**
+ * @brief       The reading being successful, save the read data into the output matrix
+ * @param[in]   ids List of motors whose fields have been successfully read
+ * @todo change the goto
+ * @retval      void
+ */
 void Reader::populateOutputMatrix(vector<int> ids)
 {
     Fields field;
