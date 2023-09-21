@@ -1,7 +1,7 @@
 /**
  *****************************************************************************
- * @file            kmr_dxl_hal.hpp
- * @brief           Header for kmr_dxl_hal.cpp file
+ * @file            KMR_dxl_hal.hpp
+ * @brief           Header for KMR_dxl_hal.cpp file
  *****************************************************************************
  * @copyright
  * Copyright 2021-2023 Laura Paez Coy and Kamilo Melo                    \n
@@ -62,6 +62,9 @@ enum Motor_models
     MX_64R, NBR_MODELS, UNDEF_M
 };
 
+/**
+ * @brief       Exhaustive list of all possible control modes for Dynamixel motors
+ */
 struct Control_modes {
     uint8_t current_control;
     uint8_t velocity_control;
@@ -72,8 +75,8 @@ struct Control_modes {
 };
 
 /**
- * @brief   Structure saving the info of a single motor: both config-wise (ID + model + scanned model)
- *          and occupied addresses (indir_address_offset and indir_data_offset)
+ * @brief   Structure saving the info of a single motor: both config-wise (ID, model...)
+ *          and specific to the project (occupied indirect addresses, reset status...)
  */
 struct Motor {
     int id;
@@ -86,6 +89,7 @@ struct Motor {
     int scanned_model = 0;
     int toReset = 0;
 };
+
 
 /**
  * @brief   Enumerate of all data fields in a dynamixel motor
@@ -105,6 +109,14 @@ enum Fields
 };
 
 
+
+/**
+ * @brief       Hardware abstraction layer for Dynamixel motors
+ * @details     The lowest-level element in the library. The Hal class serves primarily as
+ *              an abstraction layer, providing high-level functions to get the Dynamixel control
+ *              table addresses by creating a control table. \n 
+ *              It also parses the project's motors configuration file.
+ */
 class Hal {
 private:
     std::vector<std::string> m_unique_motor_models_list;   // List of unique motor models used in the robot
@@ -121,10 +133,10 @@ private:
 
 public:
     int m_tot_nbr_motors;   // Number of motors used in the robot
-    Motor* m_motors_list;     // 
-    std::vector<int> m_all_IDs;
-    Motor_data_field** m_control_table; 
-    Control_modes* m_controlModesPerModel;
+    Motor* m_motors_list;     // List containing all motors' info 
+    std::vector<int> m_all_IDs;  // All motor IDs in the robot
+    Motor_data_field** m_control_table;   // Table containing all Dynamixel control values for every model
+    Control_modes* m_controlModesPerModel; // List of control modes values for each Dxl model
 
     Hal();
     ~Hal();

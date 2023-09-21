@@ -1,18 +1,7 @@
 /**
  ******************************************************************************
- * @file            lib_hal.cpp
- * @brief           Parse motor models files and create the control table
- *
- * @details         The control table is a 2D table of Motor_data_field, which is a structure
- *                  containing the address and the byte length of every data field for a dynamixel
- *                  motor (ex: goal position, temperature, ID, etc.) \n
- *                  For ease of use, the indices for rows and columns are encoded by the enumerates
- *                  Motor_models and Fields respectively. \n
- *                  As such, to get the address and byte length for a given data field and a given motor: \n
- *                  control_table[Motor_models][Fields].address \n
- *                  control_table[Motor_models][Fields].length
- * @note            In case of wanting to print a uint8_t to terminal, make sure to cast it as an int. \n
- *                  For more info: https://stackoverflow.com/questions/19562103/uint8-t-cant-be-printed-with-cout
+ * @file            KMR_dxl_hal.cpp
+ * @brief           Hardware abstraction layer for Dynamixel motors
  ******************************************************************************
  * @copyright
  * Copyright 2021-2023 Laura Paez Coy and Kamilo Melo                    \n
@@ -456,9 +445,7 @@ void Hal::get_ID_list_from_motors_list()
     m_all_IDs = vector<int> (m_tot_nbr_motors);
 
     for (int i = 0; i < m_tot_nbr_motors; i++)
-    {
         m_all_IDs[i] = m_motors_list[i].id;
-    }
 }
 
 
@@ -471,7 +458,7 @@ void Hal::get_ID_list_from_motors_list()
  * @note        Vital function
  * @param[in]   id ID of the query motor
  * @param[in]   field Control field of the query
- * @retval      Control parameters (address and byte size) of the query field
+ * @retval      Control parameters of the query field
  */
 Motor_data_field Hal::getControlParametersFromID(int id, Fields field)
 {
@@ -502,9 +489,9 @@ Motor_models Hal::getModelFromID(int id)
 }
 
 /**
- * @brief       Get the index  from motor ID
+ * @brief       Get a motor's list index from its ID
  * @param[in]   id ID of the query motor
- * @retval      Model of the query motor
+ * @retval      Index of the query motor
  */
 int Hal::getMotorsListIndexFromID(int id)
 {
@@ -521,7 +508,7 @@ int Hal::getMotorsListIndexFromID(int id)
 }
 
 /**
- * @brief       Get a specific motor's info structure from motor ID
+ * @brief       Get a motor's info structure from motor ID
  * @param[in]   id ID of the query motor
  * @retval      The Motor structure of the query motor
  */
@@ -533,6 +520,10 @@ Motor Hal::getMotorFromID(int id)
     return motor;
 }
 
+
+/*****************************************************************************
+ *                             Misc. functions
+ ****************************************************************************/
 
 /**
  * @brief       Update the offsets to access empty indirect addresses for a given motor
@@ -558,8 +549,9 @@ void Hal::addMotorOffsetFromID(int id, uint8_t data_length, std::string field_na
 }
 
 /**
- * @brief       Update a motor's "to reset" status
+ * @brief       Update a motor's "to reset" status in multiturn mode
  * @param[in]   id ID of the query motor
+ * @param[in]   status Boolean: 1 if need to reset, 0 if not
  * @retval      void
  */
 void Hal::updateResetStatus(int id, int status)
@@ -569,6 +561,11 @@ void Hal::updateResetStatus(int id, int status)
 }
 
 
+/**
+ * @brief       For each motor, save all operating modes control values. \n 
+ *              Needed for resetting in multiturn mode
+ * @retval      void
+ */
 void Hal::saveControlValuesToMotors()
 {
     int idx, id, model;
