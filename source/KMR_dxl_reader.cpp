@@ -172,7 +172,7 @@ void Reader::checkReadSuccessful(vector<int> ids)
 /**
  * @brief       The reading being successful, save the read data into the output matrix
  * @param[in]   ids List of motors whose fields have been successfully read
- * @todo change the goto
+ * @todo Change the goto to a cleaner way
  * @retval      void
  */
 void Reader::populateOutputMatrix(vector<int> ids)

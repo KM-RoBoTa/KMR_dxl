@@ -187,7 +187,6 @@ void Handler::checkFieldValidity(Fields field)
  * @brief       Get the index for reading/writing a certain field in a m_data_byte_size array
  * @param[in]   field Query control field
  * @retval      Index of the field to be written/read
- * @todo is it used?
  */
 void Handler::getFieldPosition(Fields field, int& field_idx, int& field_length)
 {

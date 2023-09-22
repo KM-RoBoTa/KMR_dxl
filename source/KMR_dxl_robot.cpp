@@ -213,9 +213,6 @@ void BaseRobot::resetMultiturnMotors()
         id = m_all_IDs[i];
         motor = m_hal.getMotorFromID(id);
         if (motor.toReset) {
-
-            usleep(200000);
-
             disableMotors(vector<int>{id});
             setPositionControl_singleMotor(id, motor);
             setMultiturnControl_singleMotor(id, motor);    

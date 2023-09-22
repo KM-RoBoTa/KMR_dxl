@@ -23,8 +23,22 @@ It uses SI units, the only exception being temperature expressed in °C instead 
 - How to [setup](#setup)
 - How to [use](#how-to-use)
 
-## Use rights, credentials...?
+## About
+
+KM-RoBoTa sarl's KMR_dxl library to facilitate Dynamixel control.
+
+### Authors
+Library written by Katarina Lichardova: katarina.lichardova@km-robota.com
+
+based on code from:
+- Laura Paez: laura.paez@km-robota.com
+- Kamilo Melo: kamilo.melo@km-robota.com
+
+### Copyright
+Copyright 2021-2023, Laura Paez Coy and Kamilo Melo. \n
+This code is under MIT licence: https://opensource.org/licenses/MIT
+
 
 
 ## Not yet implemented
-Currently only contains control values for MX64-AR.
+Currently only contains control values for MX64-R.
