@@ -1,8 +1,7 @@
 /**
- * KM-Robota library
  ******************************************************************************
- * @file            kmr_dxl_robot.hpp
- * @brief           Header for the kmr_dxl_robot.cpp file.
+ * @file            KMR_dxl_robot.hpp
+ * @brief           Header for the KMR_dxl_robot.cpp file.
  ******************************************************************************
  * @copyright
  * Copyright 2021-2023 Laura Paez Coy and Kamilo Melo                    \n
@@ -22,6 +21,13 @@
 namespace KMR::dxl
 {
 
+/**
+ * @brief   Class that defines a base robot, to be inherited by a robot class in the project
+ * @details This class contains base necessities for handling a robot with dynamixel motors. \n 
+ *          It provides functions to enable/disable motors, as well as to reset motors in multiturn. \n 
+ *          The user needs to create handlers they need (Writers and Readers) for their specific
+ *          application, as well as their respective reading/writing functions
+ */
 class BaseRobot {
     protected:
         dynamixel::PortHandler   *portHandler_;
@@ -38,9 +44,9 @@ class BaseRobot {
 
         
     public:
-        int *scanned_motor_models;
-        Hal m_hal;  // to put private asap @todo
-        std::vector<int> m_all_IDs;
+        int *scanned_motor_models;  // Dynamixel-defined model numbers of motors in the robot
+        Hal m_hal;  // to put private? @todo
+        std::vector<int> m_all_IDs; // All motor IDs in the robot
 
         BaseRobot(std::vector<int> all_ids, const char *port_name, int baudrate, Hal hal);
         ~BaseRobot();

@@ -1,7 +1,6 @@
 /**
- * KM-Robota library
  ******************************************************************************
- * @file            kmr_dxl_reader.cpp
+ * @file            KMR_dxl_reader.cpp
  * @brief           Defines the Reader class
  ******************************************************************************
  * @copyright
@@ -21,12 +20,19 @@ using std::cout;
 using std::endl;
 using std::vector;
 
+
 namespace KMR::dxl
 {
 
 /**
  * @brief       Constructor for a Reader handler
- * @param[in]   list_fields 
+ * @param[in]   list_fields List of fields to be handled by the reader
+ * @param[in]   ids Motors to be handled by the reader
+ * @param[in]   portHandler Object handling port communication
+ * @param[in]   packetHandler Object handling packets
+ * @param[in]   hal Previouly initialized Hal object
+ * @param[in]   forceIndirect Boolean: 1 to force the reader to be indirect address
+ *              (has no effect if at least 2 fields)
  */
 Reader::Reader(vector<Fields> list_fields, vector<int> ids, dynamixel::PortHandler *portHandler,
                             dynamixel::PacketHandler *packetHandler, Hal hal, bool forceIndirect)
@@ -53,7 +59,7 @@ Reader::Reader(vector<Fields> list_fields, vector<int> ids, dynamixel::PortHandl
 
     m_groupSyncReader = new dynamixel::GroupSyncRead(portHandler_, packetHandler_, m_data_address, m_data_byte_size);
 
-    // Create the table to save parametrized data (to be read or sent)
+    // Create the table to save read data
     m_dataFromMotor = new float *[m_ids.size()]; 
     for (int i=0; i<m_ids.size(); i++)
         m_dataFromMotor[i] = new float[m_list_fields.size()];

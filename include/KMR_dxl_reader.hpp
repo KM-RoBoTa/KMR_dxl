@@ -1,8 +1,7 @@
 /**
- * KM-Robota library
  ******************************************************************************
- * @file            reader.hpp
- * @brief           Header for the reader.cpp file.
+ * @file            KMR_dxl_reader.hpp
+ * @brief           Header for the KMR_dxl_reader.cpp file.
  ******************************************************************************
  * @copyright
  * Copyright 2021-2023 Laura Paez Coy and Kamilo Melo                    \n
@@ -38,9 +37,9 @@ protected:
 	float position2Angle(int32_t position, int id, float units);
 
 public:
-	float **m_dataFromMotor;
-	int *motorIndices_dataFromMotor;
-	int *fieldIndices_dataFromMotor;
+	float **m_dataFromMotor;  // Table holding the read values from motors
+	int *motorIndices_dataFromMotor; // used? @todo
+	int *fieldIndices_dataFromMotor; // used? @todo
 
 	Reader(std::vector<Fields> list_fields, std::vector<int> ids,
 			dynamixel::PortHandler *portHandler,

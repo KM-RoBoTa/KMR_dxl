@@ -1,7 +1,6 @@
 /**
- * KM-Robota library
  ******************************************************************************
- * @file            kmr_dxl_writer.cpp
+ * @file            KMR_dxl_writer.cpp
  * @brief           Defines the Writer class
  ******************************************************************************
  * @copyright
@@ -30,7 +29,14 @@ namespace KMR::dxl
 {
 
 /**
- * @brief       Constructor for LibDxlWriter
+ * @brief       Constructor for a Writer handler
+ * @param[in]   list_fields List of fields to be handled by the writer
+ * @param[in]   ids Motors to be handled by the writer
+ * @param[in]   portHandler Object handling port communication
+ * @param[in]   packetHandler Object handling packets
+ * @param[in]   hal Previouly initialized Hal object
+ * @param[in]   forceIndirect Boolean: 1 to force the writer to be indirect address
+ *              (has no effect if at least 2 fields)
  */
 Writer::Writer(vector<Fields> list_fields, vector<int> ids, dynamixel::PortHandler *portHandler,
                             dynamixel::PacketHandler *packetHandler, Hal hal, bool forceIndirect)
@@ -70,7 +76,7 @@ Writer::Writer(vector<Fields> list_fields, vector<int> ids, dynamixel::PortHandl
  */
 Writer::~Writer()
 {
-    cout << "The Dxl Writer object is being deleted" << endl;
+    //cout << "The Dxl Writer object is being deleted" << endl;
 }
 
 
@@ -78,17 +84,32 @@ Writer::~Writer()
  *****************************************************************************
  *                             Data writing
  ****************************************************************************/
+
+/**
+ * @brief   Clear the parameters list
+ */
 void Writer::clearParam()
 {
     m_groupSyncWriter->clearParam();
 }
 
+/**
+ * @brief       Add data to be written to a motor
+ * @param[in]   id ID of the motor
+ * @param[in]   data Parametrized data to be sent to the motor
+ * @retval      bool: true if data-to-send added to the list successfully
+ */
 bool Writer::addParam(uint8_t id, uint8_t* data)
 {
     bool dxl_addparam_result = m_groupSyncWriter->addParam(id, data);
     return dxl_addparam_result;
 }
 
+/**
+ * @brief       Send the previously prepared data with addDataToWrite to motors
+ * @param[in]   ids List of motors who will receive data
+ * @retval      void
+ */
 void Writer::syncWrite(vector<int> ids)
 {
     bool dxl_addparam_result;
@@ -113,25 +134,18 @@ void Writer::syncWrite(vector<int> ids)
     dxl_comm_result = m_groupSyncWriter->txPacket();
     if (dxl_comm_result != COMM_SUCCESS)
         cout << packetHandler_->getTxRxResult(dxl_comm_result) << endl;
-    //else
-        //cout << "Sync write executed correctly" << endl;
 
 }
 
                                                                                                                                                                                      
 /**
  * @brief       Convert angle input into position data based on motor model provided
- * @param[in]   angle Angle to be converted, in rad or degrees
- * @param[in]   model Motor model, as encoded on Dynamixel motor's control table
- * @param[in]   isRadians Boolean flag for the angle's units, true if radians (radians by default)
+ * @param[in]   angle Angle to be converted, in rad
+ * @param[in]   id ID of the motor to receive the position input
  * @return      Position value corresponding to the joint angle (0 degrees or rad -> mid-position)
  */
 int Writer::angle2Position(float angle, int id)
 {
-/*     cout << endl;
-    cout << "Angle at start: " << angle << endl; */
-
-
 	int position = 2048;
     int motor_idx = m_hal.getMotorsListIndexFromID(id);
     int model = m_hal.m_motors_list[motor_idx].scanned_model;
@@ -158,6 +172,13 @@ int Writer::angle2Position(float angle, int id)
     return position;
 }
 
+/**
+ * @brief           Saturate input value between input limits
+ * @param[in]       lower_bound Min. value the input can take
+ * @param[in]       upper_bound Max. value the input can take
+ * @param[in/out]   param Input value to be saturated
+ * @return          void
+ */
 void Writer::bindParameter(int lower_bound, int upper_bound, int& param)
 {
     if (param > upper_bound)
@@ -168,9 +189,11 @@ void Writer::bindParameter(int lower_bound, int upper_bound, int& param)
 
 
 /**
- * @brief       Transform a target position value into the shape required by Dynamixel motors.
- * @param[in]   data Target value to the motors
- * @param[out]  param_array Transformed data into the required shape, which will be sent to motors
+ * @brief       Save a parametrized data into the general table
+ * @param[in]   data Parametrized data to be sent to motor
+ * @param[in]   motor_idx Index of the motor
+ * @param[in]   field_idx Index of the field (type of data)
+ * @param[in]   field_length Byte size of the data
  * @retval      void
  */
 void Writer::populateDataParam(int32_t data, int motor_idx, int field_idx, int field_length)
@@ -193,6 +216,11 @@ void Writer::populateDataParam(int32_t data, int motor_idx, int field_idx, int f
 }
 
 
+/**
+ * @brief       Check if the goal position will place the motor over a full turn
+ * @param[in]   position Parametrized goal position of a motor
+ * @retval      Boolean: 1 if over a full turn, 0 otherwise
+ */
 bool Writer::multiturnOverLimit(int position)
 {
     if (position > MULTITURN_MAX || position < MULTITURN_MIN)

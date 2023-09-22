@@ -1,8 +1,7 @@
 /**
- * KM-Robota library
  ******************************************************************************
- * @file            writer.hpp
- * @brief           Header for the writer.cpp file.
+ * @file            KMR_dxl_writer.hpp
+ * @brief           Header for the KMR_dxl_writer.cpp file.
  ******************************************************************************
  * @copyright
  * Copyright 2021-2023 Laura Paez Coy and Kamilo Melo                    \n
@@ -22,11 +21,16 @@
 namespace KMR::dxl
 {
 
+/**
+ * @brief       Custom Writer class that contains a dynamixel::GroupSyncWrite object
+ * @details 	This custom Writer class simplifies greatly the creation of dynamixel writing handlers. \n 
+ * 				It takes care automatically of address assignment, even for indirect address handling. 
+ */
 class Writer : public Handler
 {
 private:
     dynamixel::GroupSyncWrite *m_groupSyncWriter;
-    uint8_t **m_dataParam;
+    uint8_t **m_dataParam; // Table containing all parametrized data to be sent next step
 
     int angle2Position(float angle, int id);
     void bindParameter(int lower_bound, int upper_bound, int &param);
@@ -48,12 +52,12 @@ public:
 // Templates need to be defined in hpp
 
 /**
- * @brief       Update the current to-be-sent-to-motors data table with fresh values
- * @param[in]   data Fresh data to be sent to motors (eg, new goal positions). \n
- *              NB: If only one value is input, it will be sent to all motors
+ * @brief       Add data to the list to be sent later with syncWrite
+ * @param[in]   data Data to be sent to motors (eg, new goal positions), in SI units. \n
+ *              NB: If only one value is input, it will be sent to all input motors
  * @param[in]   field Control field to receive the data
  * @param[in]   ids List of motors that will receive the data
- * @retval      Void
+ * @retval      void
  */
 template <typename T>
 void Writer::addDataToWrite(std::vector<T> data, Fields field, std::vector<int> ids)

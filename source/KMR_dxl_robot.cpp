@@ -1,7 +1,6 @@
 /**
- * KM-Robota library
  ******************************************************************************
- * @file            kmr_dxl_robot.cpp
+ * @file            KMR_dxl_robot.cpp
  * @brief           Defines the BaseRobot class
  ******************************************************************************
  * @copyright
@@ -32,11 +31,11 @@ namespace KMR::dxl
 
 
 /**
- * @brief       Constructor for LibRobot
- * @param[in]   num_motors Number of motors in the robot
+ * @brief       Constructor for BaseRobot
  * @param[in]   all_ids List of IDs of all the motors in the robot
+ * @param[in]   port_name Name of the port handling the communication with motors
  * @param[in]   baudrate Baudrate of the port handling communication with motors
- * @param[in]   port_name Name of the port handling communication with motors
+ * @param[in]   hal Previously initialized Hal object
  */
 BaseRobot::BaseRobot(vector<int> all_ids, const char *port_name, int baudrate, Hal hal)
 {
@@ -46,7 +45,7 @@ BaseRobot::BaseRobot(vector<int> all_ids, const char *port_name, int baudrate, H
     // Connect U2D2
     init_comm(port_name, baudrate, PROTOCOL_VERSION);
 
-    // Writing handler, taking care of enabling/disabling motors
+    // 2 integrated handlers: motor enabling and mode setter
     m_motor_enabler = new Writer(vector<Fields>{TRQ_ENABLE}, m_all_IDs, portHandler_, packetHandler_, m_hal, 0);
     m_controlMode_setter = new Writer(vector<Fields>{OP_MODE}, m_all_IDs, portHandler_, packetHandler_, m_hal, 0);
 
@@ -61,12 +60,12 @@ BaseRobot::BaseRobot(vector<int> all_ids, const char *port_name, int baudrate, H
  */
 BaseRobot::~BaseRobot()
 {
-    cout << "The Robot object is being deleted" << endl;
+    //cout << "The Robot object is being deleted" << endl;
 }
 
 
 /**
- * @brief       Initialize the serial communication for a LibRobot instance
+ * @brief       Initialize the serial communication
  * @param[in]   port_name Name of the port handling communication with motors
  * @param[in]   baudrate Baudrate of the port handling communication with motors
  * @param[in]   protocol_version Protocol version, for the communication (U2D2)
@@ -188,7 +187,7 @@ void BaseRobot::setMultiturnControl_singleMotor(int id, Motor motor)
 
 /**
  * @brief       Set single motor to position control mode. Used for multiturn reset
- * @param[in]   id Motor id to get set to conotrl position mode
+ * @param[in]   id Motor id to get set to control position mode
  * @param[in]   motor Query motor 
  * @retval      void
  */

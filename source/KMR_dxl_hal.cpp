@@ -1,7 +1,7 @@
 /**
  ******************************************************************************
  * @file            KMR_dxl_hal.cpp
- * @brief           Hardware abstraction layer for Dynamixel motors
+ * @brief           Defines the Hal class
  ******************************************************************************
  * @copyright
  * Copyright 2021-2023 Laura Paez Coy and Kamilo Melo                    \n
