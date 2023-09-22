@@ -200,9 +200,10 @@ void BaseRobot::setPositionControl_singleMotor(int id, Motor motor)
 
 
 /**
- * @brief       Reset multiturn motors flagged as needing a reset. Use after a "write" function
+ * @brief       Reset multiturn motors flagged as needing a reset.
  * @retval      void
- * @note        In order to avoid undefined behavior, the sleep delay may be necessary before resetting
+ * @note        Make sure the motors had enough time to execute the goal position command before 
+ *              calling this function. Failure to do so results in undefined behavior.
  */
 void BaseRobot::resetMultiturnMotors()
 {
