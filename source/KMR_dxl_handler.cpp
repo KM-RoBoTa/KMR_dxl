@@ -66,6 +66,9 @@ void Handler::checkMotorCompatibility(Fields field)
         }
     }
 
+    if (m_ids.size() == 1)
+        address = m_hal.getControlParametersFromID(m_ids[0], field).address;
+
     m_data_address = address + biggest_data_offset;
 
     // Now that we have the guarantee that all indirect data begin at the same address and we found the first 
@@ -142,6 +145,9 @@ void Handler::getDataByteSize()
                 exit(1);
             }
         }
+
+        if (m_ids.size() == 1)
+            length = m_hal.getControlParametersFromID(m_ids[0], field).length;
 
         m_field_lengths[i] = length;
         m_field_indices[i] = m_data_byte_size;
