@@ -59,7 +59,7 @@ struct Motor_node {
  */
 enum Motor_models
 {
-    MX_64R, NBR_MODELS, UNDEF_M
+    MX_64R, MX_106, NBR_MODELS, UNDEF_M
 };
 
 /**

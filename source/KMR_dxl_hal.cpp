@@ -207,10 +207,16 @@ Motor_models Hal::string2Motors_models(const string &str)
 {
     if (str == "MX_64R")
         return MX_64R;
-    else
+    else if(str == "MX_106")
+        return MX_106;
+    else {
+        cout << "Unknown model!" << endl;
+        exit(1);
         return UNDEF_M;
-    /* else if(str == "TUESDAY") return TUESDAY;
-    else if(str == "WEDNESDAY") return WEDNESDAY;
+    }
+
+
+         /*    else if(str == "WEDNESDAY") return WEDNESDAY;
     else if(str == "THURSDAY") return THURSDAY;
     else if(str == "FRIDAY") return FRIDAY;
     else if(str == "SATURDAY") return SATURDAY;

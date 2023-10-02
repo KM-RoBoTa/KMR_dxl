@@ -152,21 +152,15 @@ int Writer::angle2Position(float angle, int id)
     float units = m_hal.getControlParametersFromID(id, GOAL_POS).unit;
     Motor motor = m_hal.getMotorFromID(id);
 
-    if (model == 1030 || model == 1000 || model == 311){
-    	int Model_max_position = 4095;
-        int Model_min_position = 0;
-		position = angle/units + Model_max_position/2 + 0.5;
+    int Model_max_position = 4095;
+    int Model_min_position = 0;
+    position = angle/units + Model_max_position/2 + 0.5;
 
-        if (!motor.multiturn)
-            bindParameter(Model_min_position, Model_max_position, position);
-        else {
-            if (multiturnOverLimit(position))
-                m_hal.updateResetStatus(id, 1);
-        }
-    }
+    if (!motor.multiturn)
+        bindParameter(Model_min_position, Model_max_position, position);
     else {
-        cout << "This model is unknown, cannot calculate position from angle!" << endl;
-        return (1);
+        if (multiturnOverLimit(position))
+            m_hal.updateResetStatus(id, 1);
     }
 
     return position;
