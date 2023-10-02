@@ -64,7 +64,7 @@ Reader::Reader(vector<Fields> list_fields, vector<int> ids, dynamixel::PortHandl
     for (int i=0; i<m_ids.size(); i++)
         m_dataFromMotor[i] = new float[m_list_fields.size()];
 
-    cout << "Dxl reader created!" << endl;
+    //cout << "Dxl reader created!" << endl;
 
 }
 
