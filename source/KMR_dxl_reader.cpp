@@ -238,15 +238,8 @@ float Reader::position2Angle(int32_t position, int id, float units)
     int motor_idx = m_hal.getMotorsListIndexFromID(id);
     int model = m_hal.m_motors_list[motor_idx].scanned_model;
 
-    if (model == 1030 || model == 1000 || model == 311){
-    	int Model_max_position = 4095;
-        
-        angle = ((float) position - Model_max_position/2) * units;
-    }
-    else {
-        cout << "This model is unknown, cannot calculate angle from position!" << endl;
-        return (1);
-    }
+    int Model_max_position = 4095;    
+    angle = ((float) position - Model_max_position/2) * units;
 
     return angle;
 }
