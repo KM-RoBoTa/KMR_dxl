@@ -61,7 +61,8 @@ class BaseRobot {
         void setMinPosition(vector<float> maxPositions);
         void setMaxVoltage(vector<float> maxVoltages);
         void setMinVoltage(vector<float> maxVoltages);       
-        void setControlModes(vector<int> controlModes);        
+        void setControlModes(vector<int> controlModes);  
+        void setAllDelay(int val);      
 };
 
 }

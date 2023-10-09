@@ -310,4 +310,21 @@ void BaseRobot::setMaxPosition(vector<float> maxPositions)
     m_EEPROM_writer->~Writer();
 }
 
+/**
+ * @brief   Set the return delay to all motors
+ * @retval  void
+ */
+void BaseRobot::setAllDelay(int val)
+{
+    m_EEPROM_writer = new KMR::dxl::Writer(vector<KMR::dxl::Fields> {KMR::dxl::RETURN_DELAY}, 
+                                            m_all_IDs, portHandler_, packetHandler_, m_hal, 0);
+
+    m_EEPROM_writer->addDataToWrite(vector<int>{val}, KMR::dxl::RETURN_DELAY, m_all_IDs);
+    m_EEPROM_writer->syncWrite(m_all_IDs);
+
+    // Destruct object by explicitly calling destructor, but keep the memory
+    m_EEPROM_writer->~Writer();
+}
+
+
 }
