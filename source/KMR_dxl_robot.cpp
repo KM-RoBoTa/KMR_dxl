@@ -225,4 +225,89 @@ void BaseRobot::resetMultiturnMotors()
 }
 
 
+/*
+******************************************************************************
+ *                               EEPROM init writing
+ ****************************************************************************/
+
+/**
+ * @brief       Set the control modes of motors
+ * @param[in]   controlModes Control modes to be set to motors
+ * @retval      void
+ */
+void BaseRobot::setControlModes(vector<int> controlModes)
+{
+    m_controlMode_setter->addDataToWrite(controlModes, KMR::dxl::OP_MODE, m_all_IDs);
+    m_controlMode_setter->syncWrite(m_all_IDs);
+}
+
+
+/**
+ * @brief       Set the minimum voltage of motors
+ * @param[in]   minVoltages Min. allowed voltages in motors
+ * @retval      void
+ */                                 
+void BaseRobot::setMinVoltage(vector<float> minVoltages)
+{
+    m_EEPROM_writer = new KMR::dxl::Writer(vector<KMR::dxl::Fields> {KMR::dxl::MIN_VOLT_LIMIT}, 
+                                            m_all_IDs, portHandler_, packetHandler_, m_hal, 0);
+
+    m_EEPROM_writer->addDataToWrite(minVoltages, KMR::dxl::MIN_VOLT_LIMIT, m_all_IDs);
+    m_EEPROM_writer->syncWrite(m_all_IDs);
+
+    // Destruct object by explicitly calling destructor, but keep the memory
+    m_EEPROM_writer->~Writer();
+}
+
+/**
+ * @brief       Set the maximum voltage of motors
+ * @param[in]   minVoltages Max. allowed voltages in motors
+ * @retval      void
+ */                                 
+void BaseRobot::setMaxVoltage(vector<float> maxVoltages)
+{
+    m_EEPROM_writer = new KMR::dxl::Writer(vector<KMR::dxl::Fields> {KMR::dxl::MAX_VOLT_LIMIT}, 
+                                            m_all_IDs, portHandler_, packetHandler_, m_hal, 0);
+
+    m_EEPROM_writer->addDataToWrite(maxVoltages, KMR::dxl::MAX_VOLT_LIMIT, m_all_IDs);
+    m_EEPROM_writer->syncWrite(m_all_IDs);
+
+    // Destruct object by explicitly calling destructor, but keep the memory
+    m_EEPROM_writer->~Writer();
+}
+
+/**
+ * @brief       Set the minimum position of motors
+ * @param[in]   minPositions Min. positions for motors (lower saturation) 
+ * @retval      void
+ */                                 
+void BaseRobot::setMinPosition(vector<float> minPositions)
+{
+    m_EEPROM_writer = new KMR::dxl::Writer(vector<KMR::dxl::Fields> {KMR::dxl::MIN_POS_LIMIT}, 
+                                            m_all_IDs, portHandler_, packetHandler_, m_hal, 0);
+
+    m_EEPROM_writer->addDataToWrite(minPositions, KMR::dxl::MIN_POS_LIMIT, m_all_IDs);
+    m_EEPROM_writer->syncWrite(m_all_IDs);
+
+    // Destruct object by explicitly calling destructor, but keep the memory
+    m_EEPROM_writer->~Writer();
+}
+
+/**
+ * @brief       Set the maximum position of motors
+ * @param[in]   maxPositions Max. positions for motors (upper saturation) 
+ * @retval      void
+ */                                 
+void BaseRobot::setMaxPosition(vector<float> maxPositions)
+{
+    m_EEPROM_writer = new KMR::dxl::Writer(vector<KMR::dxl::Fields> {KMR::dxl::MAX_POS_LIMIT}, 
+                                            m_all_IDs, portHandler_, packetHandler_, m_hal, 0);
+
+    m_EEPROM_writer->addDataToWrite(maxPositions, KMR::dxl::MAX_POS_LIMIT, m_all_IDs);
+    m_EEPROM_writer->syncWrite(m_all_IDs);
+
+    // Destruct object by explicitly calling destructor, but keep the memory
+    m_EEPROM_writer->~Writer();
+}
+
 }

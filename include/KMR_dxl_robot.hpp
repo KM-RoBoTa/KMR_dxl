@@ -35,6 +35,7 @@ class BaseRobot {
 
         Writer *m_motor_enabler;
         Writer *m_controlMode_setter;
+        Writer *m_EEPROM_writer;
 
 
         void init_comm(const char *port_name, int baudrate, float protocol_version);
@@ -56,6 +57,11 @@ class BaseRobot {
         void disableMotors();
         void disableMotors(std::vector<int> ids);
         void resetMultiturnMotors();
+        void setMaxPosition(vector<float> maxPositions);
+        void setMinPosition(vector<float> maxPositions);
+        void setMaxVoltage(vector<float> maxVoltages);
+        void setMinVoltage(vector<float> maxVoltages);       
+        void setControlModes(vector<int> controlModes);        
 };
 
 }
