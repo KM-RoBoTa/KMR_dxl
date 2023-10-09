@@ -57,11 +57,11 @@ class BaseRobot {
         void disableMotors();
         void disableMotors(std::vector<int> ids);
         void resetMultiturnMotors();
-        void setMaxPosition(vector<float> maxPositions);
-        void setMinPosition(vector<float> maxPositions);
-        void setMaxVoltage(vector<float> maxVoltages);
-        void setMinVoltage(vector<float> maxVoltages);       
-        void setControlModes(vector<int> controlModes);  
+        void setMaxPosition(std::vector<float> maxPositions);
+        void setMinPosition(std::vector<float> maxPositions);
+        void setMaxVoltage(std::vector<float> maxVoltages);
+        void setMinVoltage(std::vector<float> maxVoltages);       
+        void setControlModes(std::vector<int> controlModes);  
         void setAllDelay(int val);      
 };
 
