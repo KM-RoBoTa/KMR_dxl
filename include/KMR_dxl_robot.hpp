@@ -35,7 +35,7 @@ class BaseRobot {
 
         Writer *m_motor_enabler;
         Writer *m_controlMode_setter;
-        Writer *m_EEPROM_writer;
+        //Writer *m_EEPROM_writer;
 
 
         void init_comm(const char *port_name, int baudrate, float protocol_version);

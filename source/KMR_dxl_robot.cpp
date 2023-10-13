@@ -237,7 +237,7 @@ void BaseRobot::resetMultiturnMotors()
  */
 void BaseRobot::setControlModes(vector<int> controlModes)
 {
-    m_controlMode_setter->addDataToWrite(controlModes, KMR::dxl::OP_MODE, m_all_IDs);
+    m_controlMode_setter->addDataToWrite(controlModes, OP_MODE, m_all_IDs);
     m_controlMode_setter->syncWrite(m_all_IDs);
 }
 
@@ -249,14 +249,14 @@ void BaseRobot::setControlModes(vector<int> controlModes)
  */                                 
 void BaseRobot::setMinVoltage(vector<float> minVoltages)
 {
-    m_EEPROM_writer = new KMR::dxl::Writer(vector<KMR::dxl::Fields> {KMR::dxl::MIN_VOLT_LIMIT}, 
+    Writer* EEPROM_writer = new Writer(vector<Fields> {MIN_VOLT_LIMIT}, 
                                             m_all_IDs, portHandler_, packetHandler_, m_hal, 0);
 
-    m_EEPROM_writer->addDataToWrite(minVoltages, KMR::dxl::MIN_VOLT_LIMIT, m_all_IDs);
-    m_EEPROM_writer->syncWrite(m_all_IDs);
+    EEPROM_writer->addDataToWrite(minVoltages, KMR::dxl::MIN_VOLT_LIMIT, m_all_IDs);
+    EEPROM_writer->syncWrite(m_all_IDs);
 
     // Destruct object by explicitly calling destructor, but keep the memory
-    m_EEPROM_writer->~Writer();
+    //m_EEPROM_writer->~Writer();
 }
 
 /**
@@ -266,14 +266,14 @@ void BaseRobot::setMinVoltage(vector<float> minVoltages)
  */                                 
 void BaseRobot::setMaxVoltage(vector<float> maxVoltages)
 {
-    m_EEPROM_writer = new KMR::dxl::Writer(vector<KMR::dxl::Fields> {KMR::dxl::MAX_VOLT_LIMIT}, 
+    Writer* EEPROM_writer = new Writer(vector<Fields> {MAX_VOLT_LIMIT}, 
                                             m_all_IDs, portHandler_, packetHandler_, m_hal, 0);
 
-    m_EEPROM_writer->addDataToWrite(maxVoltages, KMR::dxl::MAX_VOLT_LIMIT, m_all_IDs);
-    m_EEPROM_writer->syncWrite(m_all_IDs);
+    EEPROM_writer->addDataToWrite(maxVoltages, MAX_VOLT_LIMIT, m_all_IDs);
+    EEPROM_writer->syncWrite(m_all_IDs);
 
     // Destruct object by explicitly calling destructor, but keep the memory
-    m_EEPROM_writer->~Writer();
+    //m_EEPROM_writer->~Writer();
 }
 
 /**
@@ -283,14 +283,14 @@ void BaseRobot::setMaxVoltage(vector<float> maxVoltages)
  */                                 
 void BaseRobot::setMinPosition(vector<float> minPositions)
 {
-    m_EEPROM_writer = new KMR::dxl::Writer(vector<KMR::dxl::Fields> {KMR::dxl::MIN_POS_LIMIT}, 
+    Writer* EEPROM_writer = new Writer(vector<Fields> {MIN_POS_LIMIT}, 
                                             m_all_IDs, portHandler_, packetHandler_, m_hal, 0);
 
-    m_EEPROM_writer->addDataToWrite(minPositions, KMR::dxl::MIN_POS_LIMIT, m_all_IDs);
-    m_EEPROM_writer->syncWrite(m_all_IDs);
+    EEPROM_writer->addDataToWrite(minPositions, MIN_POS_LIMIT, m_all_IDs);
+    EEPROM_writer->syncWrite(m_all_IDs);
 
     // Destruct object by explicitly calling destructor, but keep the memory
-    m_EEPROM_writer->~Writer();
+    //EEPROM_writer->~Writer();
 }
 
 /**
@@ -300,14 +300,14 @@ void BaseRobot::setMinPosition(vector<float> minPositions)
  */                                 
 void BaseRobot::setMaxPosition(vector<float> maxPositions)
 {
-    m_EEPROM_writer = new KMR::dxl::Writer(vector<KMR::dxl::Fields> {KMR::dxl::MAX_POS_LIMIT}, 
+    Writer* EEPROM_writer = new Writer(vector<Fields> {MAX_POS_LIMIT}, 
                                             m_all_IDs, portHandler_, packetHandler_, m_hal, 0);
 
-    m_EEPROM_writer->addDataToWrite(maxPositions, KMR::dxl::MAX_POS_LIMIT, m_all_IDs);
-    m_EEPROM_writer->syncWrite(m_all_IDs);
+    EEPROM_writer->addDataToWrite(maxPositions, MAX_POS_LIMIT, m_all_IDs);
+    EEPROM_writer->syncWrite(m_all_IDs);
 
     // Destruct object by explicitly calling destructor, but keep the memory
-    m_EEPROM_writer->~Writer();
+    //m_EEPROM_writer->~Writer();
 }
 
 /**
@@ -316,14 +316,14 @@ void BaseRobot::setMaxPosition(vector<float> maxPositions)
  */
 void BaseRobot::setAllDelay(int val)
 {
-    m_EEPROM_writer = new KMR::dxl::Writer(vector<KMR::dxl::Fields> {KMR::dxl::RETURN_DELAY}, 
+    Writer* EEPROM_writer = new Writer(vector<Fields> {RETURN_DELAY}, 
                                             m_all_IDs, portHandler_, packetHandler_, m_hal, 0);
 
-    m_EEPROM_writer->addDataToWrite(vector<int>{val}, KMR::dxl::RETURN_DELAY, m_all_IDs);
-    m_EEPROM_writer->syncWrite(m_all_IDs);
+    EEPROM_writer->addDataToWrite(vector<int>{val}, RETURN_DELAY, m_all_IDs);
+    EEPROM_writer->syncWrite(m_all_IDs);
 
     // Destruct object by explicitly calling destructor, but keep the memory
-    m_EEPROM_writer->~Writer();
+    //m_EEPROM_writer->~Writer();
 }
 
 
