@@ -126,7 +126,6 @@ void Writer::syncWrite(vector<int> ids)
 
         if (dxl_addparam_result != true) {
             cout << "Adding parameters failed for ID = " << id << endl;
-            exit(1);
         }
     }
 

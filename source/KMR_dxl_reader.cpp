@@ -118,7 +118,6 @@ void Reader::syncRead(vector<int> ids)
         dxl_addparam_result = addParam(ids[i]);
         if (dxl_addparam_result != true) {
             cout << "Adding parameters failed for ID = " << ids[i] << endl;
-            exit(1);
         }
     }
 
@@ -126,7 +125,6 @@ void Reader::syncRead(vector<int> ids)
     dxl_comm_result = m_groupSyncReader->txRxPacket();
     if (dxl_comm_result != COMM_SUCCESS){
         cout << packetHandler_->getTxRxResult(dxl_comm_result) << endl;
-        exit(1);
     }
 
     checkReadSuccessful(ids);
@@ -158,7 +156,6 @@ void Reader::checkReadSuccessful(vector<int> ids)
             if (dxl_getdata_result != true)
             {
                 fprintf(stderr, "[ID:%03d] groupSyncRead getdata failed \n", ids[i]);
-                exit(1);
             }
 
             offset += field_length;
