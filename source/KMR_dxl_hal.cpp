@@ -209,6 +209,8 @@ Motor_models Hal::string2Motors_models(const string &str)
         return MX_64R;
     else if(str == "MX_106")
         return MX_106;
+    else if(str == "MX_28")
+        return MX_28;  
     else {
         cout << "Unknown model!" << endl;
         exit(1);
