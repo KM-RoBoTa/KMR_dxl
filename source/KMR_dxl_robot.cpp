@@ -110,6 +110,7 @@ void BaseRobot::check_comm()
         result = packetHandler_->ping(portHandler_, id, &model_number, &dxl_error);
         if (result != COMM_SUCCESS) {
             cout << "Failed to ping, check config file and motor ID: " << id << endl;
+            cout << "Check also the power source and the cabling ;) " << endl;
             cout << packetHandler_->getTxRxResult(result) << endl;
             exit(1);
         }
