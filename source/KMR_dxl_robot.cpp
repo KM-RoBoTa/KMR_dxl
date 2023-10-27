@@ -79,7 +79,7 @@ void BaseRobot::init_comm(const char *port_name, int baudrate, float protocol_ve
         exit(1);
     }
     else
-        cout<< "Succeed to open the motors port" <<endl;
+        cout<< "Succeeded to open the motors port!" <<endl;
 
     if (!portHandler_->setBaudRate(baudrate)) {
         cout<< "Failed to set baudrate!" <<endl;

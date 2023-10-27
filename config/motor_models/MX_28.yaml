@@ -7,7 +7,7 @@
 
 
 # EEPROM
-model_name: MX_28R    # !!!! The underscore instead of hyphen very important
+model_name: MX_28    # !!!! The underscore instead of hyphen very important
 operating_modes:
   - current_control: 0
     velocity_control: 1
