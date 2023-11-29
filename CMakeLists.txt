@@ -19,7 +19,18 @@ target_include_directories(KMR_dxl PUBLIC include)
 target_link_directories(KMR_dxl PUBLIC /usr/local/lib)
 
 # Link the used libraries: dynamixel and yaml-cpp
-target_link_libraries(KMR_dxl yaml-cpp dxl_x64_cpp)
+target_link_libraries(KMR_dxl yaml-cpp)
+
+if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "x86_64")
+    message(STATUS "Processor used: " ${CMAKE_SYSTEM_PROCESSOR})
+    target_link_libraries(KMR_dxl dxl_x64_cpp)
+elseif(${CMAKE_SYSTEM_PROCESSOR} MATCHES "armv7l")
+    message(STATUS "Processor used: " ${CMAKE_SYSTEM_PROCESSOR})
+    target_link_libraries(KMR_dxl dxl_sbc_cpp)
+else()
+    message(FATAL_ERROR "ERROR: Unknown processor architecture! CMake will exit")
+endif()
+
 
 # Generate Docs
 option(BUILD_DOCS "Generate Docs" ON)
