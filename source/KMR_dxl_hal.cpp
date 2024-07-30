@@ -28,7 +28,6 @@ namespace YAML
  *              Convert YAML::Node to Data_node
  * @param[in]   node YAML:Node read by the YAML parser
  * @param[out]  data_node Instance of Data_node to store the info gotten from node
- * @retval      void
  */
 template <>
 struct convert<KMR::dxl::Data_node>
@@ -51,7 +50,6 @@ struct convert<KMR::dxl::Data_node>
  *              Convert YAML::Node to Motor_node
  * @param[in]   node YAML:Node read by the YAML parser
  * @param[out]  motor_node Instance of Motor_node to store the info gotten from node
- * @retval      void
  */
 template <>
 struct convert<KMR::dxl::Motor_node>
@@ -72,7 +70,6 @@ struct convert<KMR::dxl::Motor_node>
  *              Convert YAML::Node to Control_modes
  * @param[in]   node YAML:Node read by the YAML parser
  * @param[out]  motor_node Instance of Control_modes to contain the info gotten from node
- * @retval      void
  */
 template <>
 struct convert<KMR::dxl::Control_modes>
@@ -108,8 +105,20 @@ Hal::Hal()
         m_control_table[i] = new Motor_data_field[NBR_FIELDS];
 
     m_controlModesPerModel = new Control_modes[NBR_MODELS];
+}
 
-    //cout << "[KMR::dxl] Hal created" << endl;
+/**
+ * @brief       Destructor for Hal
+ */
+Hal::~Hal()
+{
+    delete[] m_controlModesPerModel;
+
+    for (int i=0; i<NBR_MODELS; i++)
+        delete[] m_control_table[i];
+    delete[] m_control_table;
+    
+    free(m_motors_list);
 }
 
 /**
@@ -136,15 +145,6 @@ vector<int> Hal::init(char *motor_config_file, char* path_to_KMR_dxl)
 }
 
 
-/**
- * @brief       Destructor for Hal
- */
-Hal::~Hal()
-{
-    //cout << "[KMR::dxl] The Hal object is being deleted" << endl;
-}
-
-
 /*****************************************************************************
  *                   Creation of the control table
  ****************************************************************************/
@@ -152,7 +152,6 @@ Hal::~Hal()
 /**
  * @brief       Populate the control table's data fields for all motor models in the project
  * @param[in]   path_to_KMR_dxl Path from the working directory (build) to this library's folder
- * @retval      void
  */
 void Hal::populate_control_table(char* path_to_KMR_dxl)
 {
@@ -357,7 +356,6 @@ Fields Hal::string2Fields(const string &str)
  * @brief       Convert a Data_node instance to a Motor_data_field instance
  * @param[in]   data_node Data_node instance to be converted
  * @param[out]  motor_data_field Motor_data_field instance to store the info from the node
- * @retval      void
  */
 void Hal::dataNode2Motor_data_field(Data_node &data_node, Motor_data_field &motor_data_field)
 {
@@ -370,7 +368,6 @@ void Hal::dataNode2Motor_data_field(Data_node &data_node, Motor_data_field &moto
  * @brief       Convert a Motor_node instance to a Motor instance
  * @param[in]   motor_node Motor_node instance to be converted
  * @param[out]  motor Motor instance to store the info from the node
- * @retval      void
  */
 void Hal::motorNode2Motor(Motor_node &motor_node, Motor &motor)
 {
@@ -387,7 +384,6 @@ void Hal::motorNode2Motor(Motor_node &motor_node, Motor &motor)
 /**
  * @brief       Parse the motor configuration file and populate the list of motors
  * @param[in]   config_file Yaml config file for the motors in the robot
- * @return      void
  */
 void Hal::parse_motor_config(char *config_file)
 {
@@ -425,7 +421,6 @@ void Hal::parse_motor_config(char *config_file)
 /**
  * @brief       Create the list of unique motor models used in the robot
  * @param[in]   motor_model_string Model of the currently querried motor
- * @retval      void
  */
 void Hal::update_unique_models_list(string motor_model_string)
 {
@@ -449,7 +444,6 @@ void Hal::update_unique_models_list(string motor_model_string)
 
 /**
  * @brief       Extract the list of all motor IDs from the motors list
- * @return      void
  */
 void Hal::get_ID_list_from_motors_list()
 {
@@ -541,7 +535,6 @@ Motor Hal::getMotorFromID(int id)
  * @param[in]   id ID of the query motor
  * @param[in]   data_length Byte length of the data that was just assigned an indirect address
  * @param[in]   field_name Type of field that was just assigned an indirect address (address or data)
- * @retval      void
  */
 void Hal::addMotorOffsetFromID(int id, uint8_t data_length, std::string field_name)
 {
@@ -563,7 +556,6 @@ void Hal::addMotorOffsetFromID(int id, uint8_t data_length, std::string field_na
  * @brief       Update a motor's "to reset" status in multiturn mode
  * @param[in]   id ID of the query motor
  * @param[in]   status Boolean: 1 if need to reset, 0 if not
- * @retval      void
  */
 void Hal::updateResetStatus(int id, int status)
 {
@@ -575,7 +567,6 @@ void Hal::updateResetStatus(int id, int status)
 /**
  * @brief       For each motor, save all operating modes control values. \n 
  *              Needed for resetting in multiturn mode
- * @retval      void
  */
 void Hal::saveControlValuesToMotors()
 {

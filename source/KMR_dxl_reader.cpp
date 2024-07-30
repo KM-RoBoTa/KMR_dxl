@@ -63,9 +63,6 @@ Reader::Reader(vector<Fields> list_fields, vector<int> ids, dynamixel::PortHandl
     m_dataFromMotor = new float *[m_ids.size()]; 
     for (int i=0; i<m_ids.size(); i++)
         m_dataFromMotor[i] = new float[m_list_fields.size()];
-
-    //cout << "Dxl reader created!" << endl;
-
 }
 
 
@@ -74,7 +71,11 @@ Reader::Reader(vector<Fields> list_fields, vector<int> ids, dynamixel::PortHandl
  */
 Reader::~Reader()
 {
-    //cout << "The Dxl Reader object is being deleted" << endl;
+    delete m_groupSyncReader;
+
+    for (int i=0; i<m_ids.size(); i++)
+        delete[] m_dataFromMotor[i];
+    delete[] m_dataFromMotor;
 }
 
 /*
@@ -104,7 +105,6 @@ bool Reader::addParam(uint8_t id)
 /**
  * @brief       Read the handled fields of input motors
  * @param[in]   ids List of motors whose fields will be read 
- * @retval      void
  */
 void Reader::syncRead(vector<int> ids)
 {
@@ -135,7 +135,6 @@ void Reader::syncRead(vector<int> ids)
 /**
  * @brief       Check if read data from motors is available
  * @param[in]   ids List of motors whose fields have just been read
- * @retval      void
  */
 void Reader::checkReadSuccessful(vector<int> ids)
 {
@@ -170,7 +169,6 @@ void Reader::checkReadSuccessful(vector<int> ids)
  * @brief       The reading being successful, save the read data into the output matrix
  * @param[in]   ids List of motors whose fields have been successfully read
  * @todo Change the goto to a cleaner way
- * @retval      void
  */
 void Reader::populateOutputMatrix(vector<int> ids)
 {

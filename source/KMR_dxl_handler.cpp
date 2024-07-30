@@ -40,7 +40,6 @@ namespace KMR::dxl
  * @brief       Check if the motors are compatible for a given field: same address for data storing. \n 
  *              For indirect handling, also find the first common address for every motor
  * @param[in]   field Control field that the handler is taking care of
- * @retval      void
  */
 void Handler::checkMotorCompatibility(Fields field)
 {
@@ -82,7 +81,6 @@ void Handler::checkMotorCompatibility(Fields field)
 
 /**
  * @brief       Set the indirect addresses: link the direct field address to an indirect address
- * @retval      void
  */
 void Handler::setIndirectAddresses()
 {
@@ -123,7 +121,6 @@ void Handler::setIndirectAddresses()
 /**
  * @brief       Calculate and store the byte length of data read/written by the handler. \n 
  *              Also check if the motors are field-compatible (same data lengths required for a given field)
- * @retval      void
  */
 void Handler::getDataByteSize()
 {
@@ -164,7 +161,6 @@ void Handler::getDataByteSize()
 /**
  * @brief       Check if query motors are handled by this specific handler
  * @param[in]   ids List of query motors
- * @retval      void
  */
 void Handler::checkIDvalidity(vector<int> ids)
 {
@@ -179,7 +175,6 @@ void Handler::checkIDvalidity(vector<int> ids)
 /**
  * @brief       Check if query field is handled by this specific handler
  * @param[in]   field Query control field
- * @retval      void
  */
 void Handler::checkFieldValidity(Fields field)
 {

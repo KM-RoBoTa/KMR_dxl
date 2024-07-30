@@ -60,7 +60,8 @@ BaseRobot::BaseRobot(vector<int> all_ids, const char *port_name, int baudrate, H
  */
 BaseRobot::~BaseRobot()
 {
-    //cout << "The Robot object is being deleted" << endl;
+    delete m_motor_enabler;
+    delete m_controlMode_setter;
 }
 
 
@@ -69,7 +70,6 @@ BaseRobot::~BaseRobot()
  * @param[in]   port_name Name of the port handling communication with motors
  * @param[in]   baudrate Baudrate of the port handling communication with motors
  * @param[in]   protocol_version Protocol version, for the communication (U2D2)
- * @retval      void
  */
 void BaseRobot::init_comm(const char *port_name, int baudrate, float protocol_version)
 {
@@ -93,7 +93,6 @@ void BaseRobot::init_comm(const char *port_name, int baudrate, float protocol_ve
 
 /**
  * @brief       Ping each motor to validate the communication is working
- * @retval      void
  */
 void BaseRobot::check_comm()
 {
@@ -129,7 +128,6 @@ void BaseRobot::check_comm()
 
 /**
  * @brief       Enable all the motors
- * @retval      void
  */
 void BaseRobot::enableMotors()
 {
@@ -140,7 +138,6 @@ void BaseRobot::enableMotors()
 /**
  * @brief       Enable motors specified by IDs
  * @param[in]   ids List of motor ids to be enabled
- * @retval      void
  */
 void BaseRobot::enableMotors(vector<int> ids)
 {
@@ -150,7 +147,6 @@ void BaseRobot::enableMotors(vector<int> ids)
 
 /**
  * @brief       Disable all the motors
- * @retval      void
  */
 void BaseRobot::disableMotors()
 {
@@ -161,7 +157,6 @@ void BaseRobot::disableMotors()
 /**
  * @brief       Disable motors specified by IDs
  * @param[in]   ids List of motor ids to be disabled
- * @retval      void
  */
 void BaseRobot::disableMotors(vector<int> ids)
 {
@@ -178,7 +173,6 @@ void BaseRobot::disableMotors(vector<int> ids)
  * @brief       Set single motor to multiturn mode. Used for multiturn reset
  * @param[in]   id Motor id to get set to multiturn mode
  * @param[in]   motor Query motor 
- * @retval      void
  */
 void BaseRobot::setMultiturnControl_singleMotor(int id, Motor motor)
 {
@@ -190,7 +184,6 @@ void BaseRobot::setMultiturnControl_singleMotor(int id, Motor motor)
  * @brief       Set single motor to position control mode. Used for multiturn reset
  * @param[in]   id Motor id to get set to control position mode
  * @param[in]   motor Query motor 
- * @retval      void
  */
 void BaseRobot::setPositionControl_singleMotor(int id, Motor motor)
 {
@@ -202,7 +195,6 @@ void BaseRobot::setPositionControl_singleMotor(int id, Motor motor)
 
 /**
  * @brief       Reset multiturn motors flagged as needing a reset.
- * @retval      void
  * @note        Make sure the motors had enough time to execute the goal position command before 
  *              calling this function. Failure to do so results in undefined behavior.
  */
@@ -234,7 +226,6 @@ void BaseRobot::resetMultiturnMotors()
 /**
  * @brief       Set the control modes of motors
  * @param[in]   controlModes Control modes to be set to motors
- * @retval      void
  */
 void BaseRobot::setControlModes(vector<int> controlModes)
 {
@@ -246,85 +237,75 @@ void BaseRobot::setControlModes(vector<int> controlModes)
 /**
  * @brief       Set the minimum voltage of motors
  * @param[in]   minVoltages Min. allowed voltages in motors
- * @retval      void
  */                                 
 void BaseRobot::setMinVoltage(vector<float> minVoltages)
 {
-    Writer* EEPROM_writer = new Writer(vector<Fields> {MIN_VOLT_LIMIT}, 
+    m_EEPROM_writer = new Writer(vector<Fields> {MIN_VOLT_LIMIT}, 
                                             m_all_IDs, portHandler_, packetHandler_, m_hal, 0);
 
-    EEPROM_writer->addDataToWrite(minVoltages, KMR::dxl::MIN_VOLT_LIMIT, m_all_IDs);
-    EEPROM_writer->syncWrite(m_all_IDs);
+    m_EEPROM_writer->addDataToWrite(minVoltages, KMR::dxl::MIN_VOLT_LIMIT, m_all_IDs);
+    m_EEPROM_writer->syncWrite(m_all_IDs);
 
-    // Destruct object by explicitly calling destructor, but keep the memory
-    //m_EEPROM_writer->~Writer();
+    delete m_EEPROM_writer;
 }
 
 /**
  * @brief       Set the maximum voltage of motors
  * @param[in]   minVoltages Max. allowed voltages in motors
- * @retval      void
  */                                 
 void BaseRobot::setMaxVoltage(vector<float> maxVoltages)
 {
-    Writer* EEPROM_writer = new Writer(vector<Fields> {MAX_VOLT_LIMIT}, 
+    m_EEPROM_writer = new Writer(vector<Fields> {MAX_VOLT_LIMIT}, 
                                             m_all_IDs, portHandler_, packetHandler_, m_hal, 0);
 
-    EEPROM_writer->addDataToWrite(maxVoltages, MAX_VOLT_LIMIT, m_all_IDs);
-    EEPROM_writer->syncWrite(m_all_IDs);
+    m_EEPROM_writer->addDataToWrite(maxVoltages, MAX_VOLT_LIMIT, m_all_IDs);
+    m_EEPROM_writer->syncWrite(m_all_IDs);
 
-    // Destruct object by explicitly calling destructor, but keep the memory
-    //m_EEPROM_writer->~Writer();
+    delete m_EEPROM_writer;
 }
 
 /**
  * @brief       Set the minimum position of motors
  * @param[in]   minPositions Min. positions for motors (lower saturation) 
- * @retval      void
  */                                 
 void BaseRobot::setMinPosition(vector<float> minPositions)
 {
-    Writer* EEPROM_writer = new Writer(vector<Fields> {MIN_POS_LIMIT}, 
+    m_EEPROM_writer = new Writer(vector<Fields> {MIN_POS_LIMIT}, 
                                             m_all_IDs, portHandler_, packetHandler_, m_hal, 0);
 
-    EEPROM_writer->addDataToWrite(minPositions, MIN_POS_LIMIT, m_all_IDs);
-    EEPROM_writer->syncWrite(m_all_IDs);
+    m_EEPROM_writer->addDataToWrite(minPositions, MIN_POS_LIMIT, m_all_IDs);
+    m_EEPROM_writer->syncWrite(m_all_IDs);
 
-    // Destruct object by explicitly calling destructor, but keep the memory
-    //EEPROM_writer->~Writer();
+    delete m_EEPROM_writer;
 }
 
 /**
  * @brief       Set the maximum position of motors
  * @param[in]   maxPositions Max. positions for motors (upper saturation) 
- * @retval      void
  */                                 
 void BaseRobot::setMaxPosition(vector<float> maxPositions)
 {
-    Writer* EEPROM_writer = new Writer(vector<Fields> {MAX_POS_LIMIT}, 
+    m_EEPROM_writer = new Writer(vector<Fields> {MAX_POS_LIMIT}, 
                                             m_all_IDs, portHandler_, packetHandler_, m_hal, 0);
 
-    EEPROM_writer->addDataToWrite(maxPositions, MAX_POS_LIMIT, m_all_IDs);
-    EEPROM_writer->syncWrite(m_all_IDs);
+    m_EEPROM_writer->addDataToWrite(maxPositions, MAX_POS_LIMIT, m_all_IDs);
+    m_EEPROM_writer->syncWrite(m_all_IDs);
 
-    // Destruct object by explicitly calling destructor, but keep the memory
-    //m_EEPROM_writer->~Writer();
+    delete m_EEPROM_writer;
 }
 
 /**
  * @brief   Set the return delay to all motors
- * @retval  void
  */
 void BaseRobot::setAllDelay(int val)
 {
-    Writer* EEPROM_writer = new Writer(vector<Fields> {RETURN_DELAY}, 
+    m_EEPROM_writer = new Writer(vector<Fields> {RETURN_DELAY}, 
                                             m_all_IDs, portHandler_, packetHandler_, m_hal, 0);
 
-    EEPROM_writer->addDataToWrite(vector<int>{val}, RETURN_DELAY, m_all_IDs);
-    EEPROM_writer->syncWrite(m_all_IDs);
+    m_EEPROM_writer->addDataToWrite(vector<int>{val}, RETURN_DELAY, m_all_IDs);
+    m_EEPROM_writer->syncWrite(m_all_IDs);
 
-    // Destruct object by explicitly calling destructor, but keep the memory
-    //m_EEPROM_writer->~Writer();
+    delete m_EEPROM_writer;
 }
 
 
