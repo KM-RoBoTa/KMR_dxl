@@ -168,7 +168,6 @@ void Reader::checkReadSuccessful(vector<int> ids)
 /**
  * @brief       The reading being successful, save the read data into the output matrix
  * @param[in]   ids List of motors whose fields have been successfully read
- * @todo Change the goto to a cleaner way
  */
 void Reader::populateOutputMatrix(vector<int> ids)
 {
@@ -178,7 +177,7 @@ void Reader::populateOutputMatrix(vector<int> ids)
     uint8_t offset = 0;
     int32_t paramData;
     float units, data;
-    int id = 0, row = 0, col = 0;
+    int id = 0;
 
     for (int i=0; i<ids.size(); i++){
         for (int j=0; j<m_list_fields.size(); j++){
@@ -200,16 +199,17 @@ void Reader::populateOutputMatrix(vector<int> ids)
                 data = position2Angle(paramData, id, units);
 
             // Save the converted value into the output matrix
-            for (row=0; row<ids.size(); row++){
-                for(col=0; col<m_list_fields.size(); col++){
-                    if (ids[row] == id && m_list_fields[col] == field)
-                        goto fill_matrix;
+            for (int row=0; row<ids.size(); row++){
+                for(int col=0; col<m_list_fields.size(); col++){
+                    if (ids[row] == id && m_list_fields[col] == field) {
+                        m_dataFromMotor[row][col] = data;
+                        goto loop_break;
+                    }
                 }
             }
 
-            fill_matrix:
-            m_dataFromMotor[row][col] = data;
-            
+            loop_break:
+
             // Offset for the data address
             offset += field_length;
         }

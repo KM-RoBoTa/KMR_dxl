@@ -39,6 +39,13 @@ Copyright 2021-2023, Laura Paez Coy and Kamilo Melo. \n
 This code is under MIT licence: https://opensource.org/licenses/MIT
 
 
+## Supported models
 
-## Not yet implemented
-Currently only contains control values for MX64-R.
+- MX-28
+- MX-64
+- MX-106
+- XH540-W150
+- XH540-W270
+- XM540-W150
+- XM540-W270
+- XM430-W350

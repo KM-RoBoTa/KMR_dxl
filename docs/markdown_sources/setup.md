@@ -49,4 +49,10 @@ In the source code, only one header needs to be included:
 #include "KMR_dxl_robot.hpp"
 ```
 
+## Add a model
+If you need to add a motor model, you need to:
+1. create its yaml config file in the ```config``` folder
+2. add the model to the ```Motor_models``` enumerate in```KMR_dxl_hal.hpp```
+3. update the ```string2Motors_models``` function in ```KMR_dxl_hal.cpp``` 
+
 Next: how to [use](#how-to-use)
