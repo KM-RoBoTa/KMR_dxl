@@ -210,19 +210,22 @@ Motor_models Hal::string2Motors_models(const string &str)
     else if(str == "MX_106")
         return MX_106;
     else if(str == "MX_28")
-        return MX_28;  
+        return MX_28;
+    else if (str == "XH540_W150")
+        return XH540_W150;
+    else if (str == "XH540_W270")
+        return XH540_W270;
+    else if (str == "XM430_W350")
+        return XM430_W350;
+    else if (str == "XM540_W150")
+        return XM540_W150;
+    else if (str == "XM540_W270")
+        return XM540_W270;
     else {
         cout << "Unknown model!" << endl;
         exit(1);
         return UNDEF_M;
     }
-
-
-         /*    else if(str == "WEDNESDAY") return WEDNESDAY;
-    else if(str == "THURSDAY") return THURSDAY;
-    else if(str == "FRIDAY") return FRIDAY;
-    else if(str == "SATURDAY") return SATURDAY;
-    else return SUNDAY; */
 }
 
 /**

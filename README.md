@@ -24,3 +24,14 @@ make docs
 from the `build` folder after the cmake.  
 The generated documentation can be found in "docs/generated_docs/html".
 
+## Supported models
+
+- MX-28
+- MX-64
+- MX-106
+- XH540-W150
+- XH540-W270
+- XM540-W150
+- XM540-W270
+- XM430-W350
+

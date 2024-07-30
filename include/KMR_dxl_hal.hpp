@@ -59,7 +59,8 @@ struct Motor_node {
  */
 enum Motor_models
 {
-    MX_64R, MX_106, MX_28, NBR_MODELS, UNDEF_M
+    MX_64R, MX_106, MX_28, XH540_W150, XH540_W270, XM430_W350, XM540_W150, XM540_W270,
+    NBR_MODELS, UNDEF_M
 };
 
 /**
