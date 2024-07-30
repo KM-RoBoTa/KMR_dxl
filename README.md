@@ -34,4 +34,6 @@ The generated documentation can be found in "docs/generated_docs/html".
 - XM540-W150
 - XM540-W270
 - XM430-W350
-
+- XW430-T200
+- XW540-T260
+- XW540-T140

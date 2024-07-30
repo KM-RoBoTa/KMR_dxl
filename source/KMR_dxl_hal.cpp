@@ -220,6 +220,12 @@ Motor_models Hal::string2Motors_models(const string &str)
         return XM540_W150;
     else if (str == "XM540_W270")
         return XM540_W270;
+    else if (str == "XW430_T200")
+        return XW430_T200;
+    else if (str == "XW540_T260")
+        return XW540_T260;
+    else if (str == "XW540_T140")
+        return XW540_T140;
     else {
         cout << "Unknown model!" << endl;
         exit(1);

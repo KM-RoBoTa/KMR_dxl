@@ -49,3 +49,6 @@ This code is under MIT licence: https://opensource.org/licenses/MIT
 - XM540-W150
 - XM540-W270
 - XM430-W350
+- XW430-T200
+- XW540-T260
+- XW540-T140
