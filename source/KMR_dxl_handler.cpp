@@ -135,7 +135,7 @@ void Handler::getDataByteSize()
         
         for (int j=1; j<m_ids.size(); j++){
             length = m_hal.getControlParametersFromID(m_ids[j], field).length;
-            length_prev = m_hal.getControlParametersFromID(m_ids[j-1], field).length;       
+            length_prev = m_hal.getControlParametersFromID(m_ids[j-1], field).length;      
 
             if(length != length_prev){
                 cout << "Motors " << m_ids[j] << " and " << m_ids[j-1] << " have incompatible field lengths!" << endl;

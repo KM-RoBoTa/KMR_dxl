@@ -112,13 +112,13 @@ Hal::Hal()
  */
 Hal::~Hal()
 {
-    delete[] m_controlModesPerModel;
+    /*delete[] m_controlModesPerModel;
 
     for (int i=0; i<NBR_MODELS; i++)
         delete[] m_control_table[i];
     delete[] m_control_table;
     
-    free(m_motors_list);
+    free(m_motors_list);*/
 }
 
 /**
@@ -486,7 +486,7 @@ Motor_data_field Hal::getControlParametersFromID(int id, Fields field)
  */
 Motor_models Hal::getModelFromID(int id)
 {
-    Motor_models motor_model = NBR_MODELS;
+    Motor_models motor_model = UNDEF_M;
 
     for (int i = 0; i < m_tot_nbr_motors; i++)
     {
@@ -496,7 +496,13 @@ Motor_models Hal::getModelFromID(int id)
             break;
         }
     }
-    return motor_model;
+
+    if (motor_model != UNDEF_M)
+        return motor_model;
+    else {
+        cout << "Error in getting the model from ID!" << endl;
+        exit(1);
+    }
 }
 
 /**

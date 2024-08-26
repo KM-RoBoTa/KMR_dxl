@@ -51,7 +51,6 @@ BaseRobot::BaseRobot(vector<int> all_ids, const char *port_name, int baudrate, H
 
     // Ping each motor to validate the communication is working
     check_comm();
-
 }
 
 
