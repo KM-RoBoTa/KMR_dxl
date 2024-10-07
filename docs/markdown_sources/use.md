@@ -3,6 +3,16 @@
 
 The library lives in the KMR::dxl namespace. 
 
+## Important: motor angle redefinition
+
+The angles of the motors have been redefined in this library so that they feel more natural.  <br /> 
+Dynamixel libraries define the motor angles as indicated in black in the following image:
+
+![File tree](../img/motor_new.png)
+
+with the angle position being in the interval $]0, 2\pi[$ rad. <br /> 
+This library uses the redefined angles as indicated in blue, in the interval  $] - \pi, +\pi[$ rad, with the 0 position being in the center of the motor.
+
 # I. Initializations
 ## Step 1: Write a motor configuration file
 
@@ -44,13 +54,40 @@ This allows to make sure the motors configuration files are correct, as well as 
 // In main.cpp
 KMR::dxl::Hal hal;
 
-char path_to_motor_config[] = "../config/motors_config.yaml";
-char path_to_KMR_dxl[] = "../KMR_dxl";
+char path_to_motor_config[] = "../config/motors_config.yaml"; // EDIT HERE: Path from your project's executable to your motors config file
+char path_to_KMR_dxl[] = "../KMR_dxl";                        // EDIT HERE: Path from your project's executable to the library folder
 
 std::vector<int> all_ids = hal.init(path_to_motor_config, path_to_KMR_dxl);
 ```
 
 # II. Create your Robot class
+
+## KMR::dxl::BaseRobot
+
+The constructor of the library's ```BaseRobot``` class takes the following arguments:
+```cpp
+/**
+ * @brief       Constructor for BaseRobot
+ * @param[in]   all_ids List of IDs of all the motors in the robot
+ * @param[in]   port_name Name of the port handling the communication with motors
+ * @param[in]   baudrate Baudrate of the port handling communication with motors
+ * @param[in]   hal Previously initialized Hal object
+ */
+BaseRobot::BaseRobot(vector<int> all_ids, const char *port_name, int baudrate, Hal hal)
+```
+which means any custom class inheriting ```BaseRobot``` needs to have those arguments as well. 
+
+On construction, it takes care of opening the communication port with the motors, and pings them all. If a motor fails to respond, the program is stopped.
+
+```BaseRobot``` also provides the most commonly used setup functions, such as: 
+- enabling and disabling motors with ```enableMotors``` and ```disableMotors```, as well as their id-specific versions
+- set minimal and maximal angle limits with ```setMinPosition``` and ```setMaxPosition```
+- set minimal and maximal voltage limits with ```setMinVoltage``` and ```setMaxVoltage```
+- set the return times of the motors with ```setAllDelay``` 
+
+> **Reminder** <br> 
+> Before writing in the EEPROM memory, the motors need to be disabled.
+
 
 ## Step 3: Declare Robot
 
@@ -80,8 +117,8 @@ It can be declared as a private member of Robot:
 ```cpp
 // robot.hpp
 class Robot : public KMR::dxl::BaseRobot {
-    private:
-        KMR::dxl::Writer *m_writer;
+private:
+    KMR::dxl::Writer *m_writer = nullptr;
 };
 ```
 
@@ -175,16 +212,17 @@ char path_to_motor_config[] = "../config/motors_config.yaml";
 char path_to_KMR_dxl[] = "../KMR_dxl";
 
 std::vector<int> all_ids = hal.init(path_to_motor_config, path_to_KMR_dxl);
+int nbrMotors = all_ids.size();
 
 // Create robot instance
 int baudrate = 1000000;
 Robot robot(all_ids, "/dev/ttyUSB0", baudrate, hal);
 
 // Feedback tables
-vector<float> fbck_angles(4);
-vector<float> fbck_leds(4);
-vector<float> goal_angles(4);
-vector<float> goal_leds(4);
+vector<float> fbck_angles(nbrMotors);
+vector<float> fbck_leds(nbrMotors);
+vector<float> goal_angles(nbrMotors);
+vector<float> goal_leds(nbrMotors);
 
 // Start the loop
 robot.enableMotors();
@@ -195,11 +233,14 @@ while(1) {
 
     robot.readData(all_ids, fbck_angles, fbck_leds);
 
-    // Send the feedback values to the controller and get the new
-    // goal values into goal_angles and goal_leds
+    /* Send the feedback values to the controller and get the new
+    goal values into goal_angles and goal_leds */
 
     robot.writeData(goal_angles, goal_leds, all_ids);
 
     sleep(1);
 }
 ``` 
+
+> **Warning** <br> 
+> Unfortunately, reading in Dynamixel motors is extremely slow, 1000 times slower than writing (~15us versus ~15ms). The control loop needs to be designed accordingly 

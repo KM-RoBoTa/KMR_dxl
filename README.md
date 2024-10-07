@@ -1,6 +1,6 @@
-# KMR_dxl
+# C++ wrapper around Dynamixel's library for protocol 2 motors
 
-Library for an easy use of Dynamixel motors.  
+Wrapper library for an easy use of Dynamixel motors.  
 It abstracts the hardware (no need to concern yourself with memory addresses) and automates the creation of reading/writing handlers (automatically assigns indirect address reading/writing).
 
 It works with Dynamixel's **protocol 2**.
@@ -9,7 +9,9 @@ Dependencies:
 - dynamixel API
 - yaml-cpp
 
-How to use: go to the KMR_dxl folder, then: 
+The documentation explaining how to use the library can be found [here](docs/markdown_sources/mainpage.md).
+
+To compile the library: go to the KMR_dxl folder, then: 
 ```bash
 mkdir build
 cd build
@@ -37,3 +39,18 @@ The generated documentation can be found in "docs/generated_docs/html".
 - XW430-T200
 - XW540-T260
 - XW540-T140
+
+## About
+
+KM-RoBoTa SA's KMR_dxl library to facilitate Dynamixel control.
+
+### Authors
+Library written by Katarina Lichardova: katarina.lichardova@km-robota.com
+
+based on code from:
+- Laura Paez: laura.paez@km-robota.com
+- Kamilo Melo: kamilo.melo@km-robota.com
+
+### Copyright
+Copyright 2021-2024, Kamilo Melo. \n
+This code is under MIT licence: https://opensource.org/licenses/MIT

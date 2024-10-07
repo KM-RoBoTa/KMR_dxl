@@ -25,7 +25,7 @@ It uses SI units, the only exception being temperature expressed in °C instead 
 
 ## About
 
-KM-RoBoTa sarl's KMR_dxl library to facilitate Dynamixel control.
+KM-RoBoTa SA's KMR_dxl library to facilitate Dynamixel control.
 
 ### Authors
 Library written by Katarina Lichardova: katarina.lichardova@km-robota.com
@@ -35,7 +35,7 @@ based on code from:
 - Kamilo Melo: kamilo.melo@km-robota.com
 
 ### Copyright
-Copyright 2021-2023, Laura Paez Coy and Kamilo Melo. \n
+Copyright 2021-2024, Kamilo Melo. \n
 This code is under MIT licence: https://opensource.org/licenses/MIT
 
 
