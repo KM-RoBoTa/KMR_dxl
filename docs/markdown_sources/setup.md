@@ -55,4 +55,4 @@ If you need to add a motor model, you need to:
 2. add the model to the ```Motor_models``` enumerate in```KMR_dxl_hal.hpp```
 3. update the ```string2Motors_models``` function in ```KMR_dxl_hal.cpp``` 
 
-Next: how to [use](#how-to-use)
+Next: how to [use](use.md)

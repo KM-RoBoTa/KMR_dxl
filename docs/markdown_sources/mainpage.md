@@ -20,8 +20,8 @@ It uses SI units, the only exception being temperature expressed in °C instead 
 ## Links
 
 - Repository: https://github.com/KM-RoBoTa/KMR_dxl
-- How to [setup](#setup)
-- How to [use](#how-to-use)
+- How to [setup](setup.md)
+- How to [use](use.md)
 
 ## About
 
