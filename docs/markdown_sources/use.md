@@ -1,4 +1,4 @@
-\page how-to-use How to use
+# How to use {#how-to-use}
 [TOC]
 
 The library lives in the KMR::dxl namespace. 
@@ -16,8 +16,8 @@ This library uses the redefined angles as indicated in blue, in the interval  $]
 # I. Initializations
 ## Step 1: Write a motor configuration file
 
-The first thing that needs to be done is to create a yaml configuration file of the motors used in the projet. \n
-Let's assume the robot has 4 motors with IDs {1, 2, 3, 4}, all of model MX_64R. Motors 1 and 3 are in multiturn mode, while the 2 others are not. \n
+The first thing that needs to be done is to create a yaml configuration file of the motors used in the projet. <br /> 
+Let's assume the robot has 4 motors with IDs {1, 2, 3, 4}, all of model MX_64R. Motors 1 and 3 are in multiturn mode, while the 2 others are not. <br /> 
 The motor configuration file will look as follows:
 
 ```yaml
@@ -38,7 +38,7 @@ motors:
     multiturn: 0
 ```
 
-The multiturn mode corresponds to the "extended position control" in dynamixel's SDK. It's a position control allowing 255 turns in each direction before the input value saturates. In order to avoid saturation and thus, to allow motors turning indefinitely, this library resets a motor after it does more than a full turn relative to its starting 0 position. \n
+The multiturn mode corresponds to the "extended position control" in dynamixel's SDK. It's a position control allowing 255 turns in each direction before the input value saturates. In order to avoid saturation and thus, to allow motors turning indefinitely, this library resets a motor after it does more than a full turn relative to its starting 0 position. <br /> 
 After the reset, the motor thus detects its position as being between -180° and +180° again.  
 
 In addition to setting the "multiturn" configuration in the yaml file correctly, the motors themselves must of course be configured for the correct operation mode.
@@ -47,7 +47,7 @@ In addition to setting the "multiturn" configuration in the yaml file correctly,
 
 ## Step 2: Initialize hal
 
-The second step is to initialize a KMR::dxl::Hal object in the project's main file. \n
+The second step is to initialize a KMR::dxl::Hal object in the project's main file. <br /> 
 This allows to make sure the motors configuration files are correct, as well as to create the hidden control tables used to abstract the hardware layer:
 
 ```cpp
@@ -111,7 +111,7 @@ Robot::Robot(vector<int> all_ids, const char *port_name, int baudrate, KMR::dxl:
 ```
 ## Step 4: Writer handlers
 
-To create a handler that sends data to the motors (example: goal positions, LED control), a KMR::dxl::Writer object is used. \n
+To create a handler that sends data to the motors (example: goal positions, LED control), a KMR::dxl::Writer object is used. <br /> 
 It can be declared as a private member of Robot:
 
 ```cpp
@@ -128,7 +128,7 @@ m_writer = new KMR::dxl::Writer(writer_fields, ids, portHandler_, packetHandler_
 ```
 The "writer_fields" is the list of field(s) that will be handled by this specific Writer object. Since this library uses the protocol 2 of dynamixel's SDK, a single Writer can handle several control fields, resulting in an indirect address writing - but this is handled by the library automatically.
 
-The fields themselves are enumerated in KMR::dxl::Fields and correspond to control fields found in Dynamixels' control tables, as in https://emanual.robotis.com/docs/en/dxl/mx/mx-64-2/#control-table \n 
+The fields themselves are enumerated in KMR::dxl::Fields and correspond to control fields found in Dynamixels' control tables, as in https://emanual.robotis.com/docs/en/dxl/mx/mx-64-2/#control-table <br />  
 For example, if we wish to have a Writer handler that sends goal positions and LED status commands to motors, the Writer definition becomes:
 
 ```cpp
@@ -138,7 +138,7 @@ m_writer = new KMR::dxl::Writer(writer_fields, ids, portHandler_, packetHandler_
 
 Finally, the last element we need to use the Writer is the function that actually sends the data to motors. The creation of this function is very straightforward.
 
-The method KMR::dxl::Writer::addDataToWrite allows to save data that need to be sent to motors into the Writer's private attribute table. Then, once all the data is updated, it is sent with the method KMR::dxl::Writer::syncWrite. \n 
+The method KMR::dxl::Writer::addDataToWrite allows to save data that need to be sent to motors into the Writer's private attribute table. Then, once all the data is updated, it is sent with the method KMR::dxl::Writer::syncWrite. <br />  
 Keeping the same Writer example, a public method can be defined inside Robot: 
 
 ```cpp
@@ -158,7 +158,7 @@ This public method Robot::writeData can be for example called from the main when
 
 In order to fetch data from the motors' sensors (for example current position and temperature), a KMR::dxl::Reader object is required. It works extremely similarly to its Writer counterpart.
 
-When writing the read function, one needs to be careful about the order in which the control fields were written when declaring the Reader. \n
+When writing the read function, one needs to be careful about the order in which the control fields were written when declaring the Reader. <br /> 
 The method KMR::dxl::Reader::syncRead stores the data received from motors into the Reader's attribute table "m_dataFromMotor", organized like this:
 
 |          | field1 | field2 | .... | field_n |
@@ -174,7 +174,7 @@ vector<KMR::dxl::Fields> reader_fields = {KMR::dxl::PRESENT_POS, KMR::dxl::LED};
 m_reader = new KMR::dxl::Reader(reader_fields, handlers_ids, portHandler_, packetHandler_, m_hal, 0);
 ```
 
-which means the present position data will be saved in the first column of "m_dataFromMotor" and the LED status in the second. \n
+which means the present position data will be saved in the first column of "m_dataFromMotor" and the LED status in the second. <br /> 
 As such, the reading function is:
 ```cpp
 // robot.cpp
@@ -193,7 +193,7 @@ void Robot::readData(vector<int> ids, vector<float>& fbck_angles, vector<float>&
 ## Note: multiturn reset
 The public method KMR::dxl::BaseRobot::resetMultiturnMotors resets the motors flagged as in need of a reset. It is inherited by the Robot class, and needs to be called only if the project contains multiturn motors. 
 
-It is up to the user where they want to call it. A good idea is to call it at the start of each control loop, before reading the sensor values. \n
+It is up to the user where they want to call it. A good idea is to call it at the start of each control loop, before reading the sensor values. <br /> 
 If wished, one can also add it for example at the end of the writing functions.
 
 > **Warning** <br> 

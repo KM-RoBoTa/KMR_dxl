@@ -25,7 +25,7 @@ make docs
 from the build folder. This will generate a "index.html" file in "docs/generated_docs/html".
 
 ## Include in a project
-It is very straightforward to include this library in a project. \n
+It is very straightforward to include this library in a project. <br /> 
 All the headers are located in "KMR_dxl/include", and, as already mentioned, the static libraries in "KMR_dxl/build".
 
 In the root CMakeLists.txt of the project, add:
