@@ -13,83 +13,11 @@
  */
 
 #include "KMR_dxl_hal.hpp"
-#include "yaml-cpp/yaml.h"
 #include <iostream>
 #include <cstdint>
 
 using namespace std;
 
-
-namespace YAML
-{
-
-/**
- * @brief       Overload YAML::Node.as to be usable with our Data_node structure: \n
- *              Convert YAML::Node to Data_node
- * @param[in]   node YAML:Node read by the YAML parser
- * @param[out]  data_node Instance of Data_node to store the info gotten from node
- */
-template <>
-struct convert<KMR::dxl::Data_node>
-{
-
-    static bool decode(const Node &node, KMR::dxl::Data_node &data_node)
-    {
-
-        data_node.field_name = node["field"].as<std::string>();
-        data_node.address = node["address"].as<int>();
-        data_node.length = node["length"].as<int>();
-        data_node.unit = node["unit"].as<float>();
-
-        return true;
-    }
-};
-
-/**
- * @brief       Overload YAML::Node.as to be usable with our Motor_node structure: \n
- *              Convert YAML::Node to Motor_node
- * @param[in]   node YAML:Node read by the YAML parser
- * @param[out]  motor_node Instance of Motor_node to store the info gotten from node
- */
-template <>
-struct convert<KMR::dxl::Motor_node>
-{
-
-    static bool decode(const Node &node, KMR::dxl::Motor_node &motor_node)
-    {
-        motor_node.id = node["ID"].as<int>();
-        motor_node.model_name = node["model"].as<string>();
-        motor_node.multiturn = node["multiturn"].as<int>();
-        return true;
-    }
-};
-
-
-/**
- * @brief       Overload YAML::Node.as to be usable with our Control_modes structure: \n
- *              Convert YAML::Node to Control_modes
- * @param[in]   node YAML:Node read by the YAML parser
- * @param[out]  motor_node Instance of Control_modes to contain the info gotten from node
- */
-template <>
-struct convert<KMR::dxl::Control_modes>
-{
-
-    static bool decode(const Node &node, KMR::dxl::Control_modes &control_modes)
-    {
-
-        control_modes.current_control = (uint8_t) node["current_control"].as<int>();
-        control_modes.current_based_position_control = (uint8_t) node["current_based_position_control"].as<int>();
-        control_modes.multiturn_control = (uint8_t) node["multiturn_control"].as<int>();
-        control_modes.velocity_control = (uint8_t) node["velocity_control"].as<int>();
-        control_modes.position_control = (uint8_t) node["position_control"].as<int>();
-        control_modes.PWM_control = (uint8_t) node["PWM_control"].as<int>();
-
-        return true;
-    }
-};
-
-}
 
 namespace KMR::dxl
 {
