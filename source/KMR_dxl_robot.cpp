@@ -14,21 +14,21 @@
 
 #include <cstdint>
 #include <iostream>
-
-
 #include <unistd.h>  // Provides sleep function for linux
+
 #include "KMR_dxl_robot.hpp"
-
-#define PROTOCOL_VERSION            2.0
-#define ENABLE                      1
-#define DISABLE                     0
-
 
 using namespace std;
 
 namespace KMR::dxl
 {
 
+#define PROTOCOL_VERSION            2.0
+#define ENABLE                      1
+#define DISABLE                     0
+
+// Control mode
+// Multiturn
 
 /**
  * @brief       Constructor for BaseRobot
@@ -37,20 +37,25 @@ namespace KMR::dxl
  * @param[in]   baudrate Baudrate of the port handling communication with motors
  * @param[in]   hal Previously initialized Hal object
  */
-BaseRobot::BaseRobot(vector<int> all_ids, const char *port_name, int baudrate, Hal hal)
+BaseRobot::BaseRobot(vector<int> ids, const char *port_name, int baudrate)
 {
-    m_hal = hal;
-    m_all_IDs = all_ids;
+    m_hal = new Hal();
+    m_ids = ids;
+    m_nbrMotors = ids.size();
+    m_models = vector<int>(m_nbrMotors);
 
     // Connect U2D2
     init_comm(port_name, baudrate, PROTOCOL_VERSION);
 
+    // Ping each motor to validate the communication is working
+    check_comm();
+
+    // Initialize Hal
+    m_hal->init(m_ids, m_nbrMotors, m_models);
+
     // 2 integrated handlers: motor enabling and mode setter
     m_motor_enabler = new Writer(vector<Fields>{TRQ_ENABLE}, m_all_IDs, portHandler_, packetHandler_, m_hal, 0);
     m_controlMode_setter = new Writer(vector<Fields>{OP_MODE}, m_all_IDs, portHandler_, packetHandler_, m_hal, 0);
-
-    // Ping each motor to validate the communication is working
-    check_comm();
 }
 
 
@@ -61,6 +66,9 @@ BaseRobot::~BaseRobot()
 {
     delete m_motor_enabler;
     delete m_controlMode_setter;
+
+    // Do last
+    delete m_hal;
 }
 
 
@@ -74,7 +82,7 @@ void BaseRobot::init_comm(const char *port_name, int baudrate, float protocol_ve
 {
     portHandler_ = dynamixel::PortHandler::getPortHandler(port_name);
     if (!portHandler_->openPort()) {
-        cout<< "Failed to open the motors port!" <<endl;
+        cout << "Failed to open the motors port!" <<endl;
         exit(1);
     }
     else
@@ -85,17 +93,17 @@ void BaseRobot::init_comm(const char *port_name, int baudrate, float protocol_ve
         return ;
     }
     else
-        cout<< "Succeeded to change the baudrate!" <<endl;
+        cout << "Succeeded to change the baudrate!" <<endl;
 
     packetHandler_ = dynamixel::PacketHandler::getPacketHandler(protocol_version);
 }
 
 /**
- * @brief       Ping each motor to validate the communication is working
+ * @brief   Ping each motor to validate the communication is working
+ * @note    Also populates the models vector, required to initialize Hal
  */
 void BaseRobot::check_comm()
 {
-    bool result = false;
     uint16_t model_number = 0;
     uint8_t dxl_error = 0;
     int motor_idx;
@@ -103,9 +111,9 @@ void BaseRobot::check_comm()
 
     cout << "Pinging motors...." << endl;
 
-    for (int i=0; i<m_all_IDs.size(); i++) {
-        id = m_all_IDs[i];
-        result = packetHandler_->ping(portHandler_, id, &model_number, &dxl_error);
+    for (int i=0; i<m_nbrMotors; i++) {
+        id = m_ids[i];
+        bool result = packetHandler_->ping(portHandler_, id, &model_number, &dxl_error);
         if (result != COMM_SUCCESS) {
             cout << "Failed to ping, check config file and motor ID: " << id << endl;
             cout << "Check also the power source and the cabling ;) " << endl;
@@ -114,8 +122,7 @@ void BaseRobot::check_comm()
         }
         else {
             cout << "id: " << id << ", model number : " << model_number << endl;
-            motor_idx = m_hal.getMotorsListIndexFromID(id);
-            m_hal.m_motors_list[motor_idx].scanned_model = model_number; 
+            m_models[i] = (int)model_number;
         }
     }
 }
@@ -242,7 +249,7 @@ void BaseRobot::setMinVoltage(vector<float> minVoltages)
     m_EEPROM_writer = new Writer(vector<Fields> {MIN_VOLT_LIMIT}, 
                                             m_all_IDs, portHandler_, packetHandler_, m_hal, 0);
 
-    m_EEPROM_writer->addDataToWrite(minVoltages, KMR::dxl::MIN_VOLT_LIMIT, m_all_IDs);
+    m_EEPROM_writer->addDataToWrite(minVoltages, MIN_VOLT_LIMIT, m_all_IDs);
     m_EEPROM_writer->syncWrite(m_all_IDs);
 
     delete m_EEPROM_writer;

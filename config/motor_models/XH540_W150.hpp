@@ -16,11 +16,11 @@
 
 #include "../KMR_dxl_structures.hpp"
 
-namespace KMR_dxl
+namespace KMR::dxl
 {
 
-struct XH540_W150 : ControlTable {
-    XH540_W150 ()
+struct XH540_W150_P2 : public KMR::dxl::ControlTable {
+    XH540_W150_P2() : ControlTable()
     {
         modelNumber.addr = 0;
         modelNumber.length = 2;
@@ -195,6 +195,6 @@ struct XH540_W150 : ControlTable {
     }
 };
 
-
 }
+
 #endif

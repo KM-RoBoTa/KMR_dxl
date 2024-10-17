@@ -37,13 +37,6 @@ namespace KMR::dxl
 Reader::Reader(vector<Fields> list_fields, vector<int> ids, dynamixel::PortHandler *portHandler,
                             dynamixel::PacketHandler *packetHandler, Hal hal, bool forceIndirect)
 {
-    portHandler_ = portHandler;
-    packetHandler_ = packetHandler;
-    m_hal = hal;
-    m_ids = ids;
-
-    m_list_fields = list_fields;
-
     getDataByteSize();
 
     if (list_fields.size() == 1 && !forceIndirect) {

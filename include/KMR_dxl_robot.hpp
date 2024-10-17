@@ -31,10 +31,11 @@ namespace KMR::dxl
 class BaseRobot {
 public:
     int *scanned_motor_models = nullptr;  // Dynamixel-defined model numbers of motors in the robot
-    Hal m_hal;  // to put private? @todo
-    std::vector<int> m_all_IDs; // All motor IDs in the robot
+    std::vector<int> m_ids; // List of IDs in the robot
+    int m_nbrMotors;
+    std::vector<int> m_models; // List of IDs in the robot
 
-    BaseRobot(std::vector<int> all_ids, const char *port_name, int baudrate, Hal hal);
+    BaseRobot(std::vector<int> all_ids, const char *port_name, int baudrate);
     ~BaseRobot();
     
     void enableMotors();
@@ -52,6 +53,7 @@ public:
 protected:
     dynamixel::PortHandler   *portHandler_ = nullptr;
     dynamixel::PacketHandler *packetHandler_ = nullptr;
+    Hal* m_hal = nullptr;
 
     Writer *m_motor_enabler = nullptr;
     Writer *m_controlMode_setter = nullptr;

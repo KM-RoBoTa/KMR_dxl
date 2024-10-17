@@ -16,11 +16,11 @@
 
 #include "../KMR_dxl_structures.hpp"
 
-namespace KMR_dxl
+namespace KMR::dxl
 {
 
-struct XW540_T260 : ControlTable {
-    XW540_T260 ()
+struct XW540_T260_P2 : ControlTable {
+    XW540_T260_P2 ()
     {
         modelNumber.addr = 0;
         modelNumber.length = 2;

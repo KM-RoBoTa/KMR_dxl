@@ -16,11 +16,11 @@
 
 #include "../KMR_dxl_structures.hpp"
 
-namespace KMR_dxl
+namespace KMR::dxl
 {
 
-struct MX_64 : ControlTable {
-    MX_64 ()
+struct MX_64_P2 : ControlTable {
+    MX_64_P2 ()
     {
         modelNumber.addr = 0;
         modelNumber.length = 2;

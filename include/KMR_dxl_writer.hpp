@@ -29,11 +29,12 @@ namespace KMR::dxl
 class Writer : public Handler
 {
 public:
-    Writer(std::vector<Fields> list_fields, std::vector<int> ids, dynamixel::PortHandler *portHandler,
-            dynamixel::PacketHandler *packetHandler, Hal hal, bool forceIndirect);
+    Writer(std::vector<ControlTableItem> list_fields, std::vector<int> ids, std::vector<int> models,
+            dynamixel::PortHandler *portHandler, dynamixel::PacketHandler *packetHandler,
+            Hal* hal, bool forceIndirect);
     ~Writer();
     template <typename T>
-    void addDataToWrite(std::vector<T> data, Fields field, std::vector<int> ids);
+    void addDataToWrite(std::vector<T> data, ControlTableItem field);
     void syncWrite(std::vector<int> ids);
 
 private:
@@ -58,38 +59,33 @@ private:
  * @param[in]   ids List of motors that will receive the data
  */
 template <typename T>
-void Writer::addDataToWrite(std::vector<T> data, Fields field, std::vector<int> ids)
+void Writer::addDataToWrite(std::vector<T> data, ControlTableItem field)
 {
     int field_length;
     int field_idx;
-    checkIDvalidity(ids);
-    checkFieldValidity(field);
 
+    checkFieldValidity(field);
     getFieldPosition(field, field_idx, field_length);
-    T current_data;
-    int param_data;
-    float units;
-    int id;
-    int motor_idx = 0;
+
 
     for (int i = 0; i < ids.size(); i++)
     {
-        id = ids[i];
-        units = m_hal.getControlParametersFromID(id, field).unit;
-        motor_idx = getMotorIndexFromID(id);
+        int id = m_ids[i];
+        float units = m_hal.getControlParametersFromID(id, field).unit;
+        int motor_idx = getMotorIndexFromID(id);
 
+        T current_data;
         if (data.size() == 1)
             current_data = data[0];
         else
             current_data = data[i];
 
         // Transform data into its parametrized form and write it into the parametrized data matrix
+        int param_data;
         if (field != GOAL_POS && field != PRESENT_POS &&
             field != MIN_POS_LIMIT && field != MAX_POS_LIMIT &&
             field != HOMING_OFFSET)
-        {
             param_data = current_data / units;
-        }
         else
             param_data = angle2Position(current_data, id);
 

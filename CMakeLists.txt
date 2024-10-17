@@ -13,7 +13,7 @@ add_library(KMR_dxl
             source/KMR_dxl_hal.cpp)
 
 # Directories containing header files
-target_include_directories(KMR_dxl PUBLIC include)
+target_include_directories(KMR_dxl PUBLIC include config)
 
 # Locations of the used libraries
 target_link_directories(KMR_dxl PUBLIC /usr/local/lib)

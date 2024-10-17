@@ -35,30 +35,37 @@ class Handler
 {
 public:
 	std::vector<int> m_ids;				// All IDs handled by this specific handler
+	int m_nbrMotors;
 	bool m_isIndirectHandler;			// Boolean: 1 if the handler is indirect, 0 otherwise
-	std::vector<Fields> m_list_fields;	// All Fields hanlded by this specific handler
+	std::vector<ControlTableItem> m_list_fields;	// All Fields hanlded by this specific handler
+	std::vector<int> m_models;
+	
 	std::vector<int> m_field_indices;	// USED?
 	std::vector<int> m_field_lengths;	// Byte size list of fields in the Handler USED?
 
 protected:
+	Handler(std::vector<ControlTableItem> list_fields, std::vector<int> ids, std::vector<int> models,
+			dynamixel::PacketHandler* packetHandler, dynamixel::PortHandler* portHandler,
+			Hal* hal, bool forceIndirect);
+
 	dynamixel::PacketHandler *packetHandler_;
 	dynamixel::PortHandler *portHandler_;
-	Hal m_hal;
+	Hal* m_hal;
 	uint8_t m_data_address = -1;		// Address where the data is written/read
 	uint8_t m_data_byte_size = 0;		// Total data byte size handled by the handler	
 
-	void checkMotorCompatibility(Fields field);
+	void checkMotorCompatibility(ControlTableItem field);
 	void setIndirectAddresses();
 	void getDataByteSize();
 	void checkIDvalidity(std::vector<int> ids);
-	void checkFieldValidity(Fields field);
-	void getFieldPosition(Fields field, int &field_idx, int &field_length);
+	void checkFieldValidity(ControlTableItem field);
+	void getFieldPosition(ControlTableItem field, int &field_idx, int &field_length);
 	int getMotorIndexFromID(int id);
 
 	// Methods that need to be implemented in child classes
 	virtual void clearParam() = 0; // Pure Virtual Function
 };
 
-} // namespace KMR::dxl
+} 
 
 #endif

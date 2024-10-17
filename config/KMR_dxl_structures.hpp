@@ -15,9 +15,65 @@
 #ifndef KMR_DXL_STRUCTURES_HPP
 #define KMR_DXL_STRUCTURES_HPP
 
-namespace KMR_dxl
+namespace KMR::dxl
 {
 #define UNDEF -1
+
+/**
+ * @brief       Exhaustive list of all possible control modes for Dynamixel motors
+ */
+struct Control_modes {
+    uint8_t current_control;
+    uint8_t velocity_control;
+    uint8_t position_control;
+    uint8_t multiturn_control;    
+    uint8_t current_based_position_control;
+    uint8_t PWM_control;
+};
+
+/**
+ * @brief   Structure saving the info of a single motor: both config-wise (ID, model...)
+ *          and specific to the project (occupied indirect addresses, reset status...)
+ */
+struct Motor {
+    int id;
+    int model;
+    int multiturn;
+    Control_modes control_modes;
+
+    uint8_t indir_address_offset = 0;
+    uint8_t indir_data_offset = 0;
+    int toReset = 0;
+
+    Motor(int id, int model)
+    {
+        this->id = id;
+        this->model = model;
+    }; 
+};
+
+/**
+ * @brief   Enumerate of all data fields in a dynamixel motor
+ */
+enum ControlTableItem
+{
+    MODEL_NBR, MODEL_INFO, FIRMWARE, ID, BAUDRATE, RETURN_DELAY, DRIVE_MODE, OPERATING_MODE,
+    SHADOW_ID, PROTOCOL, HOMING_OFFSET, MOVING_THRESHOLD, TEMPERATURE_LIMIT, MAX_VOLTAGE_LIMIT,
+    MIN_VOLTAGE_LIMIT, PWM_LIMIT, CURRENT_LIMIT, ACCELERATION_LIMIT, VELOCITY_LIMIT, MAX_POSITION_LIMIT, 
+    MIN_POSITION_LIMIT, SHUTDOWN,
+
+    TORQUE_ENABLE, LED, STATUS_RETURN, REGISTERED, HARDWARE_ERROR, VELOCITY_I_GAIN, VELOCITY_P_GAIN,
+    POSITION_D_GAIN,
+    POSITION_I_GAIN, POSITION_P_GAIN, FF_2ND_GAIN, FF_1ST_GAIN, BUS_WATCHDOG, GOAL_PWM, GOAL_CURRENT,
+    GOAL_VELOCITY,
+    PROFILE_ACCELERATION, PROFILE_VELOCITY, GOAL_POSITION, REALTIME_TICK, MOVING, MOVING_STATUS,
+    PRESENT_PWM,
+    PRESENT_CURRENT, PRESENT_VELOCITY, PRESENT_POSITION, VELOCITY_TRAJECTORY, POSITION_TRAJECTORY,
+    PRESENT_VOLTAGE, PRESENT_TEMPERATURE,
+    INDIR_ADD_1, INDIR_DATA_1, INDIR_ADD_2, INDIR_DATA_2,
+    NBR_FIELDS, UNDEF_F
+};
+
 
 struct Field {
     float unit;

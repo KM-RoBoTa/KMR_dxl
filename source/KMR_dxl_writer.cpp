@@ -38,32 +38,15 @@ namespace KMR::dxl
  * @param[in]   forceIndirect Boolean: 1 to force the writer to be indirect address
  *              (has no effect if at least 2 fields)
  */
-Writer::Writer(vector<Fields> list_fields, vector<int> ids, dynamixel::PortHandler *portHandler,
-                            dynamixel::PacketHandler *packetHandler, Hal hal, bool forceIndirect)
+Writer::Writer(vector<ControlTableItem> list_fields, vector<int> ids, vector<int> models,
+                dynamixel::PortHandler *portHandler, dynamixel::PacketHandler *packetHandler,
+                Hal* hal, bool forceIndirect)
+: Handler(list_fields, ids, models, packetHandler, portHandler, hal, forceIndirect)
 {
-    portHandler_ = portHandler;
-    packetHandler_ = packetHandler;
-    m_hal = hal;
-    m_ids = ids;
-    m_list_fields = list_fields;
-
-    getDataByteSize();
-
-    if (list_fields.size() == 1 && !forceIndirect) {
-        m_isIndirectHandler = false;
-        checkMotorCompatibility(list_fields[0]);
-    }
-
-    else {
-        m_isIndirectHandler = true;
-        checkMotorCompatibility(INDIR_DATA_1);
-        setIndirectAddresses();
-    }
-
     m_groupSyncWriter = new dynamixel::GroupSyncWrite(portHandler_, packetHandler_, m_data_address, m_data_byte_size);
 
     // Create the table to save parametrized data (to be read or sent)
-    m_dataParam = new uint8_t *[m_ids.size()];
+    m_dataParam = new uint8_t *[m_nbrMotors];
     for (int i=0; i<m_ids.size(); i++)
         m_dataParam[i] = new uint8_t[m_data_byte_size];
 }
@@ -136,7 +119,7 @@ void Writer::syncWrite(vector<int> ids)
 
 }
 
-                                                                                                                                                                                     
+                                                                                                                                                                                  
 /**
  * @brief       Convert angle input into position data based on motor model provided
  * @param[in]   angle Angle to be converted, in rad
@@ -146,7 +129,7 @@ void Writer::syncWrite(vector<int> ids)
 int Writer::angle2Position(float angle, int id)
 {
 	int position = 2048;
-    int motor_idx = m_hal.getMotorsListIndexFromID(id);
+    int motor_idx = m_hal->getMotorsListIndexFromID(id);
     int model = m_hal.m_motors_list[motor_idx].scanned_model;
     float units = m_hal.getControlParametersFromID(id, GOAL_POS).unit;
     Motor motor = m_hal.getMotorFromID(id);

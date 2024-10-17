@@ -21,10 +21,7 @@
 #define POS_DATA_SIZE               4
 
 
-using std::cout;
-using std::endl;
-using std::vector;
-
+using namespace std;
 
 namespace KMR::dxl
 {
@@ -35,24 +32,51 @@ namespace KMR::dxl
  *                                Initializations
  ****************************************************************************/
 
+Handler::Handler(vector<ControlTableItem> list_fields, vector<int> ids, vector<int> models,
+                 dynamixel::PacketHandler* packetHandler, dynamixel::PortHandler* portHandler,
+                 Hal* hal, bool forceIndirect)
+{
+    m_ids = ids;
+    m_models = models;
+    m_nbrMotors = ids.size();
+    packetHandler_ = packetHandler;
+    portHandler_ = portHandler;
+    m_hal = hal;
+    m_list_fields = list_fields;   
+
+    getDataByteSize();
+
+    if (list_fields.size() == 1 && !forceIndirect) {
+        m_isIndirectHandler = false;
+        checkMotorCompatibility(list_fields[0]);
+    }
+
+    else {
+        m_isIndirectHandler = true;
+        checkMotorCompatibility(INDIR_DATA_1);
+        setIndirectAddresses();
+    }
+}
+
 
 /**
  * @brief       Check if the motors are compatible for a given field: same address for data storing. \n 
  *              For indirect handling, also find the first common address for every motor
  * @param[in]   field Control field that the handler is taking care of
  */
-void Handler::checkMotorCompatibility(Fields field)
+void Handler::checkMotorCompatibility(ControlTableItem field)
 {
     uint8_t address = -1;
     uint8_t address_prev = -1;
     int id = -1, id_prev = -1;
     uint8_t biggest_data_offset = 0;
   
-    for(int i=1; i<m_ids.size(); i++){
+    for(int i=1; i<m_nbrMotors; i++){
         id = m_ids[i];
         id_prev = m_ids[i-1];
-        address = m_hal.getControlParametersFromID(id, field).address;
-        address_prev = m_hal.getControlParametersFromID(id_prev, field).address;
+
+        address = m_hal->getControlFieldFromModel(m_models[i], field).addr;
+        address_prev = m_hal->getControlFieldFromModel(m_models[i-1], field).addr;
 
         if(address != address_prev){
             cout << "Motors " << id << " and " << id_prev << " have incompatible addresses!" << endl;
@@ -60,13 +84,13 @@ void Handler::checkMotorCompatibility(Fields field)
         }
 
         if (m_isIndirectHandler) {
-            if (m_hal.getMotorFromID(id).indir_data_offset > biggest_data_offset)
-                biggest_data_offset = m_hal.getMotorFromID(id).indir_data_offset;
+            if (m_hal->getMotorFromID(id).indir_data_offset > biggest_data_offset)
+                biggest_data_offset = m_hal->getMotorFromID(id).indir_data_offset;
         }
     }
 
     if (m_ids.size() == 1)
-        address = m_hal.getControlParametersFromID(m_ids[0], field).address;
+        address = m_hal->getControlFieldFromModel(m_models[0], field).addr;
 
     m_data_address = address + biggest_data_offset;
 
@@ -74,7 +98,7 @@ void Handler::checkMotorCompatibility(Fields field)
     // available common address for all motors for indirect handling, update their offset (already assigned memory)
     if (m_isIndirectHandler) {
         for (int i=0; i<m_ids.size();i++)
-            m_hal.addMotorOffsetFromID(m_ids[i], (uint8_t) (biggest_data_offset + m_data_byte_size), "indir_data_offset");
+            m_hal->addMotorOffsetFromID(m_ids[i], (uint8_t) (biggest_data_offset + m_data_byte_size), "indir_data_offset");
     }
 
 }
@@ -84,35 +108,29 @@ void Handler::checkMotorCompatibility(Fields field)
  */
 void Handler::setIndirectAddresses()
 {
-    Motor_data_field motor_field; 
-    uint8_t dxl_error = 0;  
-    int dxl_comm_result = COMM_TX_FAIL; 
     uint8_t param_address_offset = 0;
-    int id;
-    uint8_t indir_address_start; 
 
-    for (int k=0; k<m_ids.size(); k++){
-        id = m_ids[k];
-        indir_address_start = m_hal.getControlParametersFromID(id, INDIR_ADD_1).address;
+    for (int k=0; k<m_nbrMotors; k++){
+        int id = m_ids[k];
+        uint8_t indir_address_start = m_hal->getControlFieldFromModel(m_models[k], INDIR_ADD_1).addr;
 
         for (int i=0; i<m_list_fields.size(); i++){
-            motor_field = m_hal.getControlParametersFromID(id, m_list_fields.at(i));
+            Field field = m_hal->getControlFieldFromModel(m_models[i], m_list_fields.at(i));
 
-            for (int j=0; j<motor_field.length; j++) {
-
-                dxl_comm_result = packetHandler_->write2ByteTxRx(portHandler_, id, 
-                                                                indir_address_start + m_hal.getMotorFromID(id).indir_address_offset,
-                                                                motor_field.address + param_address_offset, 
+            for (int j=0; j<field.length; j++) {
+                uint8_t dxl_error = 0;  
+                int dxl_comm_result = packetHandler_->write2ByteTxRx(portHandler_, id, 
+                                                                indir_address_start + m_hal->getMotorFromID(id).indir_address_offset,
+                                                                field.addr + param_address_offset, 
                                                                 &dxl_error);
                 if (dxl_comm_result != COMM_SUCCESS)
                     cout << packetHandler_->getTxRxResult(dxl_comm_result) << endl;
 
-                m_hal.addMotorOffsetFromID(id, INDIR_OFFSET, "indir_address_offset");
+                m_hal->addMotorOffsetFromID(id, INDIR_OFFSET, "indir_address_offset");
                 param_address_offset += PARAM_OFFSET;
             }
 
             param_address_offset = 0;
-
         }
     }
 }
@@ -124,7 +142,7 @@ void Handler::setIndirectAddresses()
  */
 void Handler::getDataByteSize()
 {
-    Fields field;
+    ControlTableItem field;
     uint8_t length = 0, length_prev = 0;
 
     m_field_indices = vector<int> (m_list_fields.size());
@@ -133,9 +151,9 @@ void Handler::getDataByteSize()
     for (int i=0; i<m_list_fields.size(); i++){
         field = m_list_fields[i];
         
-        for (int j=1; j<m_ids.size(); j++){
-            length = m_hal.getControlParametersFromID(m_ids[j], field).length;
-            length_prev = m_hal.getControlParametersFromID(m_ids[j-1], field).length;      
+        for (int j=1; j<m_nbrMotors; j++){
+            length = m_hal->getControlFieldFromModel(m_models[j], field).length;
+            length_prev = m_hal->getControlFieldFromModel(m_models[j], field).length;  
 
             if(length != length_prev){
                 cout << "Motors " << m_ids[j] << " and " << m_ids[j-1] << " have incompatible field lengths!" << endl;
@@ -144,12 +162,11 @@ void Handler::getDataByteSize()
         }
 
         if (m_ids.size() == 1)
-            length = m_hal.getControlParametersFromID(m_ids[0], field).length;
+            length = m_hal->getControlFieldFromModel(m_models[0], field).length;  
 
         m_field_lengths[i] = length;
         m_field_indices[i] = m_data_byte_size;
         m_data_byte_size += length;
-
     }
 }
 
@@ -176,7 +193,7 @@ void Handler::checkIDvalidity(vector<int> ids)
  * @brief       Check if query field is handled by this specific handler
  * @param[in]   field Query control field
  */
-void Handler::checkFieldValidity(Fields field)
+void Handler::checkFieldValidity(ControlTableItem field)
 {
     if ( find(m_list_fields.begin(), m_list_fields.end(), field) == m_list_fields.end() ) {
         cout << "Error: field " << field << " is not handled by this handler!" << endl;  
@@ -189,7 +206,7 @@ void Handler::checkFieldValidity(Fields field)
  * @param[in]   field Query control field
  * @retval      Index of the field to be written/read
  */
-void Handler::getFieldPosition(Fields field, int& field_idx, int& field_length)
+void Handler::getFieldPosition(ControlTableItem field, int& field_idx, int& field_length)
 {
     for (int i=0; i<m_list_fields.size(); i++){
         if (m_list_fields[i] == field){

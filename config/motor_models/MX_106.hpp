@@ -16,11 +16,11 @@
 
 #include "../KMR_dxl_structures.hpp"
 
-namespace KMR_dxl
+namespace KMR::dxl
 {
 
-struct MX_106 : ControlTable {
-    MX_106 ()
+struct MX_106_P2 : ControlTable {
+    MX_106_P2 ()
     {
         modelNumber.addr = 0;
         modelNumber.length = 2;
