@@ -30,9 +30,9 @@ class Reader : public Handler
 public:
 	float **m_dataFromMotor = nullptr;  // Table holding the read values from motors
 
-	Reader(std::vector<ControlTableItem> list_fields, std::vector<int> ids,
-			dynamixel::PortHandler *portHandler,
-			dynamixel::PacketHandler *packetHandler, Hal hal, bool forceIndirect);
+	Reader(std::vector<ControlTableItem> list_fields, std::vector<int> ids, std::vector<int> models,
+                dynamixel::PortHandler *portHandler, dynamixel::PacketHandler *packetHandler,
+                Hal* hal, bool forceIndirect);
 	~Reader();
 	void syncRead(std::vector<int> ids);
 

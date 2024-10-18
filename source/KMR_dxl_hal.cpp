@@ -87,10 +87,9 @@ void Hal::init(vector<int> ids, int nbrMotors, vector<int> models)
     m_ids = ids;
     m_models =  models;
 
-    m_motorsList = vector<Motor>(nbrMotors);
     for (int i=0; i<m_nbrMotors; i++) {
         Motor motor(m_ids[i], m_models[i]);
-        m_motorsList[i] = motor;
+        m_motorsList.push_back(motor);
     }
 
     /*

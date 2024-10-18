@@ -33,12 +33,17 @@ namespace KMR::dxl
  */
 class Handler
 {
-public:
-	std::vector<int> m_ids;				// All IDs handled by this specific handler
+public:	
 	int m_nbrMotors;
-	bool m_isIndirectHandler;			// Boolean: 1 if the handler is indirect, 0 otherwise
-	std::vector<ControlTableItem> m_list_fields;	// All Fields hanlded by this specific handler
+	std::vector<int> m_ids;				// All IDs handled by this specific handler
 	std::vector<int> m_models;
+
+	std::vector<ControlTableItem> m_fields;	// All Fields hanlded by this specific handler
+	bool m_isIndirectHandler;			// Boolean: 1 if the handler is indirect, 0 otherwise
+
+	// SI-to-parameters conversion variables
+	std::vector<std::vector<float>> m_units;
+	std::vector<std::vector<float>> m_offsets;
 	
 	std::vector<int> m_field_indices;	// USED?
 	std::vector<int> m_field_lengths;	// Byte size list of fields in the Handler USED?
@@ -51,6 +56,7 @@ protected:
 	dynamixel::PacketHandler *packetHandler_;
 	dynamixel::PortHandler *portHandler_;
 	Hal* m_hal;
+	
 	uint8_t m_data_address = -1;		// Address where the data is written/read
 	uint8_t m_data_byte_size = 0;		// Total data byte size handled by the handler	
 
@@ -61,6 +67,8 @@ protected:
 	void checkFieldValidity(ControlTableItem field);
 	void getFieldPosition(ControlTableItem field, int &field_idx, int &field_length);
 	int getMotorIndexFromID(int id);
+
+	void getConversionVariables();
 
 	// Methods that need to be implemented in child classes
 	virtual void clearParam() = 0; // Pure Virtual Function

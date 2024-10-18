@@ -38,7 +38,7 @@ public:
     BaseRobot(std::vector<int> all_ids, const char *port_name, int baudrate);
     ~BaseRobot();
     
-    void enableMotors();
+    /*void enableMotors();
     void enableMotors(std::vector<int> ids);
     void disableMotors();
     void disableMotors(std::vector<int> ids);
@@ -48,21 +48,22 @@ public:
     void setMaxVoltage(std::vector<float> maxVoltages);
     void setMinVoltage(std::vector<float> maxVoltages);       
     void setControlModes(std::vector<int> controlModes);  
-    void setAllDelay(int val);     
+    void setAllDelay(int val); */
     
 protected:
     dynamixel::PortHandler   *portHandler_ = nullptr;
     dynamixel::PacketHandler *packetHandler_ = nullptr;
     Hal* m_hal = nullptr;
 
-    Writer *m_motor_enabler = nullptr;
+    /*Writer *m_motor_enabler = nullptr;
     Writer *m_controlMode_setter = nullptr;
-    Writer *m_EEPROM_writer = nullptr;
+    Writer *m_EEPROM_writer = nullptr;*/
 
     void init_comm(const char *port_name, int baudrate, float protocol_version);
     void check_comm();
-    void setMultiturnControl_singleMotor(int id, Motor motor);
-    void setPositionControl_singleMotor(int id, Motor motor);
+    
+    /*void setMultiturnControl_singleMotor(int id, Motor motor);
+    void setPositionControl_singleMotor(int id, Motor motor);*/
 };
 
 }

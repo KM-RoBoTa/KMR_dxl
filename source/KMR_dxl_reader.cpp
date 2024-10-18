@@ -16,10 +16,8 @@
 #include <algorithm>
 #include <cstdint>
 
-using std::cout;
-using std::endl;
-using std::vector;
 
+using namespace std;
 
 namespace KMR::dxl
 {
@@ -34,28 +32,17 @@ namespace KMR::dxl
  * @param[in]   forceIndirect Boolean: 1 to force the reader to be indirect address
  *              (has no effect if at least 2 fields)
  */
-Reader::Reader(vector<Fields> list_fields, vector<int> ids, dynamixel::PortHandler *portHandler,
-                            dynamixel::PacketHandler *packetHandler, Hal hal, bool forceIndirect)
+Reader::Reader(vector<ControlTableItem> list_fields, vector<int> ids, vector<int> models,
+                dynamixel::PortHandler *portHandler, dynamixel::PacketHandler *packetHandler,
+                Hal* hal, bool forceIndirect)
+: Handler(list_fields, ids, models, packetHandler, portHandler, hal, forceIndirect)
 {
-    getDataByteSize();
-
-    if (list_fields.size() == 1 && !forceIndirect) {
-        m_isIndirectHandler = false;
-        checkMotorCompatibility(list_fields[0]);
-    }
-
-    else {
-        m_isIndirectHandler = true;
-        checkMotorCompatibility(INDIR_DATA_1);
-        setIndirectAddresses();
-    }
-
     m_groupSyncReader = new dynamixel::GroupSyncRead(portHandler_, packetHandler_, m_data_address, m_data_byte_size);
 
     // Create the table to save read data
     m_dataFromMotor = new float *[m_ids.size()]; 
     for (int i=0; i<m_ids.size(); i++)
-        m_dataFromMotor[i] = new float[m_list_fields.size()];
+        m_dataFromMotor[i] = new float[m_fields.size()];
 }
 
 
@@ -133,14 +120,14 @@ void Reader::checkReadSuccessful(vector<int> ids)
 {
     // Check if groupsyncread data of Dyanamixel is available
     bool dxl_getdata_result = false;
-    Fields field;
+    ControlTableItem field;
     int field_idx = 0;
     int field_length = 0;
     uint8_t offset = 0;
 
     for (int i=0; i<ids.size(); i++){
-        for (int j=0; j<m_list_fields.size(); j++){
-            field = m_list_fields[j];
+        for (int j=0; j<m_fields.size(); j++){
+            field = m_fields[j];
             getFieldPosition(field, field_idx, field_length);
 
             dxl_getdata_result = m_groupSyncReader->isAvailable(ids[i], m_data_address + offset, field_length);
@@ -164,37 +151,23 @@ void Reader::checkReadSuccessful(vector<int> ids)
  */
 void Reader::populateOutputMatrix(vector<int> ids)
 {
-    Fields field;
-    int field_idx = 0;
-    int field_length = 0;
     uint8_t offset = 0;
-    int32_t paramData;
-    float units, data;
-    int id = 0;
 
     for (int i=0; i<ids.size(); i++){
-        for (int j=0; j<m_list_fields.size(); j++){
-            field = m_list_fields[j];
-            id = ids[i];
+        for (int j=0; j<m_fields.size(); j++){
+            ControlTableItem field = m_fields[j];
+            int id = ids[i];
 
+            int field_idx, field_length;
             getFieldPosition(field, field_idx, field_length);
-            units = m_hal.getControlParametersFromID(id, field).unit;
+            int32_t paramData = m_groupSyncReader->getData(id, m_data_address + offset, field_length);
 
-            paramData = m_groupSyncReader->getData(id, m_data_address + offset, field_length);
-
-            // Transform data from parametrized value to SI units
-            if (field != GOAL_POS && field != PRESENT_POS &&
-                field != MIN_POS_LIMIT && field != MAX_POS_LIMIT &&
-                field != HOMING_OFFSET) {
-                data = paramData * units;        
-            }
-            else
-                data = position2Angle(paramData, id, units);
+            float data =  (float) paramData * m_units[j][i] - m_offsets[j][i];
 
             // Save the converted value into the output matrix
             for (int row=0; row<ids.size(); row++){
-                for(int col=0; col<m_list_fields.size(); col++){
-                    if (ids[row] == id && m_list_fields[col] == field) {
+                for(int col=0; col<m_fields.size(); col++){
+                    if (ids[row] == id && m_fields[col] == field) {
                         m_dataFromMotor[row][col] = data;
                         goto loop_break;
                     }
@@ -212,6 +185,7 @@ void Reader::populateOutputMatrix(vector<int> ids)
 }
 
 
+// TO DELETE?
 /**
  * @brief       Convert position into angle based on motor model 
  * @param[in]   position Position to be converted
@@ -219,15 +193,10 @@ void Reader::populateOutputMatrix(vector<int> ids)
  * @param[in]   units Conversion units between the position and the angle
  * @return      Angle position [rad] of the query motor
  */
-float Reader::position2Angle(int32_t position, int id, float units)
+float Reader::position2Angle(int32_t position, int model, float units)
 {
-    float angle;
-
-    int motor_idx = m_hal.getMotorsListIndexFromID(id);
-    int model = m_hal.m_motors_list[motor_idx].scanned_model;
-
-    int Model_max_position = 4095;    
-    angle = ((float) position - Model_max_position/2) * units;
+    float offset = m_hal->getPositionOffset(model);
+    float angle = (float) position * units - offset;
 
     return angle;
 }

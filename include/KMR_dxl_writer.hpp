@@ -41,7 +41,7 @@ private:
     dynamixel::GroupSyncWrite *m_groupSyncWriter = nullptr;
     uint8_t **m_dataParam = nullptr; // Table containing all parametrized data to be sent next step
 
-    int angle2Position(float angle, int id);
+    int angle2Position(float angle, int id, float units);
     void bindParameter(int lower_bound, int upper_bound, int &param);
     void populateDataParam(int32_t data, int motor_idx, int field_idx, int field_length);
     void clearParam();
@@ -67,12 +67,9 @@ void Writer::addDataToWrite(std::vector<T> data, ControlTableItem field)
     checkFieldValidity(field);
     getFieldPosition(field, field_idx, field_length);
 
-
-    for (int i = 0; i < ids.size(); i++)
+    for (int i=0; i<m_nbrMotors; i++)
     {
         int id = m_ids[i];
-        float units = m_hal.getControlParametersFromID(id, field).unit;
-        int motor_idx = getMotorIndexFromID(id);
 
         T current_data;
         if (data.size() == 1)
@@ -81,15 +78,13 @@ void Writer::addDataToWrite(std::vector<T> data, ControlTableItem field)
             current_data = data[i];
 
         // Transform data into its parametrized form and write it into the parametrized data matrix
-        int param_data;
-        if (field != GOAL_POS && field != PRESENT_POS &&
-            field != MIN_POS_LIMIT && field != MAX_POS_LIMIT &&
-            field != HOMING_OFFSET)
-            param_data = current_data / units;
-        else
-            param_data = angle2Position(current_data, id);
+        int param_data = (int) ( (current_data + m_offsets[field_idx][i]) / m_units[field_idx][i] );
 
-        populateDataParam(param_data, motor_idx, field_idx, field_length);
+        // TODO : RESET MULTITURN STATUS (check old angle 2 pos function)
+
+        populateDataParam(param_data, i, field_idx, field_length);
+
+        // Find a way to link it with writing?
     }
 }
 

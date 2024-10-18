@@ -19,10 +19,6 @@
 #define MULTITURN_MAX   6144
 #define MULTITURN_MIN   -2048
 
-using std::cout;
-using std::endl;
-using std::vector;
-
 using namespace std;
 
 namespace KMR::dxl
@@ -119,31 +115,25 @@ void Writer::syncWrite(vector<int> ids)
 
 }
 
-                                                                                                                                                                                  
+                                                                                                                                                                                   
 /**
  * @brief       Convert angle input into position data based on motor model provided
  * @param[in]   angle Angle to be converted, in rad
  * @param[in]   id ID of the motor to receive the position input
  * @return      Position value corresponding to the joint angle (0 degrees or rad -> mid-position)
  */
-int Writer::angle2Position(float angle, int id)
+int Writer::angle2Position(float angle, int model, float units)
 {
-	int position = 2048;
-    int motor_idx = m_hal->getMotorsListIndexFromID(id);
-    int model = m_hal.m_motors_list[motor_idx].scanned_model;
-    float units = m_hal.getControlParametersFromID(id, GOAL_POS).unit;
-    Motor motor = m_hal.getMotorFromID(id);
+    float offset = m_hal->getPositionOffset(model);
 
-    int Model_max_position = 4095;
-    int Model_min_position = 0;
-    position = angle/units + Model_max_position/2 + 0.5;
+    int position = (int)( (angle+offset) /units);
 
-    if (!motor.multiturn)
+    /*if (!motor.multiturn)
         bindParameter(Model_min_position, Model_max_position, position);
     else {
         if (multiturnOverLimit(position))
             m_hal.updateResetStatus(id, 1);
-    }
+    }*/
 
     return position;
 }

@@ -42,7 +42,7 @@ Handler::Handler(vector<ControlTableItem> list_fields, vector<int> ids, vector<i
     packetHandler_ = packetHandler;
     portHandler_ = portHandler;
     m_hal = hal;
-    m_list_fields = list_fields;   
+    m_fields = list_fields;   
 
     getDataByteSize();
 
@@ -56,6 +56,8 @@ Handler::Handler(vector<ControlTableItem> list_fields, vector<int> ids, vector<i
         checkMotorCompatibility(INDIR_DATA_1);
         setIndirectAddresses();
     }
+
+    getConversionVariables();
 }
 
 
@@ -114,8 +116,8 @@ void Handler::setIndirectAddresses()
         int id = m_ids[k];
         uint8_t indir_address_start = m_hal->getControlFieldFromModel(m_models[k], INDIR_ADD_1).addr;
 
-        for (int i=0; i<m_list_fields.size(); i++){
-            Field field = m_hal->getControlFieldFromModel(m_models[i], m_list_fields.at(i));
+        for (int i=0; i<m_fields.size(); i++){
+            Field field = m_hal->getControlFieldFromModel(m_models[i], m_fields.at(i));
 
             for (int j=0; j<field.length; j++) {
                 uint8_t dxl_error = 0;  
@@ -145,11 +147,11 @@ void Handler::getDataByteSize()
     ControlTableItem field;
     uint8_t length = 0, length_prev = 0;
 
-    m_field_indices = vector<int> (m_list_fields.size());
-    m_field_lengths = vector<int> (m_list_fields.size());
+    m_field_indices = vector<int> (m_fields.size());
+    m_field_lengths = vector<int> (m_fields.size());
 
-    for (int i=0; i<m_list_fields.size(); i++){
-        field = m_list_fields[i];
+    for (int i=0; i<m_fields.size(); i++){
+        field = m_fields[i];
         
         for (int j=1; j<m_nbrMotors; j++){
             length = m_hal->getControlFieldFromModel(m_models[j], field).length;
@@ -169,6 +171,40 @@ void Handler::getDataByteSize()
         m_data_byte_size += length;
     }
 }
+
+
+void Handler::getConversionVariables()
+{
+    int nbrFields = m_fields.size();
+    m_units = vector<vector<float>>(nbrFields);
+    m_offsets = vector<vector<float>>(nbrFields);
+
+    for (int i=0; i<nbrFields; i++) {
+        vector<float> units(m_nbrMotors);
+        vector<float> offsets(m_nbrMotors);
+
+        for (int j=0; j<m_nbrMotors; j++) {
+            float unit = m_hal->getControlFieldFromModel(m_models[j], m_fields[i]).unit;
+            float offset = 0;
+
+            if (m_fields[i] == ControlTableItem::GOAL_POSITION       ||
+                m_fields[i] == ControlTableItem::PRESENT_POSITION    ||
+                m_fields[i] == ControlTableItem::MIN_POSITION_LIMIT  || 
+                m_fields[i] == ControlTableItem::MAX_POSITION_LIMIT  ||
+                m_fields[i] == ControlTableItem::HOMING_OFFSET        )
+                offset = m_hal->getPositionOffset(m_models[j]);
+
+            units[j] = unit;
+            offsets[j] = offset;
+        }
+
+        m_units[i] = units;
+        m_offsets[i] = offsets;
+    }
+} 
+
+
+
 
 /*
  *****************************************************************************
@@ -195,7 +231,7 @@ void Handler::checkIDvalidity(vector<int> ids)
  */
 void Handler::checkFieldValidity(ControlTableItem field)
 {
-    if ( find(m_list_fields.begin(), m_list_fields.end(), field) == m_list_fields.end() ) {
+    if ( find(m_fields.begin(), m_fields.end(), field) == m_fields.end() ) {
         cout << "Error: field " << field << " is not handled by this handler!" << endl;  
         exit(1);
     }
@@ -208,8 +244,8 @@ void Handler::checkFieldValidity(ControlTableItem field)
  */
 void Handler::getFieldPosition(ControlTableItem field, int& field_idx, int& field_length)
 {
-    for (int i=0; i<m_list_fields.size(); i++){
-        if (m_list_fields[i] == field){
+    for (int i=0; i<m_fields.size(); i++){
+        if (m_fields[i] == field){
             field_idx = m_field_indices[i];
             field_length = m_field_lengths[i];
         }
