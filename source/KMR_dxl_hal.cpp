@@ -163,21 +163,6 @@ Field Hal::getControlFieldFromModel(int modelNumber, ControlTableItem item)
     return field;
 }
 
-/**
- * @brief       Get the motor model number corresponding to the input motor ID
- * @param[in]   id Query motor ID
- * @return      Motor model number of the query motor
- */
-int Hal::getModelNumberFromID(int id)
-{
-    int i;
-    for (i=0; i<m_nbrMotors; i++) {
-        if (id == m_ids[i])
-            break;
-    }
-
-    return m_models[i];
-}
 
 /**
  * @brief       Extract a specific control field from the input control table
@@ -286,32 +271,13 @@ float Hal::getPositionOffset(int modelNumber)
  ****************************************************************************/
 
 /**
- * @brief       Get a motor's list index from its ID
- * @param[in]   id ID of the query motor
- * @retval      Index of the query motor
- */
-int Hal::getMotorsListIndexFromID(int id)
-{
-    int i;
-    for (i=0; i<m_nbrMotors; i++)
-    {
-        if (m_motorsList[i].id == id)
-        {
-            break;
-        }
-    }
-
-    return i;
-}
-
-/**
  * @brief       Get a motor's info structure from motor ID
  * @param[in]   id ID of the query motor
  * @retval      The Motor structure of the query motor
  */
 Motor Hal::getMotorFromID(int id)
 {
-    int motor_idx = getMotorsListIndexFromID(id);
+    int motor_idx = getIndex(m_ids, id);
     Motor motor = m_motorsList[motor_idx];
 
     return motor;
@@ -330,11 +296,10 @@ Motor Hal::getMotorFromID(int id)
  */
 void Hal::addMotorOffsetFromID(int id, uint8_t data_length, std::string field_name)
 {
-    int motor_idx = getMotorsListIndexFromID(id);
+    int motor_idx = getIndex(m_ids, id);
 
-    if (field_name == "indir_address_offset"){
+    if (field_name == "indir_address_offset")
         m_motorsList[motor_idx].indir_address_offset += data_length;
-    }
     else if (field_name == "indir_data_offset")
         m_motorsList[motor_idx].indir_data_offset += data_length;
     else{
@@ -351,7 +316,7 @@ void Hal::addMotorOffsetFromID(int id, uint8_t data_length, std::string field_na
  */
 /*void Hal::updateResetStatus(int id, int status)
 {
-    int idx = getMotorsListIndexFromID(id);
+    int idx = getIndex(m_ids, id);
     m_motors_list[idx].toReset = status;
 }*/
 
@@ -366,7 +331,7 @@ void Hal::addMotorOffsetFromID(int id, uint8_t data_length, std::string field_na
 
     for (int i=0; i<m_tot_nbr_motors; i++){
         id = m_all_IDs[i];
-        idx = getMotorsListIndexFromID(id);
+        int idx = getIndex(m_ids, id);
         model = m_motors_list[idx].model;
 
         m_motors_list[idx].control_modes.current_based_position_control = 

@@ -10,7 +10,9 @@ add_library(KMR_dxl
             source/KMR_dxl_handler.cpp
             source/KMR_dxl_reader.cpp
             source/KMR_dxl_writer.cpp
-            source/KMR_dxl_hal.cpp)
+            source/KMR_dxl_hal.cpp
+            source/KMR_dxl_utils.cpp
+            )
 
 # Directories containing header files
 target_include_directories(KMR_dxl PUBLIC include config)

@@ -99,7 +99,7 @@ void Writer::syncWrite(vector<int> ids)
 
     for(int i=0; i<ids.size(); i++) {
         id = ids[i];
-        motor_idx = getMotorIndexFromID(id);
+        motor_idx = getIndex(m_ids, id);
 
         dxl_addparam_result = addParam((uint8_t) id, m_dataParam[motor_idx]);
 

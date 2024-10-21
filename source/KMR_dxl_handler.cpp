@@ -18,8 +18,6 @@
 
 #define INDIR_OFFSET                2
 #define PARAM_OFFSET                1
-#define POS_DATA_SIZE               4
-
 
 using namespace std;
 
@@ -70,12 +68,11 @@ void Handler::checkMotorCompatibility(ControlTableItem field)
 {
     uint8_t address = -1;
     uint8_t address_prev = -1;
-    int id = -1, id_prev = -1;
     uint8_t biggest_data_offset = 0;
   
     for(int i=1; i<m_nbrMotors; i++){
-        id = m_ids[i];
-        id_prev = m_ids[i-1];
+        int id = m_ids[i];
+        int id_prev = m_ids[i-1];
 
         address = m_hal->getControlFieldFromModel(m_models[i], field).addr;
         address_prev = m_hal->getControlFieldFromModel(m_models[i-1], field).addr;
@@ -102,7 +99,6 @@ void Handler::checkMotorCompatibility(ControlTableItem field)
         for (int i=0; i<m_ids.size();i++)
             m_hal->addMotorOffsetFromID(m_ids[i], (uint8_t) (biggest_data_offset + m_data_byte_size), "indir_data_offset");
     }
-
 }
 
 /**
@@ -212,20 +208,6 @@ void Handler::getConversionVariables()
  ****************************************************************************/
 
 /**
- * @brief       Check if query motors are handled by this specific handler
- * @param[in]   ids List of query motors
- */
-void Handler::checkIDvalidity(vector<int> ids)
-{
-    for(int i=0; i<ids.size(); i++){
-        if ( find(m_ids.begin(), m_ids.end(), ids[i]) == m_ids.end() ) {
-            cout << "Error: motor " << ids[i] << " is not handled by this handler!" << endl;  
-            exit(1);
-        }
-    }
-}
-
-/**
  * @brief       Check if query field is handled by this specific handler
  * @param[in]   field Query control field
  */
@@ -252,19 +234,5 @@ void Handler::getFieldPosition(ControlTableItem field, int& field_idx, int& fiel
     }
 }
 
-/**
- * @brief       Get the index of a motor in the list of handled motors
- * @param[in]   id Query motor
- * @retval      Index of the motor in the list of handled motors
- */
-int Handler::getMotorIndexFromID(int id)
-{
-    int idx = 0;
-
-    while(m_ids[idx] != id)
-        idx++;
-
-    return idx; 
-}
 
 }

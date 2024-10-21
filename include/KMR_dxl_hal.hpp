@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "KMR_dxl_motor_models.hpp"
+#include "KMR_dxl_utils.hpp"
 
 namespace KMR::dxl
 {
@@ -38,17 +39,18 @@ public:
     ~Hal();
     void init(std::vector<int> ids, int nbrMotors, std::vector<int> models);
 
-    Field getControlFieldFromID(int id, ControlTableItem item);
-    ControlTable getControlTable(int modelNumber);
-    Field getControlField(ControlTable motor, ControlTableItem item);
+    // Keep public
     Field getControlFieldFromModel(int modelNumber, ControlTableItem item);
-    int getModelNumberFromID(int id);
     float getPositionOffset(int modelNumber);
 
 
+
+    // TO edit? USED IN HANDLER
     Motor getMotorFromID(int id);
-    int getMotorsListIndexFromID(int id);
     void addMotorOffsetFromID(int id, uint8_t data_length, std::string field_name);
+
+
+
 
     // TO DELETE?
     /*int m_tot_nbr_motors;   // Number of motors used in the robot. TO DELETE
@@ -82,6 +84,10 @@ private:
     std::vector<int> m_ids;
     std::vector<int> m_models;
 	std::vector<Motor> m_motorsList;     // List containing all motors' info
+
+    Field getControlField(ControlTable motor, ControlTableItem item);
+    ControlTable getControlTable(int modelNumber);
+ 
 
     // TO DELETE?
     /*Motor_models getModelFromID(int id);

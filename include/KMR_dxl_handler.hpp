@@ -17,6 +17,8 @@
 
 #include "dynamixel_sdk/dynamixel_sdk.h"
 #include "KMR_dxl_hal.hpp"
+#include "KMR_dxl_utils.hpp"
+
 #include <cstdint>
 
 namespace KMR::dxl
@@ -33,7 +35,7 @@ namespace KMR::dxl
  */
 class Handler
 {
-public:	
+protected:
 	int m_nbrMotors;
 	std::vector<int> m_ids;				// All IDs handled by this specific handler
 	std::vector<int> m_models;
@@ -41,37 +43,37 @@ public:
 	std::vector<ControlTableItem> m_fields;	// All Fields hanlded by this specific handler
 	bool m_isIndirectHandler;			// Boolean: 1 if the handler is indirect, 0 otherwise
 
+	dynamixel::PacketHandler *packetHandler_;
+	dynamixel::PortHandler *portHandler_;
+	Hal* m_hal;
+
+	uint8_t m_data_address = -1;		// Address where the data is written/read
+	uint8_t m_data_byte_size = 0;		// Total data byte size handled by the handler	
+
 	// SI-to-parameters conversion variables
 	std::vector<std::vector<float>> m_units;
 	std::vector<std::vector<float>> m_offsets;
 	
-	std::vector<int> m_field_indices;	// USED?
-	std::vector<int> m_field_lengths;	// Byte size list of fields in the Handler USED?
-
-protected:
 	Handler(std::vector<ControlTableItem> list_fields, std::vector<int> ids, std::vector<int> models,
 			dynamixel::PacketHandler* packetHandler, dynamixel::PortHandler* portHandler,
 			Hal* hal, bool forceIndirect);
 
-	dynamixel::PacketHandler *packetHandler_;
-	dynamixel::PortHandler *portHandler_;
-	Hal* m_hal;
-	
-	uint8_t m_data_address = -1;		// Address where the data is written/read
-	uint8_t m_data_byte_size = 0;		// Total data byte size handled by the handler	
-
-	void checkMotorCompatibility(ControlTableItem field);
-	void setIndirectAddresses();
-	void getDataByteSize();
-	void checkIDvalidity(std::vector<int> ids);
 	void checkFieldValidity(ControlTableItem field);
 	void getFieldPosition(ControlTableItem field, int &field_idx, int &field_length);
-	int getMotorIndexFromID(int id);
-
-	void getConversionVariables();
 
 	// Methods that need to be implemented in child classes
-	virtual void clearParam() = 0; // Pure Virtual Function
+	virtual void clearParam() = 0; // Pure virtual function
+
+
+private:	
+	std::vector<int> m_field_indices;
+	std::vector<int> m_field_lengths;	// Byte size list of fields in the Handler
+
+	// Initialization functions on constructor call
+	void getDataByteSize();
+	void checkMotorCompatibility(ControlTableItem field);
+	void getConversionVariables();
+	void setIndirectAddresses();
 };
 
 } 
