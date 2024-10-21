@@ -87,29 +87,21 @@ bool Writer::addParam(uint8_t id, uint8_t* data)
 
 /**
  * @brief       Send the previously prepared data with addDataToWrite to motors
- * @param[in]   ids List of motors who will receive data
  */
-void Writer::syncWrite(vector<int> ids)
+void Writer::syncWrite()
 {
-    bool dxl_addparam_result;
-    int dxl_comm_result = COMM_TX_FAIL;   
-    int id, motor_idx;
-
     clearParam();
 
-    for(int i=0; i<ids.size(); i++) {
-        id = ids[i];
-        motor_idx = getIndex(m_ids, id);
-
-        dxl_addparam_result = addParam((uint8_t) id, m_dataParam[motor_idx]);
+    for(int i=0; i<m_nbrMotors; i++) {
+        bool dxl_addparam_result = addParam((uint8_t) m_ids[i], m_dataParam[i]);
 
         if (dxl_addparam_result != true) {
-            cout << "Adding parameters failed for ID = " << id << endl;
+            cout << "Adding parameters failed for ID = " << m_ids[i] << endl;
         }
     }
 
     // Send the packet
-    dxl_comm_result = m_groupSyncWriter->txPacket();
+    int dxl_comm_result = m_groupSyncWriter->txPacket();
     if (dxl_comm_result != COMM_SUCCESS)
         cout << packetHandler_->getTxRxResult(dxl_comm_result) << endl;
 
@@ -129,7 +121,7 @@ int Writer::angle2Position(float angle, int model, float units)
     int position = (int)( (angle+offset) /units);
 
     /*if (!motor.multiturn)
-        bindParameter(Model_min_position, Model_max_position, position);
+        position = saturate(min_pos, max_pos);
     else {
         if (multiturnOverLimit(position))
             m_hal.updateResetStatus(id, 1);
@@ -137,21 +129,6 @@ int Writer::angle2Position(float angle, int model, float units)
 
     return position;
 }
-
-/**
- * @brief           Saturate input value between input limits
- * @param[in]       lower_bound Min. value the input can take
- * @param[in]       upper_bound Max. value the input can take
- * @param[in/out]   param Input value to be saturated
- */
-void Writer::bindParameter(int lower_bound, int upper_bound, int& param)
-{
-    if (param > upper_bound)
-        param = upper_bound;
-    else if (param < lower_bound)
-        param = lower_bound;
-}
-
 
 /**
  * @brief       Save a parametrized data into the general table

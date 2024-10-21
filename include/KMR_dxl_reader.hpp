@@ -28,21 +28,21 @@ namespace KMR::dxl
 class Reader : public Handler
 {
 public:
-	float **m_dataFromMotor = nullptr;  // Table holding the read values from motors
-
 	Reader(std::vector<ControlTableItem> list_fields, std::vector<int> ids, std::vector<int> models,
                 dynamixel::PortHandler *portHandler, dynamixel::PacketHandler *packetHandler,
                 Hal* hal, bool forceIndirect);
 	~Reader();
-	void syncRead(std::vector<int> ids);
+	void syncRead();
+	std::vector<float> getReadFeedback(ControlTableItem field);
 
 protected:
 	dynamixel::GroupSyncRead *m_groupSyncReader = nullptr;
+	std::vector<std::vector<float>> m_dataFromMotor;
 
 	void clearParam();
 	bool addParam(uint8_t id);
-	void checkReadSuccessful(std::vector<int> ids);
-	void populateOutputMatrix(std::vector<int> ids);
+	void checkReadSuccessful();
+	void populateOutputMatrix();
 	float position2Angle(int32_t position, int id, float units);
 };
 

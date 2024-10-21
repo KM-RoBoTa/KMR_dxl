@@ -35,14 +35,13 @@ public:
     ~Writer();
     template <typename T>
     void addDataToWrite(std::vector<T> data, ControlTableItem field);
-    void syncWrite(std::vector<int> ids);
+    void syncWrite();
 
 private:
     dynamixel::GroupSyncWrite *m_groupSyncWriter = nullptr;
     uint8_t **m_dataParam = nullptr; // Table containing all parametrized data to be sent next step
 
-    int angle2Position(float angle, int id, float units);
-    void bindParameter(int lower_bound, int upper_bound, int &param);
+    int angle2Position(float angle, int id, float units); // TO DELETE LATER: multiturn stuff
     void populateDataParam(int32_t data, int motor_idx, int field_idx, int field_length);
     void clearParam();
     bool addParam(uint8_t id, uint8_t *data);
@@ -78,11 +77,19 @@ void Writer::addDataToWrite(std::vector<T> data, ControlTableItem field)
             current_data = data[i];
 
         // Transform data into its parametrized form and write it into the parametrized data matrix
-        int param_data = (int) ( (current_data + m_offsets[field_idx][i]) / m_units[field_idx][i] );
+        T data = current_data + m_offsets[field_idx][i];  // Go to the same reference as Dynamixel's SDK
+
+        int32_t parameter = 0;
+        int32_t absParam = (int32_t) abs((float)data/m_units[field_idx][i]);
+
+        if (data >= 0)
+            parameter = absParam;
+        else
+            parameter = (~absParam) + 1;  // 2's complement for negative values
 
         // TODO : RESET MULTITURN STATUS (check old angle 2 pos function)
 
-        populateDataParam(param_data, i, field_idx, field_length);
+        populateDataParam(parameter, i, field_idx, field_length);
 
         // Find a way to link it with writing?
     }

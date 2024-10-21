@@ -40,9 +40,11 @@ Reader::Reader(vector<ControlTableItem> list_fields, vector<int> ids, vector<int
     m_groupSyncReader = new dynamixel::GroupSyncRead(portHandler_, packetHandler_, m_data_address, m_data_byte_size);
 
     // Create the table to save read data
-    m_dataFromMotor = new float *[m_ids.size()]; 
-    for (int i=0; i<m_ids.size(); i++)
-        m_dataFromMotor[i] = new float[m_fields.size()];
+    m_dataFromMotor = vector<vector<float>>(m_nbrMotors);
+    vector<float> data(m_fields.size(), 0);
+    for (int i=0; i<m_nbrMotors; i++)
+        m_dataFromMotor[i] = data;
+
 }
 
 
@@ -52,10 +54,6 @@ Reader::Reader(vector<ControlTableItem> list_fields, vector<int> ids, vector<int
 Reader::~Reader()
 {
     delete m_groupSyncReader;
-
-    for (int i=0; i<m_ids.size(); i++)
-        delete[] m_dataFromMotor[i];
-    delete[] m_dataFromMotor;
 }
 
 /*
@@ -86,29 +84,26 @@ bool Reader::addParam(uint8_t id)
  * @brief       Read the handled fields of input motors
  * @param[in]   ids List of motors whose fields will be read 
  */
-void Reader::syncRead(vector<int> ids)
+void Reader::syncRead()
 {
-    int dxl_comm_result = COMM_TX_FAIL;             // Communication result
-    bool dxl_addparam_result = 0;
-
     clearParam();    
 
     // Add the input motors to the reading list
-    for (int i=0; i<ids.size(); i++){
-        dxl_addparam_result = addParam(ids[i]);
+    for (int i=0; i<m_ids.size(); i++){
+        bool dxl_addparam_result = addParam(m_ids[i]);
         if (dxl_addparam_result != true) {
-            cout << "Adding parameters failed for ID = " << ids[i] << endl;
+            cout << "Adding parameters failed for ID = " << m_ids[i] << endl;
         }
     }
 
     // Read the motors' sensors
-    dxl_comm_result = m_groupSyncReader->txRxPacket();
+    int dxl_comm_result = m_groupSyncReader->txRxPacket();
     if (dxl_comm_result != COMM_SUCCESS){
         cout << packetHandler_->getTxRxResult(dxl_comm_result) << endl;
     }
 
-    checkReadSuccessful(ids);
-    populateOutputMatrix(ids);
+    checkReadSuccessful();
+    populateOutputMatrix();
 }
 
 
@@ -116,26 +111,20 @@ void Reader::syncRead(vector<int> ids)
  * @brief       Check if read data from motors is available
  * @param[in]   ids List of motors whose fields have just been read
  */
-void Reader::checkReadSuccessful(vector<int> ids)
+void Reader::checkReadSuccessful()
 {
     // Check if groupsyncread data of Dyanamixel is available
-    bool dxl_getdata_result = false;
-    ControlTableItem field;
-    int field_idx = 0;
-    int field_length = 0;
+    int field_idx = 0, field_length = 0;
     uint8_t offset = 0;
 
-    for (int i=0; i<ids.size(); i++){
+    for (int i=0; i<m_nbrMotors; i++){
         for (int j=0; j<m_fields.size(); j++){
-            field = m_fields[j];
-            getFieldPosition(field, field_idx, field_length);
+            getFieldPosition(m_fields[j], field_idx, field_length);
 
-            dxl_getdata_result = m_groupSyncReader->isAvailable(ids[i], m_data_address + offset, field_length);
+            bool dxl_getdata_result = m_groupSyncReader->isAvailable(m_ids[i], m_data_address + offset, field_length);
 
             if (dxl_getdata_result != true)
-            {
-                fprintf(stderr, "[ID:%03d] groupSyncRead getdata failed \n", ids[i]);
-            }
+                fprintf(stderr, "[ID:%03d] groupSyncRead getdata failed \n", m_ids[i]);
 
             offset += field_length;
         }
@@ -149,14 +138,14 @@ void Reader::checkReadSuccessful(vector<int> ids)
  * @brief       The reading being successful, save the read data into the output matrix
  * @param[in]   ids List of motors whose fields have been successfully read
  */
-void Reader::populateOutputMatrix(vector<int> ids)
+void Reader::populateOutputMatrix()
 {
     uint8_t offset = 0;
 
-    for (int i=0; i<ids.size(); i++){
+    for (int i=0; i<m_nbrMotors; i++){
         for (int j=0; j<m_fields.size(); j++){
             ControlTableItem field = m_fields[j];
-            int id = ids[i];
+            int id = m_ids[i];
 
             int field_idx, field_length;
             getFieldPosition(field, field_idx, field_length);
@@ -165,16 +154,7 @@ void Reader::populateOutputMatrix(vector<int> ids)
             float data =  (float) paramData * m_units[j][i] - m_offsets[j][i];
 
             // Save the converted value into the output matrix
-            for (int row=0; row<ids.size(); row++){
-                for(int col=0; col<m_fields.size(); col++){
-                    if (ids[row] == id && m_fields[col] == field) {
-                        m_dataFromMotor[row][col] = data;
-                        goto loop_break;
-                    }
-                }
-            }
-
-            loop_break:
+            m_dataFromMotor[i][j] = data;
 
             // Offset for the data address
             offset += field_length;
