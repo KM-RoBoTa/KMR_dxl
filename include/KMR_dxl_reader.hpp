@@ -33,7 +33,8 @@ public:
                 Hal* hal, bool forceIndirect);
 	~Reader();
 	void syncRead();
-	std::vector<float> getReadFeedback(ControlTableItem field);
+	std::vector<float> getReadingResults(ControlTableItem field);
+	std::vector<float> getReadingResults();
 
 protected:
 	dynamixel::GroupSyncRead *m_groupSyncReader = nullptr;
@@ -43,7 +44,6 @@ protected:
 	bool addParam(uint8_t id);
 	void checkReadSuccessful();
 	void populateOutputMatrix();
-	float position2Angle(int32_t position, int id, float units);
 };
 
 } // namespace KMR::dxl

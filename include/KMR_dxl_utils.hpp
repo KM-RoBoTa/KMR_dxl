@@ -20,9 +20,6 @@
 #include <unistd.h> // Provides the usleep function
 
 
-// Function to return the index of an element k
-int getIndex(std::vector<int> v, int k);
-
 // Trigonometry
 float deg2rad(float deg);
 float rad2deg(float rad);
@@ -58,6 +55,19 @@ T modulo(T a, T b)
     int k = (int)( (float)a /(float)b );
     std::cout << "k = " << k << std::endl;
     return (a-k*b);
+}
+
+// Function to return the index of an element k
+template<typename T>
+int getIndex(std::vector<T> v, T k)
+{
+    auto it = std::find(v.begin(), v.end(), k); 
+    int index = -1;
+  
+    // If element was found 
+    if (it != v.end())  
+        index = it - v.begin(); 
+    return index;    
 }
 
 

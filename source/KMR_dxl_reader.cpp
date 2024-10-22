@@ -40,8 +40,8 @@ Reader::Reader(vector<ControlTableItem> list_fields, vector<int> ids, vector<int
     m_groupSyncReader = new dynamixel::GroupSyncRead(portHandler_, packetHandler_, m_data_address, m_data_byte_size);
 
     // Create the table to save read data
-    m_dataFromMotor = vector<vector<float>>(m_nbrMotors);
-    vector<float> data(m_fields.size(), 0);
+    m_dataFromMotor = vector<vector<float>>(m_fields.size());
+    vector<float> data(m_nbrMotors, 0);
     for (int i=0; i<m_nbrMotors; i++)
         m_dataFromMotor[i] = data;
 
@@ -154,7 +154,7 @@ void Reader::populateOutputMatrix()
             float data =  (float) paramData * m_units[j][i] - m_offsets[j][i];
 
             // Save the converted value into the output matrix
-            m_dataFromMotor[i][j] = data;
+            m_dataFromMotor[j][i] = data;
 
             // Offset for the data address
             offset += field_length;
@@ -165,20 +165,33 @@ void Reader::populateOutputMatrix()
 }
 
 
-// TO DELETE?
-/**
- * @brief       Convert position into angle based on motor model 
- * @param[in]   position Position to be converted
- * @param[in]   id ID of the motor
- * @param[in]   units Conversion units between the position and the angle
- * @return      Angle position [rad] of the query motor
- */
-float Reader::position2Angle(int32_t position, int model, float units)
+vector<float> Reader::getReadingResults(ControlTableItem field)
 {
-    float offset = m_hal->getPositionOffset(model);
-    float angle = (float) position * units - offset;
+    int idx = getIndex(m_fields, field);
+    vector<float> results;
 
-    return angle;
+    if (idx >= 0)
+        results = m_dataFromMotor[idx];
+    else {
+        cout << "Error! This Reader does not handle the asked field. Exiting" << endl;
+        exit(1);
+    }
+
+    return results;
+}
+
+vector<float> Reader::getReadingResults()
+{
+    if (m_isIndirectHandler) {
+        cout << "[Reader handler] Error! This Handler is indirect (at least 2 fields). "
+        "Use the getReadingResults(ControlTableItem field) overload instead" << endl;
+        exit(1);
+    }
+
+    int idx = 0;  // Direct handler (unique field), so index necessarily equal to 0
+    vector<float> results = m_dataFromMotor[idx];
+
+    return results;
 }
 
 }

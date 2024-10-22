@@ -20,7 +20,7 @@
 #include <cstdint>
 #include <vector>
 
-#include "KMR_dxl_motor_models.hpp"
+#include "../config/KMR_dxl_motor_models.hpp"
 #include "KMR_dxl_utils.hpp"
 
 namespace KMR::dxl

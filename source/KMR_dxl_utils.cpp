@@ -20,17 +20,6 @@
 
 using namespace std;
 
-// Function to return the index of an element k
-int getIndex(std::vector<int> v, int k) 
-{ 
-    auto it = std::find(v.begin(), v.end(), k); 
-    int index = -1;
-  
-    // If element was found 
-    if (it != v.end())  
-        index = it - v.begin(); 
-    return index;
-} 
 
 float deg2rad(float deg)
 {
