@@ -19,8 +19,16 @@ namespace KMR::dxl
 {
 #define UNDEF -1
 
+#define CTRL_CURRENT    0
+#define CTRL_SPEED      1
+#define CTRL_POSITION   3
+#define CTRL_MULTITURN  4  
+#define CTRL_HYBRID     5
+#define CTRL_PWM        16
+
 /**
  * @brief       Exhaustive list of all possible control modes for Dynamixel motors
+  * TO DELETE?
  */
 struct Control_modes {
     uint8_t current_control;
@@ -30,6 +38,11 @@ struct Control_modes {
     uint8_t current_based_position_control;
     uint8_t PWM_control;
 };
+
+enum ControlMode {
+    CURRENT, SPEED, POSITION, MULTITURN, HYBRID, PWM, UNDEF_CTRL
+};
+
 
 /**
  * @brief   Structure saving the info of a single motor: both config-wise (ID, model...)

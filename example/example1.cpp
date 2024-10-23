@@ -20,9 +20,21 @@
 //#include "KMR_dxl/KMR_dxl.hpp"
 #include "KMR_dxl.hpp"
 
+// TEMP
+#include "dynamixel_sdk/dynamixel_sdk.h"
+
 using namespace std;
 
 int main()
 {
+    vector<int> ids = {1,2};
+    const char* portname = "/dev/ttyUSB0";
+    int baudrate = 1000000;
+
+    KMR::dxl::BaseRobot robot(ids, portname, baudrate);
+
+    KMR::dxl::ControlMode mode = KMR::dxl::POSITION;
+    robot.setControlModes(mode);
+
     cout << "Field = " << KMR::dxl::ControlTableItem::ACCELERATION_LIMIT << endl;
 }

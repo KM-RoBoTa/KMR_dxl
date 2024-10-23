@@ -55,7 +55,7 @@ BaseRobot::BaseRobot(vector<int> ids, const char *port_name, int baudrate)
 
     // 2 integrated handlers: motor enabling and mode setter
     //m_motor_enabler = new Writer(vector<Fields>{TRQ_ENABLE}, m_all_IDs, portHandler_, packetHandler_, m_hal, 0);
-    //m_controlMode_setter = new Writer(vector<Fields>{OP_MODE}, m_all_IDs, portHandler_, packetHandler_, m_hal, 0);
+    m_controlModeWriter = getNewWriter(vector<ControlTableItem>{OPERATING_MODE}, m_ids);
 }
 
 
@@ -66,9 +66,13 @@ BaseRobot::~BaseRobot()
 {
     //delete m_motor_enabler;
     //delete m_controlMode_setter;
+    deleteWriter(m_controlModeWriter);
 
     // Do last
     delete m_hal;
+
+    // Close port
+    portHandler_->closePort();
 }
 
 
@@ -104,15 +108,13 @@ void BaseRobot::init_comm(const char *port_name, int baudrate, float protocol_ve
  */
 void BaseRobot::check_comm()
 {
-    uint16_t model_number = 0;
-    uint8_t dxl_error = 0;
-    int motor_idx;
-    int id = 0;
-
     cout << "Pinging motors...." << endl;
 
     for (int i=0; i<m_nbrMotors; i++) {
-        id = m_ids[i];
+        int id = m_ids[i];
+        uint16_t model_number = 0;
+        uint8_t dxl_error = 0;
+
         bool result = packetHandler_->ping(portHandler_, id, &model_number, &dxl_error);
         if (result != COMM_SUCCESS) {
             cout << "Failed to ping, check config file and motor ID: " << id << endl;
@@ -126,6 +128,61 @@ void BaseRobot::check_comm()
         }
     }
 }
+
+/*
+******************************************************************************
+ *                         Easy handlers creation
+ ****************************************************************************/
+
+// Create a new Writer handler (!!! on heap)
+Writer* BaseRobot::getNewWriter(vector<ControlTableItem> fields, vector<int> ids)
+{
+    // Get the list of models corresponding to the ids
+    vector<int> models(ids.size());
+    for (int i=0; i<ids.size(); i++) {
+        int idx = getIndex(m_ids, ids[i]);
+        if (idx < 0) {
+            cout << "Error! Unknown ID during Writer creation. Exiting" << endl;
+            exit(1);
+        }
+        models[i] = m_models[i];
+    }
+
+    Writer* writer = new Writer(fields, ids, models, portHandler_, packetHandler_, m_hal, 0);
+    return writer;
+}
+
+// Create a new Reader handler (!!! on heap)
+Reader* BaseRobot::getNewReader(vector<ControlTableItem> fields, vector<int> ids)
+{
+    // Get the list of models corresponding to the ids
+    vector<int> models(ids.size());
+    for (int i=0; i<ids.size(); i++) {
+        int idx = getIndex(m_ids, ids[i]);
+        if (idx < 0) {
+            cout << "Error! Unknown ID during Reader creation. Exiting" << endl;
+            exit(1);
+        }
+        models[i] = m_models[i];
+    }
+
+    Reader* reader = new Reader(fields, ids, models, portHandler_, packetHandler_, m_hal, 0);
+    return reader;
+}
+
+void BaseRobot::deleteWriter(Writer* writer)
+{
+    delete writer;
+    writer = nullptr; // Security in case of double freeing
+}
+
+
+void BaseRobot::deleteReader(Reader* reader)
+{
+    delete reader;
+    reader = nullptr; // Security in case of double freeing
+}
+
 
 /*
 ******************************************************************************
@@ -228,17 +285,50 @@ void BaseRobot::check_comm()
 //******************************************************************************
 // *                               EEPROM init writing
 // ****************************************************************************/
-//
-///**
-// * @brief       Set the control modes of motors
-// * @param[in]   controlModes Control modes to be set to motors
-// */
-//void BaseRobot::setControlModes(vector<int> controlModes)
-//{
-//    m_controlMode_setter->addDataToWrite(controlModes, OP_MODE, m_all_IDs);
-//    m_controlMode_setter->syncWrite(m_all_IDs);
-//}
-//
+
+/**
+ * @brief       Set the control modes of motors
+ * @param[in]   controlModes Control modes to be set to motors
+ */
+void BaseRobot::setControlModes(vector<ControlMode> controlModes)
+{
+    if (controlModes.size() != m_nbrMotors) {
+        cout << "Error! Not all motors have their control modes assigned. Exiting" << endl; 
+        cout << endl;
+    }
+    vector<int> controlModes_int(m_nbrMotors);
+    for (int i=0; i<m_nbrMotors; i++) {
+        switch (controlModes[i])
+        {
+        case CURRENT:   controlModes_int[i] = CTRL_CURRENT;     break;
+        case SPEED:     controlModes_int[i] = CTRL_SPEED;       break;
+        case POSITION:  controlModes_int[i] = CTRL_POSITION;    break;
+        case MULTITURN: controlModes_int[i] = CTRL_MULTITURN;   break;
+        case HYBRID:    controlModes_int[i] = CTRL_HYBRID;      break;
+        case PWM:       controlModes_int[i] = CTRL_PWM;         break;
+        
+        default:
+            cout << "Error! Trying to assign an unknown control mode. Exiting" << endl;
+            exit(1);
+            break;
+        }
+    }
+
+    m_controlModeWriter->addDataToWrite(controlModes_int);
+    m_controlModeWriter->syncWrite();
+}
+
+/**
+ * @brief       Set the control modes of motors
+ * @param[in]   controlModes Control modes to be set to motors
+ */
+void BaseRobot::setControlModes(ControlMode controlMode)
+{
+    vector<ControlMode> controlModes(m_nbrMotors, controlMode);
+    setControlModes(controlModes);
+}
+
+
 //
 ///**
 // * @brief       Set the minimum voltage of motors

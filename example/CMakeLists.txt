@@ -32,3 +32,9 @@ target_link_directories(${PROJECT_NAME} PUBLIC ../build/)
 target_include_directories(${PROJECT_NAME}  PUBLIC ../include)
 
 target_link_libraries(${PROJECT_NAME} KMR_dxl)
+
+
+# TEMPORARY LINK TO DXL
+# Locations of the used libraries
+target_link_directories(${PROJECT_NAME}  PUBLIC /usr/local/lib)
+target_link_libraries(${PROJECT_NAME}  dxl_x64_cpp)

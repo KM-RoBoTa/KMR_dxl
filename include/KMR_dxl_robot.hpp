@@ -35,8 +35,14 @@ public:
     int m_nbrMotors;
     std::vector<int> m_models; // List of IDs in the robot
 
-    BaseRobot(std::vector<int> all_ids, const char *port_name, int baudrate);
+    BaseRobot(std::vector<int> ids, const char *port_name, int baudrate);
     ~BaseRobot();
+
+    // Easy handlers creations
+    Writer* getNewWriter(std::vector<ControlTableItem> fields, std::vector<int> ids);
+    Reader* getNewReader(std::vector<ControlTableItem> fields, std::vector<int> ids);
+    void deleteWriter(Writer* writer);
+    void deleteReader(Reader* reader);
     
     /*void enableMotors();
     void enableMotors(std::vector<int> ids);
@@ -46,18 +52,19 @@ public:
     void setMaxPosition(std::vector<float> maxPositions);
     void setMinPosition(std::vector<float> maxPositions);
     void setMaxVoltage(std::vector<float> maxVoltages);
-    void setMinVoltage(std::vector<float> maxVoltages);       
-    void setControlModes(std::vector<int> controlModes);  
-    void setAllDelay(int val); */
+    void setMinVoltage(std::vector<float> maxVoltages);  */    
+    void setControlModes(std::vector<ControlMode> controlModes);  
+    void setControlModes(ControlMode controlMode);  
+    //void setAllDelay(int val); 
     
 protected:
     dynamixel::PortHandler   *portHandler_ = nullptr;
     dynamixel::PacketHandler *packetHandler_ = nullptr;
     Hal* m_hal = nullptr;
 
-    /*Writer *m_motor_enabler = nullptr;
-    Writer *m_controlMode_setter = nullptr;
-    Writer *m_EEPROM_writer = nullptr;*/
+    //Writer *m_motor_enabler = nullptr;
+    Writer *m_controlModeWriter = nullptr;
+    //Writer *m_EEPROM_writer = nullptr;
 
     void init_comm(const char *port_name, int baudrate, float protocol_version);
     void check_comm();
