@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <iostream>
+#include <cmath>
 
 //#include "KMR_dxl/KMR_dxl.hpp"
 #include "KMR_dxl.hpp"
@@ -25,16 +26,101 @@
 
 using namespace std;
 
+// Global variables for easiness
+vector<int> ids = {1,2};
+const char* portname = "/dev/ttyUSB0";
+int baudrate = 1000000;
+int nbrMotors = ids.size();
+KMR::dxl::BaseRobot robot(ids, portname, baudrate);
+
+// Functions
+void positionControlDemo();
+void speedControlDemo();
+void currentControlDemo();
+void pwmControlDemo();
+
 int main()
 {
-    vector<int> ids = {1,2};
-    const char* portname = "/dev/ttyUSB0";
-    int baudrate = 1000000;
+    robot.setAllDelay(0);
+    sleep(1);
 
-    KMR::dxl::BaseRobot robot(ids, portname, baudrate);
+    positionControlDemo();
+}
 
+
+void positionControlDemo()
+{
+    cout << endl << endl << " ---------- POSITION CONTROL ---------" << endl;
+    robot.disableMotors();
     KMR::dxl::ControlMode mode = KMR::dxl::POSITION;
     robot.setControlModes(mode);
+    sleep(1);
+    vector<float> minPositions = {-M_PI, -2*M_PI/3};
+    vector<float> maxPositions = {+M_PI, +M_PI/2};
+    robot.setMinPosition(minPositions, ids);
+    sleep(1);
+    robot.setMaxPosition(maxPositions, ids);
+    sleep(1);
+    robot.enableMotors();
 
-    cout << "Field = " << KMR::dxl::ControlTableItem::ACCELERATION_LIMIT << endl;
+    vector<float> goalPositions(nbrMotors, 0);
+    vector<float> fbckPositions(nbrMotors, 0);
+
+    float angle = 0;
+    bool forward = 1;
+    const float increment = 0.02;
+    int ctr = 0, maxCtr = 3000;
+
+    robot.setPositions(goalPositions);
+    sleep(1);
+
+    while (ctr < maxCtr) {
+        // Get feedback
+        timespec start = time_s();
+        robot.getPositions(fbckPositions);
+
+        /*cout << "Positions: "; 
+        for (int i=0; i<nbrMotors; i++)
+            cout << fbckPositions[0] << " rad, ";
+        cout << endl;*/
+
+        // Send new goal positions
+        for (int i=0; i<nbrMotors; i++)
+            goalPositions[i] = angle;
+
+        robot.setPositions(goalPositions);
+
+
+        // Update the goal angle for next loop
+        if (forward) {
+            angle += increment;
+
+            if (angle > M_PI) {
+                angle = M_PI;
+                forward = false;
+            }
+        }
+        else {
+            angle -= increment;
+
+            if (angle < -M_PI) {
+                angle = -M_PI;
+                forward = true;
+            }
+        }
+
+        // Increment counter and set the control loop to 5ms
+        ctr++;
+
+        timespec end = time_s();
+        double elapsed = get_delta_us(end, start);
+        cout << "Elapsed = " << elapsed << " us " << endl;
+
+        double toSleep_us = 5*1000-elapsed;
+        if (toSleep_us < 0)
+            toSleep_us = 0;
+        usleep(toSleep_us);
+    }
+
+    robot.disableMotors();
 }

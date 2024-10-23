@@ -44,27 +44,48 @@ public:
     void deleteWriter(Writer* writer);
     void deleteReader(Reader* reader);
     
-    /*void enableMotors();
-    void enableMotors(std::vector<int> ids);
+    void enableMotors();
     void disableMotors();
-    void disableMotors(std::vector<int> ids);
-    void resetMultiturnMotors();
-    void setMaxPosition(std::vector<float> maxPositions);
-    void setMinPosition(std::vector<float> maxPositions);
-    void setMaxVoltage(std::vector<float> maxVoltages);
-    void setMinVoltage(std::vector<float> maxVoltages);  */    
+    //void resetMultiturnMotors();
+    void setMinPosition(std::vector<float> minPositions, std::vector<int> ids);
+    void setMaxPosition(std::vector<float> minPositions, std::vector<int> ids);
+
+    void setMaxVoltage(std::vector<float> maxVoltages);  
+    void setMaxVoltage(float maxVoltage);  
+    void setMinVoltage(std::vector<float> maxVoltages);   
+    void setMinVoltage(float minVoltage);  
+
     void setControlModes(std::vector<ControlMode> controlModes);  
     void setControlModes(ControlMode controlMode);  
-    //void setAllDelay(int val); 
+    void setAllDelay(int val); 
+
+    // Base controls
+    void setPositions(std::vector<float> positions);
+    void getPositions(std::vector<float>& positions);
+    void setSpeeds(std::vector<float> speeds);
+    void getSpeeds(std::vector<float>& speeds);
+    void setCurrents(std::vector<float> currents);
+    void getCurrents(std::vector<float>& currents);
+    void setPWMs(std::vector<float> pwms);
+    void getPWMs(std::vector<float>& pwms);
     
 protected:
     dynamixel::PortHandler   *portHandler_ = nullptr;
     dynamixel::PacketHandler *packetHandler_ = nullptr;
     Hal* m_hal = nullptr;
 
-    //Writer *m_motor_enabler = nullptr;
-    Writer *m_controlModeWriter = nullptr;
-    //Writer *m_EEPROM_writer = nullptr;
+    Writer* m_motorEnableWriter = nullptr;
+    Writer* m_controlModeWriter = nullptr;
+
+    // Base controls
+    Writer* m_positionWriter = nullptr;
+    Writer* m_speedWriter = nullptr;
+    Writer* m_currentWriter = nullptr;
+    Writer* m_PWMWriter = nullptr;
+    Reader* m_positionReader = nullptr;
+    Reader* m_speedReader = nullptr;
+    Reader* m_currentReader = nullptr;
+    Reader* m_PWMReader = nullptr;
 
     void init_comm(const char *port_name, int baudrate, float protocol_version);
     void check_comm();

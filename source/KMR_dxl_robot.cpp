@@ -54,8 +54,19 @@ BaseRobot::BaseRobot(vector<int> ids, const char *port_name, int baudrate)
     m_hal->init(m_ids, m_nbrMotors, m_models);
 
     // 2 integrated handlers: motor enabling and mode setter
-    //m_motor_enabler = new Writer(vector<Fields>{TRQ_ENABLE}, m_all_IDs, portHandler_, packetHandler_, m_hal, 0);
     m_controlModeWriter = getNewWriter(vector<ControlTableItem>{OPERATING_MODE}, m_ids);
+    m_motorEnableWriter = getNewWriter(vector<ControlTableItem>{TORQUE_ENABLE}, m_ids);
+
+    // Integrated base command handlers
+    m_positionWriter = getNewWriter(vector<ControlTableItem>{GOAL_POSITION}, m_ids);
+    m_speedWriter = getNewWriter(vector<ControlTableItem>{GOAL_VELOCITY}, m_ids);
+    m_currentWriter = getNewWriter(vector<ControlTableItem>{GOAL_CURRENT}, m_ids);
+    m_PWMWriter = getNewWriter(vector<ControlTableItem>{GOAL_PWM}, m_ids);
+    m_positionReader = getNewReader(vector<ControlTableItem>{PRESENT_POSITION}, m_ids);
+    m_speedReader = getNewReader(vector<ControlTableItem>{PRESENT_VELOCITY}, m_ids);
+    m_currentReader = getNewReader(vector<ControlTableItem>{PRESENT_CURRENT}, m_ids);
+    m_PWMReader = getNewReader(vector<ControlTableItem>{PRESENT_PWM}, m_ids);
+
 }
 
 
@@ -64,12 +75,34 @@ BaseRobot::BaseRobot(vector<int> ids, const char *port_name, int baudrate)
  */
 BaseRobot::~BaseRobot()
 {
-    //delete m_motor_enabler;
-    //delete m_controlMode_setter;
+    // Delete handlers created on heap
     deleteWriter(m_controlModeWriter);
+    deleteWriter(m_motorEnableWriter);
 
-    // Do last
+    deleteWriter(m_positionWriter); 
+    deleteWriter(m_speedWriter);
+    deleteWriter(m_currentWriter);
+    deleteWriter(m_PWMWriter);
+    deleteReader(m_positionReader);
+    deleteReader(m_speedReader);
+    deleteReader(m_currentReader);
+    deleteReader(m_PWMReader);
+
+    m_controlModeWriter = nullptr;
+    m_motorEnableWriter = nullptr;
+
+    m_positionWriter = nullptr;
+    m_speedWriter = nullptr;
+    m_currentWriter = nullptr;
+    m_PWMWriter = nullptr;
+    m_positionReader = nullptr;
+    m_speedReader = nullptr;
+    m_currentReader = nullptr;
+    m_PWMReader = nullptr;
+
+    // Delete the Hal
     delete m_hal;
+    m_hal = nullptr;
 
     // Close port
     portHandler_->closePort();
@@ -192,43 +225,23 @@ void BaseRobot::deleteReader(Reader* reader)
 /**
  * @brief       Enable all the motors
  */
-//void BaseRobot::enableMotors()
-//{
-//    m_motor_enabler->addDataToWrite(vector<int>{ENABLE}, TRQ_ENABLE, m_all_IDs);
-//    m_motor_enabler->syncWrite(m_all_IDs);
-//}
-//
-///**
-// * @brief       Enable motors specified by IDs
-// * @param[in]   ids List of motor ids to be enabled
-// */
-//void BaseRobot::enableMotors(vector<int> ids)
-//{
-//    m_motor_enabler->addDataToWrite(vector<int>{ENABLE}, TRQ_ENABLE, ids);
-//    m_motor_enabler->syncWrite(ids);    
-//}
-//
-///**
-// * @brief       Disable all the motors
-// */
-//void BaseRobot::disableMotors()
-//{
-//    m_motor_enabler->addDataToWrite(vector<int>{DISABLE}, TRQ_ENABLE, m_all_IDs);
-//    m_motor_enabler->syncWrite(m_all_IDs);
-//}
-//
-///**
-// * @brief       Disable motors specified by IDs
-// * @param[in]   ids List of motor ids to be disabled
-// */
-//void BaseRobot::disableMotors(vector<int> ids)
-//{
-//    m_motor_enabler->addDataToWrite(vector<int>{DISABLE}, TRQ_ENABLE, ids);
-//    m_motor_enabler->syncWrite(ids);    
-//}
-//
-//
-///*
+void BaseRobot::enableMotors()
+{
+    m_motorEnableWriter->addDataToWrite(vector<int>{ENABLE});
+    m_motorEnableWriter->syncWrite();
+}
+
+/**
+ * @brief       Disable all the motors
+ */
+void BaseRobot::disableMotors()
+{
+    m_motorEnableWriter->addDataToWrite(vector<int>{DISABLE});
+    m_motorEnableWriter->syncWrite();
+}
+
+
+/*
 //******************************************************************************
 // *                Reset necessary motors in multiturn mode
 // ****************************************************************************/
@@ -329,80 +342,139 @@ void BaseRobot::setControlModes(ControlMode controlMode)
 }
 
 
-//
-///**
-// * @brief       Set the minimum voltage of motors
-// * @param[in]   minVoltages Min. allowed voltages in motors
-// */                                 
-//void BaseRobot::setMinVoltage(vector<float> minVoltages)
-//{
-//    m_EEPROM_writer = new Writer(vector<Fields> {MIN_VOLT_LIMIT}, 
-//                                            m_all_IDs, portHandler_, packetHandler_, m_hal, 0);
-//
-//    m_EEPROM_writer->addDataToWrite(minVoltages, MIN_VOLT_LIMIT, m_all_IDs);
-//    m_EEPROM_writer->syncWrite(m_all_IDs);
-//
-//    delete m_EEPROM_writer;
-//}
-//
-///**
-// * @brief       Set the maximum voltage of motors
-// * @param[in]   minVoltages Max. allowed voltages in motors
-// */                                 
-//void BaseRobot::setMaxVoltage(vector<float> maxVoltages)
-//{
-//    m_EEPROM_writer = new Writer(vector<Fields> {MAX_VOLT_LIMIT}, 
-//                                            m_all_IDs, portHandler_, packetHandler_, m_hal, 0);
-//
-//    m_EEPROM_writer->addDataToWrite(maxVoltages, MAX_VOLT_LIMIT, m_all_IDs);
-//    m_EEPROM_writer->syncWrite(m_all_IDs);
-//
-//    delete m_EEPROM_writer;
-//}
-//
-///**
-// * @brief       Set the minimum position of motors
-// * @param[in]   minPositions Min. positions for motors (lower saturation) 
-// */                                 
-//void BaseRobot::setMinPosition(vector<float> minPositions)
-//{
-//    m_EEPROM_writer = new Writer(vector<Fields> {MIN_POS_LIMIT}, 
-//                                            m_all_IDs, portHandler_, packetHandler_, m_hal, 0);
-//
-//    m_EEPROM_writer->addDataToWrite(minPositions, MIN_POS_LIMIT, m_all_IDs);
-//    m_EEPROM_writer->syncWrite(m_all_IDs);
-//
-//    delete m_EEPROM_writer;
-//}
-//
-///**
-// * @brief       Set the maximum position of motors
-// * @param[in]   maxPositions Max. positions for motors (upper saturation) 
-// */                                 
-//void BaseRobot::setMaxPosition(vector<float> maxPositions)
-//{
-//    m_EEPROM_writer = new Writer(vector<Fields> {MAX_POS_LIMIT}, 
-//                                            m_all_IDs, portHandler_, packetHandler_, m_hal, 0);
-//
-//    m_EEPROM_writer->addDataToWrite(maxPositions, MAX_POS_LIMIT, m_all_IDs);
-//    m_EEPROM_writer->syncWrite(m_all_IDs);
-//
-//    delete m_EEPROM_writer;
-//}
-//
-///**
-// * @brief   Set the return delay to all motors
-// */
-//void BaseRobot::setAllDelay(int val)
-//{
-//    m_EEPROM_writer = new Writer(vector<Fields> {RETURN_DELAY}, 
-//                                            m_all_IDs, portHandler_, packetHandler_, m_hal, 0);
-//
-//    m_EEPROM_writer->addDataToWrite(vector<int>{val}, RETURN_DELAY, m_all_IDs);
-//    m_EEPROM_writer->syncWrite(m_all_IDs);
-//
-//    delete m_EEPROM_writer;
-//}
 
+/**
+ * @brief       Set the minimum voltage of motors
+ * @param[in]   minVoltages Min. allowed voltages in motors
+ */                                 
+void BaseRobot::setMinVoltage(vector<float> minVoltages)
+{
+    Writer writer(vector<ControlTableItem>{MIN_VOLTAGE_LIMIT}, m_ids, m_models, portHandler_, packetHandler_, m_hal, 0);
+
+    writer.addDataToWrite(minVoltages);
+    writer.syncWrite();
+}
+
+/**
+ * @brief       Set the minimum voltage of motors
+ * @param[in]   minVoltages Min. allowed voltages in motors
+ */                                 
+void BaseRobot::setMinVoltage(float minVoltage)
+{
+    vector<float> minVoltages(m_nbrMotors, minVoltage);
+    setMinVoltage(minVoltages);
+}
+
+
+/**
+ * @brief       Set the minimum voltage of motors
+ * @param[in]   minVoltages Min. allowed voltages in motors
+ */                                 
+void BaseRobot::setMaxVoltage(vector<float> maxVoltages)
+{
+    Writer writer(vector<ControlTableItem>{MAX_VOLTAGE_LIMIT}, m_ids, m_models, portHandler_, packetHandler_, m_hal, 0);
+
+    writer.addDataToWrite(maxVoltages);
+    writer.syncWrite();
+}
+
+/**
+ * @brief       Set the minimum voltage of motors
+ * @param[in]   minVoltages Min. allowed voltages in motors
+ */                                 
+void BaseRobot::setMaxVoltage(float maxVoltage)
+{
+    vector<float> maxVoltages(m_nbrMotors, maxVoltage);
+    setMaxVoltage(maxVoltages);
+}
+
+/**
+ * @brief       Set the minimum position of motors
+ * @param[in]   minPositions Min. positions for motors (lower saturation) 
+ */                                 
+void BaseRobot::setMinPosition(vector<float> minPositions, vector<int> ids)
+{
+    Writer writer(vector<ControlTableItem>{MIN_POSITION_LIMIT}, ids, m_models, portHandler_, packetHandler_, m_hal, 0);
+
+    writer.addDataToWrite(minPositions);
+    writer.syncWrite();
+}
+
+/**
+ * @brief       Set the maximum position of motors
+ * @param[in]   maxPositions Max. positions for motors (upper saturation) 
+ */                                 
+void BaseRobot::setMaxPosition(vector<float> maxPositions, vector<int> ids)
+{
+    Writer writer(vector<ControlTableItem>{MAX_POSITION_LIMIT}, ids, m_models, portHandler_, packetHandler_, m_hal, 0);
+
+    writer.addDataToWrite(maxPositions);
+    writer.syncWrite();
+}
+
+/**
+ * @brief   Set the return delay to all motors
+ */
+void BaseRobot::setAllDelay(int val)
+{
+    Writer writer(vector<ControlTableItem>{RETURN_DELAY}, m_ids, m_models, portHandler_, packetHandler_, m_hal, 0);
+
+    vector<int> vals{m_nbrMotors, val};
+    writer.addDataToWrite(vals);
+    writer.syncWrite();
+}
+
+
+/******************************************************************************
+/ *                            Base controls
+/ ****************************************************************************/
+
+void BaseRobot::setPositions(vector<float> positions)
+{
+    m_positionWriter->addDataToWrite(positions);
+    m_positionWriter->syncWrite();
+}
+
+void BaseRobot::getPositions(vector<float>& positions)
+{
+    m_positionReader->syncRead();
+    positions = m_positionReader->getReadingResults();
+}
+
+void BaseRobot::setSpeeds(vector<float> speeds)
+{
+    m_speedWriter->addDataToWrite(speeds);
+    m_speedWriter->syncWrite();
+}
+
+void BaseRobot::getSpeeds(vector<float>& speeds)
+{
+    m_speedReader->syncRead();
+    speeds = m_speedReader->getReadingResults();
+}
+
+void BaseRobot::setCurrents(vector<float> currents)
+{
+    m_currentWriter->addDataToWrite(currents);
+    m_currentWriter->syncWrite();
+}
+
+void BaseRobot::getCurrents(vector<float>& currents)
+{
+    m_currentReader->syncRead();
+    currents = m_currentReader->getReadingResults();
+}
+
+void BaseRobot::setPWMs(vector<float> pwms)
+{
+    m_PWMWriter->addDataToWrite(pwms);
+    m_PWMWriter->syncWrite();
+}
+
+void BaseRobot::getPWMs(vector<float>& pwms)
+{
+    m_PWMReader->syncRead();
+    pwms = m_PWMReader->getReadingResults();
+}
 
 }

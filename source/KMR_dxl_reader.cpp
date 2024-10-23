@@ -42,9 +42,8 @@ Reader::Reader(vector<ControlTableItem> list_fields, vector<int> ids, vector<int
     // Create the table to save read data
     m_dataFromMotor = vector<vector<float>>(m_fields.size());
     vector<float> data(m_nbrMotors, 0);
-    for (int i=0; i<m_nbrMotors; i++)
+    for (int i=0; i<m_fields.size(); i++)
         m_dataFromMotor[i] = data;
-
 }
 
 
