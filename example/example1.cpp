@@ -28,6 +28,7 @@ using namespace std;
 
 // Global variables for easiness
 vector<int> ids = {1,2};
+//vector<int> ids = {1};
 const char* portname = "/dev/ttyUSB0";
 int baudrate = 1000000;
 int nbrMotors = ids.size();
@@ -41,9 +42,9 @@ void pwmControlDemo();
 
 int main()
 {
-    robot.setAllDelay(0);
+    robot.disableMotors();
+    robot.setReturnDelayTime(0);
     sleep(1);
-
     positionControlDemo();
 }
 
@@ -61,7 +62,7 @@ void positionControlDemo()
     sleep(1);
     robot.setMaxPosition(maxPositions, ids);
     sleep(1);
-    robot.enableMotors();
+    robot.enableMotors();    
 
     vector<float> goalPositions(nbrMotors, 0);
     vector<float> fbckPositions(nbrMotors, 0);
@@ -121,6 +122,14 @@ void positionControlDemo()
             toSleep_us = 0;
         usleep(toSleep_us);
     }
+
+    // Go to 0
+    angle = 0;
+    for (int i=0; i<nbrMotors; i++)
+        goalPositions[i] = angle;
+    robot.setPositions(goalPositions);
+
+    sleep(1);
 
     robot.disableMotors();
 }

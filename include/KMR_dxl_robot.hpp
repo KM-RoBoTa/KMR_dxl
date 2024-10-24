@@ -57,7 +57,7 @@ public:
 
     void setControlModes(std::vector<ControlMode> controlModes);  
     void setControlModes(ControlMode controlMode);  
-    void setAllDelay(int val); 
+    void setReturnDelayTime(float val); 
 
     // Base controls
     void setPositions(std::vector<float> positions);

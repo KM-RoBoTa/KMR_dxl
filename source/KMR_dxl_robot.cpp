@@ -415,11 +415,11 @@ void BaseRobot::setMaxPosition(vector<float> maxPositions, vector<int> ids)
 /**
  * @brief   Set the return delay to all motors
  */
-void BaseRobot::setAllDelay(int val)
+void BaseRobot::setReturnDelayTime(float val)
 {
     Writer writer(vector<ControlTableItem>{RETURN_DELAY}, m_ids, m_models, portHandler_, packetHandler_, m_hal, 0);
 
-    vector<int> vals{m_nbrMotors, val};
+    vector<float> vals(m_nbrMotors, val);
     writer.addDataToWrite(vals);
     writer.syncWrite();
 }
