@@ -44,31 +44,44 @@ public:
     void deleteWriter(Writer* writer);
     void deleteReader(Reader* reader);
     
+    // Enable/disable motor torque
     void enableMotors();
     void disableMotors();
-    //void resetMultiturnMotors();
-    void setMinPosition(std::vector<float> minPositions, std::vector<int> ids);
-    void setMaxPosition(std::vector<float> minPositions, std::vector<int> ids);
 
-    void setMaxVoltage(std::vector<float> maxVoltages);  
-    void setMaxVoltage(float maxVoltage);  
-    void setMinVoltage(std::vector<float> maxVoltages);   
-    void setMinVoltage(float minVoltage);  
-
+    // Motor setup
     void setControlModes(std::vector<ControlMode> controlModes);  
     void setControlModes(ControlMode controlMode);  
     void setReturnDelayTime(float val); 
+    void setMaxVoltage(std::vector<float> maxVoltages);  
+    void setMaxVoltage(float maxVoltage);  
+    void setMinVoltage(std::vector<float> maxVoltages);   
+    void setMinVoltage(float minVoltage);   
+
+    void resetMultiturnMotors();
+
+    // Set limits for different operating modes
+    void setMinPosition(std::vector<float> minPositions, std::vector<int> ids);
+    void setMaxPosition(std::vector<float> maxPositions, std::vector<int> ids);
+    void setMaxSpeed(std::vector<float> maxSpeeds, std::vector<int> ids);
+    void setMaxCurrent(std::vector<float> maxCurrents, std::vector<int> ids);
+    void setMaxPWM(std::vector<float> maxPWMs, std::vector<int> ids);
 
     // Base controls
     void setPositions(std::vector<float> positions);
-    void getPositions(std::vector<float>& positions);
+    bool getPositions(std::vector<float>& positions);
     void setSpeeds(std::vector<float> speeds);
-    void getSpeeds(std::vector<float>& speeds);
+    bool getSpeeds(std::vector<float>& speeds);
     void setCurrents(std::vector<float> currents);
-    void getCurrents(std::vector<float>& currents);
+    bool getCurrents(std::vector<float>& currents);
     void setPWMs(std::vector<float> pwms);
-    void getPWMs(std::vector<float>& pwms);
-    
+    bool getPWMs(std::vector<float>& pwms);
+    void setHybrid(std::vector<float> positions, std::vector<float> currents);
+    bool getHybrid(std::vector<float>& positions, std::vector<float>& currents);
+
+    // Rebooting
+    void reboot(int id);
+    void reboot();
+
 protected:
     dynamixel::PortHandler   *portHandler_ = nullptr;
     dynamixel::PacketHandler *packetHandler_ = nullptr;

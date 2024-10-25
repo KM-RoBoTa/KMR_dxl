@@ -15,9 +15,10 @@
 #include "KMR_dxl_writer.hpp"
 #include <algorithm>
 #include <cstdint>
+#include <cmath>
 
-#define MULTITURN_MAX   6144
-#define MULTITURN_MIN   -2048
+//#define MULTITURN_MAX   6144
+//#define MULTITURN_MIN   -2048
 
 using namespace std;
 
@@ -120,12 +121,7 @@ int Writer::angle2Position(float angle, int model, float units)
 
     int position = (int)( (angle+offset) /units);
 
-    /*if (!motor.multiturn)
-        position = saturate(min_pos, max_pos);
-    else {
-        if (multiturnOverLimit(position))
-            m_hal.updateResetStatus(id, 1);
-    }*/
+
 
     return position;
 }
@@ -153,23 +149,29 @@ void Writer::populateDataParam(int32_t data, int motor_idx, int field_idx, int f
         m_dataParam[motor_idx][field_idx+0] = DXL_LOBYTE(DXL_LOWORD(data));
     }
     else
-        cout<< "Wrong number of parameters to populate the parametrized matrix!" <<endl;
+        cout << "Wrong number of parameters to populate the parametrized matrix!" << endl;
+}
+
+void Writer::multiturnUpdate(int id, float angle)
+{
+    Motor motor = m_hal->getMotorFromID(id);
+
+    if (motor.multiturn && multiturnOverLimit(angle))
+        m_hal->updateResetStatus(id, 1);
 }
 
 
 /**
  * @brief       Check if the goal position will place the motor over a full turn
- * @param[in]   position Parametrized goal position of a motor
+ * @param[in]   
  * @retval      Boolean: 1 if over a full turn, 0 otherwise
  */
-bool Writer::multiturnOverLimit(int position)
+bool Writer::multiturnOverLimit(float angle)
 {
-    if (position > MULTITURN_MAX || position < MULTITURN_MIN)
+    if (angle > 2*M_PI || angle < -2*M_PI)
         return true;
     else
         return false;
 }
-
-
 
 }

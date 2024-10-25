@@ -30,14 +30,14 @@ namespace KMR::dxl
  * @brief       Exhaustive list of all possible control modes for Dynamixel motors
   * TO DELETE?
  */
-struct Control_modes {
+/*struct Control_modes {
     uint8_t current_control;
     uint8_t velocity_control;
     uint8_t position_control;
     uint8_t multiturn_control;    
     uint8_t current_based_position_control;
     uint8_t PWM_control;
-};
+};*/
 
 enum ControlMode {
     CURRENT, SPEED, POSITION, MULTITURN, HYBRID, PWM, UNDEF_CTRL
@@ -51,12 +51,15 @@ enum ControlMode {
 struct Motor {
     int id;
     int model;
-    int multiturn;
-    Control_modes control_modes;
 
+    // Multiturn variables
+    bool multiturn = 0;
+    int toReset = 0;
+    //Control_modes control_modes;
+
+    // Allocated indirect memory trackers
     uint8_t indir_address_offset = 0;
     uint8_t indir_data_offset = 0;
-    int toReset = 0;
 
     Motor(int id, int model)
     {

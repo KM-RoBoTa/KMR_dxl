@@ -45,7 +45,9 @@ private:
     void populateDataParam(int32_t data, int motor_idx, int field_idx, int field_length);
     void clearParam();
     bool addParam(uint8_t id, uint8_t *data);
-    bool multiturnOverLimit(int position);
+
+    void multiturnUpdate(int id, float angle);
+    bool multiturnOverLimit(float angle);
 };
 
 // Templates need to be defined in hpp
@@ -87,11 +89,10 @@ void Writer::addDataToWrite(std::vector<T> data, ControlTableItem field)
         else
             parameter = (~absParam) + 1;  // 2's complement for negative values
 
-        // TODO : RESET MULTITURN STATUS (check old angle 2 pos function)
-
         populateDataParam(parameter, i, field_idx, field_length);
 
-        // Find a way to link it with writing?
+        if (field == GOAL_POSITION)
+            multiturnUpdate(id, (float)current_data);
     }
 }
 
@@ -105,40 +106,8 @@ void Writer::addDataToWrite(std::vector<T> data)
         exit(1);
     }
 
-    int field_length;
-    int field_idx;
     ControlTableItem field = m_fields[0];
-
-    checkFieldValidity(field);
-    getFieldPosition(field, field_idx, field_length);
-
-    for (int i=0; i<m_nbrMotors; i++)
-    {
-        int id = m_ids[i];
-
-        T current_data;
-        if (data.size() == 1)
-            current_data = data[0];
-        else
-            current_data = data[i];
-
-        // Transform data into its parametrized form and write it into the parametrized data matrix
-        T data = current_data + m_offsets[field_idx][i];  // Go to the same reference as Dynamixel's SDK
-
-        int32_t parameter = 0;
-        int32_t absParam = (int32_t) abs((float)data/m_units[field_idx][i]);
-
-        if (data >= 0)
-            parameter = absParam;
-        else
-            parameter = (~absParam) + 1;  // 2's complement for negative values
-
-        // TODO : RESET MULTITURN STATUS (check old angle 2 pos function)
-
-        populateDataParam(parameter, i, field_idx, field_length);
-
-        // Find a way to link it with writing?
-    }
+    addDataToWrite(data, field);
 }
 
 }

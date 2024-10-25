@@ -45,13 +45,13 @@ int main()
     robot.disableMotors();
     robot.setReturnDelayTime(0);
     sleep(1);
-    //positionControlDemo();
+    positionControlDemo();
     //sleep(5);
     //speedControlDemo();
     //sleep(5);
     //currentControlDemo();
     //sleep(5);
-    pwmControlDemo();
+    //pwmControlDemo();
 }
 
 

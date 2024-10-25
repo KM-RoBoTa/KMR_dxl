@@ -27,7 +27,6 @@ namespace KMR::dxl
 #define ENABLE                      1
 #define DISABLE                     0
 
-// Control mode
 // Multiturn
 
 /**
@@ -268,33 +267,44 @@ void BaseRobot::disableMotors()
 //    m_controlMode_setter->syncWrite(vector<int>{id});
 //}
 //
-//
-///**
-// * @brief       Reset multiturn motors flagged as needing a reset.
-// * @note        Make sure the motors had enough time to execute the goal position command before 
-// *              calling this function. Failure to do so results in undefined behavior.
-// */
-//void BaseRobot::resetMultiturnMotors()
-//{
-//    Motor motor;
-//    int id;
-//
-//    for(int i=0; i<m_all_IDs.size(); i++) {
-//        id = m_all_IDs[i];
-//        motor = m_hal.getMotorFromID(id);
-//        if (motor.toReset) {
-//            disableMotors(vector<int>{id});
-//            setPositionControl_singleMotor(id, motor);
-//            setMultiturnControl_singleMotor(id, motor);    
-//            enableMotors(vector<int>{id});
-//
-//            m_hal.updateResetStatus(id, 0);
-//        }
-//    }
-//}
-//
-//
-///*
+
+/**
+ * @brief       Reset multiturn motors flagged as needing a reset.
+ * @note        Make sure the motors had enough time to execute the goal position command before 
+ *              calling this function. Failure to do so results in undefined behavior.
+ */
+void BaseRobot::resetMultiturnMotors()
+{
+    for(int i=0; i<m_nbrMotors; i++) {
+        int id = m_ids[i];
+        Motor motor = m_hal->getMotorFromID(id);
+
+        if (motor.toReset) {
+            reboot(id);
+            usleep(5*1000); // TO DEFINE
+
+            //disableMotors(vector<int>{id});
+            //setPositionControl_singleMotor(id, motor);
+            //setMultiturnControl_singleMotor(id, motor);    
+            //enableMotors(vector<int>{id});
+
+            m_hal->updateResetStatus(id, 0);
+        }
+    }
+}
+
+void BaseRobot::reboot(int id)
+{
+    packetHandler_->reboot(portHandler_, id);
+}
+
+void BaseRobot::reboot()
+{
+    for (int i=0; i<m_nbrMotors; i++)
+        packetHandler_->reboot(portHandler_, m_ids[i]);
+}
+
+
 //******************************************************************************
 // *                               EEPROM init writing
 // ****************************************************************************/
@@ -394,7 +404,18 @@ void BaseRobot::setMaxVoltage(float maxVoltage)
  */                                 
 void BaseRobot::setMinPosition(vector<float> minPositions, vector<int> ids)
 {
-    Writer writer(vector<ControlTableItem>{MIN_POSITION_LIMIT}, ids, m_models, portHandler_, packetHandler_, m_hal, 0);
+    // Get the list of models corresponding to the ids
+    vector<int> models(ids.size());
+    for (int i=0; i<ids.size(); i++) {
+        int idx = getIndex(m_ids, ids[i]);
+        if (idx < 0) {
+            cout << "Error! Unknown ID during Writer creation. Exiting" << endl;
+            exit(1);
+        }
+        models[i] = m_models[i];
+    }
+    
+    Writer writer(vector<ControlTableItem>{MIN_POSITION_LIMIT}, ids, models, portHandler_, packetHandler_, m_hal, 0);
 
     writer.addDataToWrite(minPositions);
     writer.syncWrite();
@@ -406,7 +427,18 @@ void BaseRobot::setMinPosition(vector<float> minPositions, vector<int> ids)
  */                                 
 void BaseRobot::setMaxPosition(vector<float> maxPositions, vector<int> ids)
 {
-    Writer writer(vector<ControlTableItem>{MAX_POSITION_LIMIT}, ids, m_models, portHandler_, packetHandler_, m_hal, 0);
+    // Get the list of models corresponding to the ids
+    vector<int> models(ids.size());
+    for (int i=0; i<ids.size(); i++) {
+        int idx = getIndex(m_ids, ids[i]);
+        if (idx < 0) {
+            cout << "Error! Unknown ID during Writer creation. Exiting" << endl;
+            exit(1);
+        }
+        models[i] = m_models[i];
+    }
+
+    Writer writer(vector<ControlTableItem>{MAX_POSITION_LIMIT}, ids, models, portHandler_, packetHandler_, m_hal, 0);
 
     writer.addDataToWrite(maxPositions);
     writer.syncWrite();
@@ -425,6 +457,66 @@ void BaseRobot::setReturnDelayTime(float val)
 }
 
 
+void BaseRobot::setMaxSpeed(vector<float> maxSpeeds, vector<int> ids)
+{
+    // Get the list of models corresponding to the ids
+    vector<int> models(ids.size());
+    for (int i=0; i<ids.size(); i++) {
+        int idx = getIndex(m_ids, ids[i]);
+        if (idx < 0) {
+            cout << "Error! Unknown ID during Writer creation. Exiting" << endl;
+            exit(1);
+        }
+        models[i] = m_models[i];
+    }
+
+    Writer writer(vector<ControlTableItem>{VELOCITY_LIMIT}, ids, models, portHandler_, packetHandler_, m_hal, 0);
+
+    writer.addDataToWrite(maxSpeeds);
+    writer.syncWrite();
+}
+
+
+void BaseRobot::setMaxCurrent(vector<float> maxCurrents, vector<int> ids)
+{
+    // Get the list of models corresponding to the ids
+    vector<int> models(ids.size());
+    for (int i=0; i<ids.size(); i++) {
+        int idx = getIndex(m_ids, ids[i]);
+        if (idx < 0) {
+            cout << "Error! Unknown ID during Writer creation. Exiting" << endl;
+            exit(1);
+        }
+        models[i] = m_models[i];
+    }
+
+    Writer writer(vector<ControlTableItem>{CURRENT_LIMIT}, ids, models, portHandler_, packetHandler_, m_hal, 0);
+
+    writer.addDataToWrite(maxCurrents);
+    writer.syncWrite();    
+}
+
+void BaseRobot::setMaxPWM(vector<float> maxPWMs, vector<int> ids)
+{
+    // Get the list of models corresponding to the ids
+    vector<int> models(ids.size());
+    for (int i=0; i<ids.size(); i++) {
+        int idx = getIndex(m_ids, ids[i]);
+        if (idx < 0) {
+            cout << "Error! Unknown ID during Writer creation. Exiting" << endl;
+            exit(1);
+        }
+        models[i] = m_models[i];
+    }
+
+    Writer writer(vector<ControlTableItem>{PWM_LIMIT}, ids, models, portHandler_, packetHandler_, m_hal, 0);
+
+    writer.addDataToWrite(maxPWMs);
+    writer.syncWrite();   
+}
+
+
+
 /******************************************************************************
 / *                            Base controls
 / ****************************************************************************/
@@ -435,10 +527,15 @@ void BaseRobot::setPositions(vector<float> positions)
     m_positionWriter->syncWrite();
 }
 
-void BaseRobot::getPositions(vector<float>& positions)
+bool BaseRobot::getPositions(vector<float>& positions)
 {
-    m_positionReader->syncRead();
-    positions = m_positionReader->getReadingResults();
+    bool readSuccess = m_positionReader->syncRead();
+    if (readSuccess) {
+        positions = m_positionReader->getReadingResults();
+        return true;
+    }
+    else
+        return false;
 }
 
 void BaseRobot::setSpeeds(vector<float> speeds)
@@ -447,10 +544,15 @@ void BaseRobot::setSpeeds(vector<float> speeds)
     m_speedWriter->syncWrite();
 }
 
-void BaseRobot::getSpeeds(vector<float>& speeds)
+bool BaseRobot::getSpeeds(vector<float>& speeds)
 {
-    m_speedReader->syncRead();
-    speeds = m_speedReader->getReadingResults();
+    bool readSuccess = m_speedReader->syncRead();
+    if (readSuccess) {
+        speeds = m_speedReader->getReadingResults();
+        return true;
+    }
+    else
+        return false;
 }
 
 void BaseRobot::setCurrents(vector<float> currents)
@@ -459,10 +561,15 @@ void BaseRobot::setCurrents(vector<float> currents)
     m_currentWriter->syncWrite();
 }
 
-void BaseRobot::getCurrents(vector<float>& currents)
+bool BaseRobot::getCurrents(vector<float>& currents)
 {
-    m_currentReader->syncRead();
-    currents = m_currentReader->getReadingResults();
+    bool readSuccess = m_currentReader->syncRead();
+    if (readSuccess) {
+        currents = m_currentReader->getReadingResults();
+        return true;
+    }
+    else 
+        return false;
 }
 
 void BaseRobot::setPWMs(vector<float> pwms)
@@ -471,10 +578,38 @@ void BaseRobot::setPWMs(vector<float> pwms)
     m_PWMWriter->syncWrite();
 }
 
-void BaseRobot::getPWMs(vector<float>& pwms)
+bool BaseRobot::getPWMs(vector<float>& pwms)
 {
-    m_PWMReader->syncRead();
-    pwms = m_PWMReader->getReadingResults();
+    bool readSuccess = m_PWMReader->syncRead();
+    if (readSuccess) {
+        pwms = m_PWMReader->getReadingResults();
+        return true;
+    }
+    else 
+        return false;
+}
+
+void BaseRobot::setHybrid(vector<float> positions, vector<float> currents)
+{
+    m_positionWriter->addDataToWrite(positions);
+    m_currentWriter->addDataToWrite(currents);
+
+    m_positionWriter->syncWrite();
+    m_currentWriter->syncWrite();
+}
+
+bool BaseRobot::getHybrid(vector<float>& positions, vector<float>& currents)
+{
+    bool readPositionSuccess = m_positionReader->syncRead();
+    bool readCurrentSuccess = m_currentReader->syncRead();
+
+    if (readPositionSuccess && readCurrentSuccess) {
+        positions = m_positionReader->getReadingResults();
+        currents = m_currentReader->getReadingResults();
+        return true;
+    }
+    else 
+        return false;
 }
 
 }

@@ -83,7 +83,7 @@ bool Reader::addParam(uint8_t id)
  * @brief       Read the handled fields of input motors
  * @param[in]   ids List of motors whose fields will be read 
  */
-void Reader::syncRead()
+bool Reader::syncRead()
 {
     clearParam();    
 
@@ -92,6 +92,7 @@ void Reader::syncRead()
         bool dxl_addparam_result = addParam(m_ids[i]);
         if (dxl_addparam_result != true) {
             cout << "Adding parameters failed for ID = " << m_ids[i] << endl;
+            return false;
         }
     }
 
@@ -99,10 +100,13 @@ void Reader::syncRead()
     int dxl_comm_result = m_groupSyncReader->txRxPacket();
     if (dxl_comm_result != COMM_SUCCESS){
         cout << packetHandler_->getTxRxResult(dxl_comm_result) << endl;
+        return false;
     }
 
-    checkReadSuccessful();
-    populateOutputMatrix();
+    if (dataAvailable())
+        populateOutputMatrix();
+
+    return true;
 }
 
 
@@ -110,7 +114,7 @@ void Reader::syncRead()
  * @brief       Check if read data from motors is available
  * @param[in]   ids List of motors whose fields have just been read
  */
-void Reader::checkReadSuccessful()
+bool Reader::dataAvailable()
 {
     // Check if groupsyncread data of Dyanamixel is available
     int field_idx = 0, field_length = 0;
@@ -122,14 +126,17 @@ void Reader::checkReadSuccessful()
 
             bool dxl_getdata_result = m_groupSyncReader->isAvailable(m_ids[i], m_data_address + offset, field_length);
 
-            if (dxl_getdata_result != true)
+            if (dxl_getdata_result != true) {
                 fprintf(stderr, "[ID:%03d] groupSyncRead getdata failed \n", m_ids[i]);
-
+                return false;
+            }
             offset += field_length;
         }
 
         offset = 0;
     }
+
+    return true;
 }
 
 
@@ -148,9 +155,72 @@ void Reader::populateOutputMatrix()
 
             int field_idx, field_length;
             getFieldPosition(field, field_idx, field_length);
-            int32_t paramData = m_groupSyncReader->getData(id, m_data_address + offset, field_length);
+            uint32_t paramData = m_groupSyncReader->getData(id, m_data_address + offset, field_length);
 
-            float data =  (float) paramData * m_units[j][i] - m_offsets[j][i];
+            // Apply 2's complement if the received parameter represents a negative value
+            int sign = 0;
+            uint32_t absValue = 0;
+            if (canBeNegative(field)) {
+
+                int shift = field_length*8-1;
+
+                switch (field_length)
+                {
+                case 1:
+                {
+                    uint8_t param8 = (uint8_t) paramData;
+                    if ( (param8>>shift) == 0) {
+                        sign = 1;
+                        absValue = paramData;
+                    }
+                    else {
+                        sign = -1;
+                        uint8_t absValue8 = ~(param8-1);
+                        absValue = (uint32_t) absValue8;
+                    }
+                    break;
+                }
+                case 2:
+                {
+                    uint16_t param16 = (uint16_t) paramData;
+                    if ( (param16>>shift) == 0) {
+                        sign = 1;
+                        absValue = paramData;
+                    }
+                    else {
+                        sign = -1;
+                        uint16_t absValue16 =  ~(param16-1);
+                        absValue = (uint32_t) absValue16;
+                    }
+                    break;
+                }
+                case 4:
+                {
+                    uint32_t param32 = (uint32_t) paramData;
+                    if ( (param32>>shift) == 0) {
+                        sign = 1;
+                        absValue = paramData;
+                    }
+                    else {
+                        sign = -1;
+                        uint32_t absValue32 = ~(param32-1);
+                        absValue = (uint32_t) absValue32;
+                    }
+                    break;    
+                }
+                default:
+                    cout << "Error! Field length not supported" << endl;
+                    exit(1);
+                    break;
+                }
+            }
+            else {
+                sign = 1;
+                absValue = paramData;
+            }
+
+            // Get SI value
+            float data =  (float)absValue * (float)sign * m_units[j][i] - m_offsets[j][i];
 
             // Save the converted value into the output matrix
             m_dataFromMotor[j][i] = data;
@@ -192,5 +262,71 @@ vector<float> Reader::getReadingResults()
 
     return results;
 }
+
+bool Reader::canBeNegative(ControlTableItem field)
+{
+    switch (field)
+    {
+    case MODEL_NBR:             return false;   break;
+    case MODEL_INFO:            return false;   break;
+    case FIRMWARE:              return false;   break;
+    case ID:                    return false;   break;
+    case BAUDRATE:              return false;   break;
+    case RETURN_DELAY:          return false;   break;
+    case DRIVE_MODE:            return false;   break;
+    case OPERATING_MODE:        return false;   break;
+    case SHADOW_ID:             return false;   break;
+    case PROTOCOL:              return false;   break;
+    case HOMING_OFFSET:         return true;    break;
+    case MOVING_THRESHOLD:      return false;   break;
+    case TEMPERATURE_LIMIT:     return false;   break;
+    case MAX_VOLTAGE_LIMIT:     return false;   break;
+    case MIN_VOLTAGE_LIMIT:     return false;   break;
+    case PWM_LIMIT:             return false;   break;
+    case CURRENT_LIMIT:         return false;   break;
+    case ACCELERATION_LIMIT:    return false;   break;
+    case VELOCITY_LIMIT:        return false;   break;
+    case MAX_POSITION_LIMIT:    return false;   break;
+    case MIN_POSITION_LIMIT:    return false;   break;
+    case SHUTDOWN:              return false;   break;
+
+    case TORQUE_ENABLE:         return false;   break;
+    case LED:                   return false;   break;
+    case STATUS_RETURN:         return false;   break;
+    case REGISTERED:            return false;   break;
+    case HARDWARE_ERROR:        return false;   break;
+    case VELOCITY_I_GAIN:       return false;   break;
+    case VELOCITY_P_GAIN:       return false;   break;
+    case POSITION_D_GAIN:       return false;   break;
+    case POSITION_I_GAIN:       return false;   break;
+    case POSITION_P_GAIN:       return false;   break;
+    case FF_2ND_GAIN:           return false;   break;
+    case FF_1ST_GAIN:           return false;   break;
+    case BUS_WATCHDOG:          return true;    break;
+    case GOAL_PWM:              return true;    break;
+    case GOAL_CURRENT:          return true;    break;
+    case GOAL_VELOCITY:         return true;    break;
+    case PROFILE_ACCELERATION:  return false;   break;
+    case PROFILE_VELOCITY:      return false;   break;
+    case GOAL_POSITION:         return true;    break;
+    case REALTIME_TICK:         return false;   break;
+    case MOVING:                return false;   break;
+    case MOVING_STATUS:         return false;   break;
+    case PRESENT_PWM:           return true;    break;
+    case PRESENT_CURRENT:       return true;    break;
+    case PRESENT_VELOCITY:      return true;    break;
+    case PRESENT_POSITION:      return true;    break;
+    case VELOCITY_TRAJECTORY:   return false;   break;
+    case POSITION_TRAJECTORY:   return false;   break;
+    case PRESENT_VOLTAGE:       return false;   break;
+    case PRESENT_TEMPERATURE:   return false;   break;
+
+    default:
+        cout << "Error! Unknown field being tested for being able to have negative feedback" << endl;
+        exit(1);
+        break;
+    }
+}
+
 
 }

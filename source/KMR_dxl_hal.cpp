@@ -39,13 +39,6 @@ Hal::Hal()
     XW430_T200 = new XW430_T200_P2();
     XW540_T140 = new XW540_T140_P2();
     XW540_T260 = new XW540_T260_P2();
-
-
-    /*m_control_table = new Motor_data_field *[NBR_MODELS];
-    for (int i = 0; i < NBR_MODELS; i++)
-        m_control_table[i] = new Motor_data_field[NBR_FIELDS];
-
-    m_controlModesPerModel = new Control_modes[NBR_MODELS];*/
 }
 
 /**
@@ -64,14 +57,6 @@ Hal::~Hal()
     delete XW430_T200;
     delete XW540_T140;
     delete XW540_T260;    
-
-    /*delete[] m_controlModesPerModel;
-
-    for (int i=0; i<NBR_MODELS; i++)
-        delete[] m_control_table[i];
-    delete[] m_control_table;
-    
-    free(m_motors_list);*/
 }
 
 
@@ -91,21 +76,6 @@ void Hal::init(vector<int> ids, int nbrMotors, vector<int> models)
         Motor motor(m_ids[i], m_models[i]);
         m_motorsList.push_back(motor);
     }
-
-    /*
-    // Parse the motor config specific to the current project
-    parse_motor_config(motor_config_file);
-
-    // Create the control table for all models
-    populate_control_table(path_to_KMR_dxl);
-
-    // Extract the list of motor IDs
-    get_ID_list_from_motors_list();
-
-    // Save operating modes values to motors
-    saveControlValuesToMotors();
-
-    return m_all_IDs;}*/
 }
 
 /**
@@ -314,11 +284,11 @@ void Hal::addMotorOffsetFromID(int id, uint8_t data_length, std::string field_na
  * @param[in]   id ID of the query motor
  * @param[in]   status Boolean: 1 if need to reset, 0 if not
  */
-/*void Hal::updateResetStatus(int id, int status)
+void Hal::updateResetStatus(int id, int status)
 {
     int idx = getIndex(m_ids, id);
-    m_motors_list[idx].toReset = status;
-}*/
+    m_motorsList[idx].toReset = status;
+}
 
 
 /**

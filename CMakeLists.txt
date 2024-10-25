@@ -60,3 +60,10 @@ option(BUILD_DOCS "Generate Docs" ON)
 if(BUILD_DOCS)
 	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/docs)  # path to docs' cmakelists
 endif()
+
+
+# Generate example executables
+add_executable(example1 example/example1.cpp)
+target_link_libraries(example1 KMR_dxl)
+add_executable(example2 example/example_position_control.cpp)
+target_link_libraries(example2 KMR_dxl)

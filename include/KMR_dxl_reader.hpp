@@ -32,7 +32,7 @@ public:
                 dynamixel::PortHandler *portHandler, dynamixel::PacketHandler *packetHandler,
                 Hal* hal, bool forceIndirect);
 	~Reader();
-	void syncRead();
+	bool syncRead();
 	std::vector<float> getReadingResults(ControlTableItem field);
 	std::vector<float> getReadingResults();
 
@@ -42,8 +42,11 @@ protected:
 
 	void clearParam();
 	bool addParam(uint8_t id);
-	void checkReadSuccessful();
+	bool dataAvailable();
 	void populateOutputMatrix();
+
+private:
+	bool canBeNegative(ControlTableItem field);
 };
 
 } // namespace KMR::dxl

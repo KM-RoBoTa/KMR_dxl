@@ -42,7 +42,7 @@ public:
     // Keep public
     Field getControlFieldFromModel(int modelNumber, ControlTableItem item);
     float getPositionOffset(int modelNumber);
-
+    void updateResetStatus(int id, int status);
 
 
     // TO edit? USED IN HANDLER
@@ -64,8 +64,8 @@ public:
     Motor_data_field getControlParametersFromID(int id, Fields field); 
 
     Motor getMotorFromID(int id);
-    void addMotorOffsetFromID(int id, uint8_t data, std::string field_name);
-    void updateResetStatus(int id, int status);*/
+    void addMotorOffsetFromID(int id, uint8_t data, std::string field_name);*/
+
 
 private:
     ControlTable* MX_28 = nullptr;
