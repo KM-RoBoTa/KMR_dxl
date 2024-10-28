@@ -57,6 +57,7 @@ public:
     void setMinVoltage(std::vector<float> maxVoltages);   
     void setMinVoltage(float minVoltage);   
 
+    // Multiturn functions
     void resetMultiturnMotors();
 
     // Set limits for different operating modes

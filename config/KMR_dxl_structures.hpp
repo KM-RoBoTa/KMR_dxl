@@ -17,14 +17,14 @@
 
 namespace KMR::dxl
 {
-#define UNDEF -1
+const int UNDEF = -1;
 
-#define CTRL_CURRENT    0
-#define CTRL_SPEED      1
-#define CTRL_POSITION   3
-#define CTRL_MULTITURN  4  
-#define CTRL_HYBRID     5
-#define CTRL_PWM        16
+const int CTRL_CURRENT      = 0;
+const int CTRL_SPEED        = 1;
+const int CTRL_POSITION     = 3;
+const int CTRL_MULTITURN    = 4;  
+const int CTRL_HYBRID       = 5;
+const int CTRL_PWM          = 16;
 
 /**
  * @brief       Exhaustive list of all possible control modes for Dynamixel motors

@@ -290,6 +290,16 @@ void Hal::updateResetStatus(int id, int status)
     m_motorsList[idx].toReset = status;
 }
 
+void Hal::setMultiturnMode(int id)
+{
+    int idx = getIndex(m_ids, id);
+    if (idx < 0) {
+        cout << "Error! Unknown ID set as a multiturn motor" << endl;
+        exit(1);
+    }
+    m_motorsList[idx].multiturn = true;    
+}
+
 
 /**
  * @brief       For each motor, save all operating modes control values. \n 

@@ -156,8 +156,9 @@ void Writer::multiturnUpdate(int id, float angle)
 {
     Motor motor = m_hal->getMotorFromID(id);
 
-    if (motor.multiturn && multiturnOverLimit(angle))
+    if (motor.multiturn && multiturnOverLimit(angle)) {
         m_hal->updateResetStatus(id, 1);
+    }
 }
 
 

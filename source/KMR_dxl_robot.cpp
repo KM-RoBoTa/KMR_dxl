@@ -241,32 +241,9 @@ void BaseRobot::disableMotors()
 
 
 /*
-//******************************************************************************
-// *                Reset necessary motors in multiturn mode
-// ****************************************************************************/
-///**
-// * @brief       Set single motor to multiturn mode. Used for multiturn reset
-// * @param[in]   id Motor id to get set to multiturn mode
-// * @param[in]   motor Query motor 
-// */
-//void BaseRobot::setMultiturnControl_singleMotor(int id, Motor motor)
-//{
-//    m_controlMode_setter->addDataToWrite(vector<int>{motor.control_modes.multiturn_control}, OP_MODE, vector<int>{id});
-//    m_controlMode_setter->syncWrite(vector<int>{id});
-//}
-//
-///**
-// * @brief       Set single motor to position control mode. Used for multiturn reset
-// * @param[in]   id Motor id to get set to control position mode
-// * @param[in]   motor Query motor 
-// */
-//void BaseRobot::setPositionControl_singleMotor(int id, Motor motor)
-//{
-//    int pos_control = motor.control_modes.position_control;
-//    m_controlMode_setter->addDataToWrite(vector<int>{motor.control_modes.position_control}, OP_MODE, vector<int>{id});
-//    m_controlMode_setter->syncWrite(vector<int>{id});
-//}
-//
+*****************************************************************************
+*                      Multiturn mode functions
+****************************************************************************/
 
 /**
  * @brief       Reset multiturn motors flagged as needing a reset.
@@ -275,21 +252,22 @@ void BaseRobot::disableMotors()
  */
 void BaseRobot::resetMultiturnMotors()
 {
+    bool needSleep = 0;
     for(int i=0; i<m_nbrMotors; i++) {
         int id = m_ids[i];
         Motor motor = m_hal->getMotorFromID(id);
 
         if (motor.toReset) {
+            needSleep = 1;
             reboot(id);
-            usleep(5*1000); // TO DEFINE
-
-            //disableMotors(vector<int>{id});
-            //setPositionControl_singleMotor(id, motor);
-            //setMultiturnControl_singleMotor(id, motor);    
-            //enableMotors(vector<int>{id});
-
             m_hal->updateResetStatus(id, 0);
         }
+    }
+
+    if (needSleep) {
+        usleep(100*1000);  // Wait for the reboot to finish
+        enableMotors();
+        usleep(5*1000); // Allow the enable
     }
 }
 
@@ -303,7 +281,6 @@ void BaseRobot::reboot()
     for (int i=0; i<m_nbrMotors; i++)
         packetHandler_->reboot(portHandler_, m_ids[i]);
 }
-
 
 //******************************************************************************
 // *                               EEPROM init writing
@@ -319,16 +296,30 @@ void BaseRobot::setControlModes(vector<ControlMode> controlModes)
         cout << "Error! Not all motors have their control modes assigned. Exiting" << endl; 
         cout << endl;
     }
+
     vector<int> controlModes_int(m_nbrMotors);
     for (int i=0; i<m_nbrMotors; i++) {
         switch (controlModes[i])
         {
-        case CURRENT:   controlModes_int[i] = CTRL_CURRENT;     break;
-        case SPEED:     controlModes_int[i] = CTRL_SPEED;       break;
-        case POSITION:  controlModes_int[i] = CTRL_POSITION;    break;
-        case MULTITURN: controlModes_int[i] = CTRL_MULTITURN;   break;
-        case HYBRID:    controlModes_int[i] = CTRL_HYBRID;      break;
-        case PWM:       controlModes_int[i] = CTRL_PWM;         break;
+        case CURRENT:
+            controlModes_int[i] = CTRL_CURRENT;
+            break;
+        case SPEED:
+            controlModes_int[i] = CTRL_SPEED;
+            break;
+        case POSITION:
+            controlModes_int[i] = CTRL_POSITION;
+            break;
+        case MULTITURN:
+            controlModes_int[i] = CTRL_MULTITURN;
+            m_hal->setMultiturnMode(m_ids[i]);
+            break;
+        case HYBRID:
+            controlModes_int[i] = CTRL_HYBRID;
+            break;
+        case PWM:
+            controlModes_int[i] = CTRL_PWM;
+            break;
         
         default:
             cout << "Error! Trying to assign an unknown control mode. Exiting" << endl;

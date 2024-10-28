@@ -43,7 +43,7 @@ public:
     Field getControlFieldFromModel(int modelNumber, ControlTableItem item);
     float getPositionOffset(int modelNumber);
     void updateResetStatus(int id, int status);
-
+    void setMultiturnMode(int id);
 
     // TO edit? USED IN HANDLER
     Motor getMotorFromID(int id);

@@ -45,13 +45,25 @@ int main()
     robot.disableMotors();
     robot.setReturnDelayTime(0);
     sleep(1);
+
+    cout << "Motor turned on." << endl << "Rebooting in 3 sec" << endl;
+    sleep(1);
+    cout << "Rebooting in 2 sec" << endl;
+    sleep(1);
+    cout << "Rebooting in 1 sec" << endl;
+    sleep(1);
+    cout << "Rebooting..." << endl;
+
+    robot.reboot(1);
+    sleep(3);
+
     //positionControlDemo();
     //sleep(5);
     //speedControlDemo();
     //sleep(5);
     //currentControlDemo();
     //sleep(5);
-    pwmControlDemo();
+    //pwmControlDemo();
 }
 
 
