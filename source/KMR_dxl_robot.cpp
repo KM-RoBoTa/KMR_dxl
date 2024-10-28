@@ -453,6 +453,10 @@ void BaseRobot::setMaxSpeed(vector<float> maxSpeeds, vector<int> ids)
     // Get the list of models corresponding to the ids
     vector<int> models(ids.size());
     for (int i=0; i<ids.size(); i++) {
+        if (maxSpeeds[i] < 0) {
+            cout << "Error! Max speed limit set as negative. Exiting" << endl;
+            exit(1);
+        }
         int idx = getIndex(m_ids, ids[i]);
         if (idx < 0) {
             cout << "Error! Unknown ID during Writer creation. Exiting" << endl;
