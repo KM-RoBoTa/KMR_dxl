@@ -48,7 +48,7 @@ int main()
     robot.disableMotors();
 
     // Set the motors to multiturn mode
-    KMR::dxl::ControlMode mode = KMR::dxl::MULTITURN;
+    KMR::dxl::ControlMode mode = KMR::dxl::ControlMode::MULTITURN;
     robot.setControlModes(mode);
     sleep(1);
 

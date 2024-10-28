@@ -48,7 +48,7 @@ int main()
     robot.disableMotors();
 
     // Set control mode
-    KMR::dxl::ControlMode mode = KMR::dxl::SPEED;
+    KMR::dxl::ControlMode mode = KMR::dxl::ControlMode::SPEED;
     robot.setControlModes(mode);
     sleep(1);
 

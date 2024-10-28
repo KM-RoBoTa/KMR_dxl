@@ -26,7 +26,8 @@
 
 #define BAUDRATE        1000000
 #define PORTNAME        "/dev/ttyUSB0"
-#define INCREMENT       0.02
+#define GOAL_PWM1       50
+#define GOAL_PWM2       -30
 #define MAX_CTR         2000
 #define CTRL_PERIOD_US  5000
 
@@ -43,70 +44,43 @@ KMR::dxl::BaseRobot robot(ids, PORTNAME, BAUDRATE);
 
 int main()
 {
-    cout << endl << endl << " ---------- POSITION CONTROL ---------" << endl;
+    cout << endl << endl << " ---------- PWM CONTROL ---------" << endl;
     robot.disableMotors();
-
-    // Set the control mode
-    KMR::dxl::ControlMode mode = KMR::dxl::ControlMode::POSITION;
+    KMR::dxl::ControlMode mode = KMR::dxl::ControlMode::PWM;
     robot.setControlModes(mode);
     sleep(1);
 
-    // Set min/max positions
-    vector<float> minPositions = {-M_PI, -2*M_PI/3};
-    vector<float> maxPositions = {+M_PI, +M_PI/2};
-    robot.setMinPosition(minPositions, ids);
+    // Set max currents
+    vector<float> maxPWMs = {100, 40};  // %
+    robot.setMaxPWM(maxPWMs, ids);
     usleep(50*1000);
-    robot.setMaxPosition(maxPositions, ids);
-    usleep(50*1000);
-    robot.enableMotors();    
-    
-    // Required variables
-    vector<float> goalPositions(nbrMotors, 0);
-    vector<float> fbckPositions(nbrMotors, 0);
+    robot.enableMotors();        
 
-    float angle = 0;
-    bool forward = 1;
+    float pwm = GOAL_PWM1; // A
     int ctr = 0;
 
-    robot.setPositions(goalPositions);
-    sleep(1);
+    vector<float> goalPWMs(nbrMotors, pwm);
+    vector<float> fbckPWMs(nbrMotors, 0);
 
-    // Main loop
     while (ctr < MAX_CTR) {
         // Get feedback
         timespec start = time_s();
-        robot.getPositions(fbckPositions);
+        robot.getPWMs(fbckPWMs);
 
-        cout << "Positions: "; 
+        cout << "PWMs: "; 
         for (int i=0; i<nbrMotors; i++) {
-            cout << fbckPositions[i] << " rad";
+            cout << fbckPWMs[i] << " %";
             if (i != (nbrMotors-1))
                 cout << ", ";
         }
         cout << endl;
 
-        // Send new goal positions
+        // Send new goal currents
+        if (ctr > MAX_CTR/2)
+            pwm = GOAL_PWM2;
         for (int i=0; i<nbrMotors; i++)
-            goalPositions[i] = angle;
-        robot.setPositions(goalPositions);
-
-        // Update the goal angle for next loop
-        if (forward) {
-            angle += INCREMENT;
-
-            if (angle > M_PI) {
-                angle = M_PI;
-                forward = false;
-            }
-        }
-        else {
-            angle -= INCREMENT;
-
-            if (angle < -M_PI) {
-                angle = -M_PI;
-                forward = true;
-            }
-        }
+            goalPWMs[i] = pwm;
+        robot.setPWMs(goalPWMs);
 
         // Increment counter and set the control loop to 5ms
         ctr++;
@@ -119,16 +93,19 @@ int main()
         usleep(toSleep_us);
     }
 
-    robot.disableMotors();
+    pwm = 0;
+    for (int i=0; i<nbrMotors; i++)
+        goalPWMs[i] = pwm;
+    robot.setPWMs(goalPWMs);    
+
+    sleep(1);
+
+    robot.disableMotors();    
 
     // Reset the limits
-    for (int i=0; i<nbrMotors; i++) {
-        minPositions[i] = -M_PI;
-        maxPositions[i] = +M_PI;
-    }
-    robot.setMinPosition(minPositions, ids);
-    usleep(50*1000);
-    robot.setMaxPosition(maxPositions, ids);
+    for (int i=0; i<nbrMotors; i++)
+        maxPWMs[i] = 100;
+    robot.setMaxPWM(maxPWMs, ids);
     usleep(50*1000);
 
     cout << "Example finished, exiting" << endl;

@@ -265,6 +265,8 @@ vector<float> Reader::getReadingResults()
 
 bool Reader::canBeNegative(ControlTableItem field)
 {
+    using enum ControlTableItem;
+
     switch (field)
     {
     case MODEL_NBR:             return false;   break;

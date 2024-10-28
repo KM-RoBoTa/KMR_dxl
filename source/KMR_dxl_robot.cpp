@@ -53,19 +53,22 @@ BaseRobot::BaseRobot(vector<int> ids, const char *port_name, int baudrate)
     m_hal->init(m_ids, m_nbrMotors, m_models);
 
     // 2 integrated handlers: motor enabling and mode setter
-    m_controlModeWriter = getNewWriter(vector<ControlTableItem>{OPERATING_MODE}, m_ids);
-    m_motorEnableWriter = getNewWriter(vector<ControlTableItem>{TORQUE_ENABLE}, m_ids);
+    {
+        using enum ControlTableItem;
 
-    // Integrated base command handlers
-    m_positionWriter = getNewWriter(vector<ControlTableItem>{GOAL_POSITION}, m_ids);
-    m_speedWriter = getNewWriter(vector<ControlTableItem>{GOAL_VELOCITY}, m_ids);
-    m_currentWriter = getNewWriter(vector<ControlTableItem>{GOAL_CURRENT}, m_ids);
-    m_PWMWriter = getNewWriter(vector<ControlTableItem>{GOAL_PWM}, m_ids);
-    m_positionReader = getNewReader(vector<ControlTableItem>{PRESENT_POSITION}, m_ids);
-    m_speedReader = getNewReader(vector<ControlTableItem>{PRESENT_VELOCITY}, m_ids);
-    m_currentReader = getNewReader(vector<ControlTableItem>{PRESENT_CURRENT}, m_ids);
-    m_PWMReader = getNewReader(vector<ControlTableItem>{PRESENT_PWM}, m_ids);
+        m_controlModeWriter = getNewWriter(vector<ControlTableItem>{OPERATING_MODE}, m_ids);
+        m_motorEnableWriter = getNewWriter(vector<ControlTableItem>{TORQUE_ENABLE}, m_ids);
 
+        // Integrated base command handlers
+        m_positionWriter = getNewWriter(vector<ControlTableItem>{GOAL_POSITION}, m_ids);
+        m_speedWriter = getNewWriter(vector<ControlTableItem>{GOAL_VELOCITY}, m_ids);
+        m_currentWriter = getNewWriter(vector<ControlTableItem>{GOAL_CURRENT}, m_ids);
+        m_PWMWriter = getNewWriter(vector<ControlTableItem>{GOAL_PWM}, m_ids);
+        m_positionReader = getNewReader(vector<ControlTableItem>{PRESENT_POSITION}, m_ids);
+        m_speedReader = getNewReader(vector<ControlTableItem>{PRESENT_VELOCITY}, m_ids);
+        m_currentReader = getNewReader(vector<ControlTableItem>{PRESENT_CURRENT}, m_ids);
+        m_PWMReader = getNewReader(vector<ControlTableItem>{PRESENT_PWM}, m_ids);
+    }
 }
 
 
@@ -292,6 +295,8 @@ void BaseRobot::reboot()
  */
 void BaseRobot::setControlModes(vector<ControlMode> controlModes)
 {
+    using enum ControlMode;
+
     if (controlModes.size() != m_nbrMotors) {
         cout << "Error! Not all motors have their control modes assigned. Exiting" << endl; 
         cout << endl;
@@ -350,7 +355,8 @@ void BaseRobot::setControlModes(ControlMode controlMode)
  */                                 
 void BaseRobot::setMinVoltage(vector<float> minVoltages)
 {
-    Writer writer(vector<ControlTableItem>{MIN_VOLTAGE_LIMIT}, m_ids, m_models, portHandler_, packetHandler_, m_hal, 0);
+    Writer writer(vector<ControlTableItem>{ControlTableItem::MIN_VOLTAGE_LIMIT}, m_ids, m_models,
+                                            portHandler_, packetHandler_, m_hal, 0);
 
     writer.addDataToWrite(minVoltages);
     writer.syncWrite();
@@ -373,7 +379,8 @@ void BaseRobot::setMinVoltage(float minVoltage)
  */                                 
 void BaseRobot::setMaxVoltage(vector<float> maxVoltages)
 {
-    Writer writer(vector<ControlTableItem>{MAX_VOLTAGE_LIMIT}, m_ids, m_models, portHandler_, packetHandler_, m_hal, 0);
+    Writer writer(vector<ControlTableItem>{ControlTableItem::MAX_VOLTAGE_LIMIT}, m_ids, m_models,
+                                            portHandler_, packetHandler_, m_hal, 0);
 
     writer.addDataToWrite(maxVoltages);
     writer.syncWrite();
@@ -406,7 +413,8 @@ void BaseRobot::setMinPosition(vector<float> minPositions, vector<int> ids)
         models[i] = m_models[i];
     }
     
-    Writer writer(vector<ControlTableItem>{MIN_POSITION_LIMIT}, ids, models, portHandler_, packetHandler_, m_hal, 0);
+    Writer writer(vector<ControlTableItem>{ControlTableItem::MIN_POSITION_LIMIT}, ids, models,
+                                            portHandler_, packetHandler_, m_hal, 0);
 
     writer.addDataToWrite(minPositions);
     writer.syncWrite();
@@ -429,7 +437,8 @@ void BaseRobot::setMaxPosition(vector<float> maxPositions, vector<int> ids)
         models[i] = m_models[i];
     }
 
-    Writer writer(vector<ControlTableItem>{MAX_POSITION_LIMIT}, ids, models, portHandler_, packetHandler_, m_hal, 0);
+    Writer writer(vector<ControlTableItem>{ControlTableItem::MAX_POSITION_LIMIT}, ids, models,
+                                                portHandler_, packetHandler_, m_hal, 0);
 
     writer.addDataToWrite(maxPositions);
     writer.syncWrite();
@@ -440,7 +449,8 @@ void BaseRobot::setMaxPosition(vector<float> maxPositions, vector<int> ids)
  */
 void BaseRobot::setReturnDelayTime(float val)
 {
-    Writer writer(vector<ControlTableItem>{RETURN_DELAY}, m_ids, m_models, portHandler_, packetHandler_, m_hal, 0);
+    Writer writer(vector<ControlTableItem>{ControlTableItem::RETURN_DELAY}, m_ids, m_models,
+                                            portHandler_, packetHandler_, m_hal, 0);
 
     vector<float> vals(m_nbrMotors, val);
     writer.addDataToWrite(vals);
@@ -465,7 +475,8 @@ void BaseRobot::setMaxSpeed(vector<float> maxSpeeds, vector<int> ids)
         models[i] = m_models[i];
     }
 
-    Writer writer(vector<ControlTableItem>{VELOCITY_LIMIT}, ids, models, portHandler_, packetHandler_, m_hal, 0);
+    Writer writer(vector<ControlTableItem>{ControlTableItem::VELOCITY_LIMIT}, ids, models,
+                                            portHandler_, packetHandler_, m_hal, 0);
 
     writer.addDataToWrite(maxSpeeds);
     writer.syncWrite();
@@ -477,6 +488,10 @@ void BaseRobot::setMaxCurrent(vector<float> maxCurrents, vector<int> ids)
     // Get the list of models corresponding to the ids
     vector<int> models(ids.size());
     for (int i=0; i<ids.size(); i++) {
+        if (maxCurrents[i] < 0) {
+            cout << "Error! Max current limit set as negative. Exiting" << endl;
+            exit(1);
+        }
         int idx = getIndex(m_ids, ids[i]);
         if (idx < 0) {
             cout << "Error! Unknown ID during Writer creation. Exiting" << endl;
@@ -485,7 +500,8 @@ void BaseRobot::setMaxCurrent(vector<float> maxCurrents, vector<int> ids)
         models[i] = m_models[i];
     }
 
-    Writer writer(vector<ControlTableItem>{CURRENT_LIMIT}, ids, models, portHandler_, packetHandler_, m_hal, 0);
+    Writer writer(vector<ControlTableItem>{ControlTableItem::CURRENT_LIMIT}, ids, models,
+                                            portHandler_, packetHandler_, m_hal, 0);
 
     writer.addDataToWrite(maxCurrents);
     writer.syncWrite();    
@@ -496,6 +512,10 @@ void BaseRobot::setMaxPWM(vector<float> maxPWMs, vector<int> ids)
     // Get the list of models corresponding to the ids
     vector<int> models(ids.size());
     for (int i=0; i<ids.size(); i++) {
+        if (maxPWMs[i] < 0) {
+            cout << "Error! Max PWM limit set as negative. Exiting" << endl;
+            exit(1);
+        }
         int idx = getIndex(m_ids, ids[i]);
         if (idx < 0) {
             cout << "Error! Unknown ID during Writer creation. Exiting" << endl;
@@ -504,7 +524,8 @@ void BaseRobot::setMaxPWM(vector<float> maxPWMs, vector<int> ids)
         models[i] = m_models[i];
     }
 
-    Writer writer(vector<ControlTableItem>{PWM_LIMIT}, ids, models, portHandler_, packetHandler_, m_hal, 0);
+    Writer writer(vector<ControlTableItem>{ControlTableItem::PWM_LIMIT}, ids, models,
+                                        portHandler_, packetHandler_, m_hal, 0);
 
     writer.addDataToWrite(maxPWMs);
     writer.syncWrite();   

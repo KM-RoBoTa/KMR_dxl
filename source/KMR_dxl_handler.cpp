@@ -51,7 +51,7 @@ Handler::Handler(vector<ControlTableItem> list_fields, vector<int> ids, vector<i
 
     else {
         m_isIndirectHandler = true;
-        checkMotorCompatibility(INDIR_DATA_1);
+        checkMotorCompatibility(ControlTableItem::INDIR_DATA_1);
         setIndirectAddresses();
     }
 
@@ -110,7 +110,7 @@ void Handler::setIndirectAddresses()
 
     for (int k=0; k<m_nbrMotors; k++){
         int id = m_ids[k];
-        uint8_t indir_address_start = m_hal->getControlFieldFromModel(m_models[k], INDIR_ADD_1).addr;
+        uint8_t indir_address_start = m_hal->getControlFieldFromModel(m_models[k], ControlTableItem::INDIR_ADD_1).addr;
 
         for (int i=0; i<m_fields.size(); i++){
             Field field = m_hal->getControlFieldFromModel(m_models[i], m_fields.at(i));
@@ -214,7 +214,7 @@ void Handler::getConversionVariables()
 void Handler::checkFieldValidity(ControlTableItem field)
 {
     if ( find(m_fields.begin(), m_fields.end(), field) == m_fields.end() ) {
-        cout << "Error: field " << field << " is not handled by this handler!" << endl;  
+        cout << "Error: field not handled by this handler!" << endl;  
         exit(1);
     }
 }

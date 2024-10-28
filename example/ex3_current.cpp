@@ -46,7 +46,7 @@ int main()
 {
     cout << endl << endl << " ---------- CURRENT CONTROL ---------" << endl;
     robot.disableMotors();
-    KMR::dxl::ControlMode mode = KMR::dxl::CURRENT;
+    KMR::dxl::ControlMode mode = KMR::dxl::ControlMode::CURRENT;
     robot.setControlModes(mode);
     sleep(1);
     robot.enableMotors();
@@ -76,7 +76,6 @@ int main()
         }
         cout << endl;
 
-
         // Send new goal currents
         if (ctr > MAX_CTR/2)
             current = GOAL_CURRENT2;
@@ -89,7 +88,7 @@ int main()
 
         timespec end = time_s();
         double elapsed = get_delta_us(end, start);
-        double toSleep_us = 5*1000-elapsed;
+        double toSleep_us = CTRL_PERIOD_US-elapsed;
         if (toSleep_us < 0)
             toSleep_us = 0;
         usleep(toSleep_us);

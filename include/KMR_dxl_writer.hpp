@@ -91,7 +91,7 @@ void Writer::addDataToWrite(std::vector<T> data, ControlTableItem field)
 
         populateDataParam(parameter, i, field_idx, field_length);
 
-        if (field == GOAL_POSITION)
+        if (field == ControlTableItem::GOAL_POSITION)
             multiturnUpdate(id, (float)current_data);
     }
 }

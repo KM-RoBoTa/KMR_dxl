@@ -39,7 +39,7 @@ const int CTRL_PWM          = 16;
     uint8_t PWM_control;
 };*/
 
-enum ControlMode {
+enum class ControlMode {
     CURRENT, SPEED, POSITION, MULTITURN, HYBRID, PWM, UNDEF_CTRL
 };
 
@@ -71,7 +71,7 @@ struct Motor {
 /**
  * @brief   Enumerate of all data fields in a dynamixel motor
  */
-enum ControlTableItem
+enum class ControlTableItem
 {
     MODEL_NBR, MODEL_INFO, FIRMWARE, ID, BAUDRATE, RETURN_DELAY, DRIVE_MODE, OPERATING_MODE,
     SHADOW_ID, PROTOCOL, HOMING_OFFSET, MOVING_THRESHOLD, TEMPERATURE_LIMIT, MAX_VOLTAGE_LIMIT,

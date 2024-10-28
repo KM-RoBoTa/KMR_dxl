@@ -41,9 +41,13 @@ vector<int> ids = {1,2};  // EDIT HERE FOR YOUR MOTOR(s)
 int nbrMotors = ids.size();
 KMR::dxl::BaseRobot robot(ids, PORTNAME, BAUDRATE);
 
+vector<KMR::dxl::ControlTableItem> wFields = {KMR::dxl::ControlTableItem::MAX_POSITION_LIMIT};
+KMR::dxl::Writer* writer = robot.getNewWriter(wFields, ids);
+
 int main()
 {
-    cout << endl << endl << " ---------- POSITION CONTROL ---------" << endl;
+    exit(1);
+    cout << endl << endl << " ---------- CUSTOM HANDLERS ---------" << endl;
     robot.disableMotors();
 
     // Set the control mode
