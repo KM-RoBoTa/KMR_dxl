@@ -65,5 +65,7 @@ endif()
 # Generate example executables
 add_executable(ex1_position example/ex1_position.cpp)
 target_link_libraries(ex1_position KMR_dxl)
+add_executable(ex2_speed example/ex2_speed.cpp)
+target_link_libraries(ex2_speed KMR_dxl)
 add_executable(ex_multiturn example/ex_multiturn.cpp)
 target_link_libraries(ex_multiturn KMR_dxl)
