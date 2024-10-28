@@ -41,17 +41,26 @@ vector<int> ids = {1,2};  // EDIT HERE FOR YOUR MOTOR(s)
 int nbrMotors = ids.size();
 KMR::dxl::BaseRobot robot(ids, PORTNAME, BAUDRATE);
 
-vector<KMR::dxl::ControlTableItem> wFields = {KMR::dxl::ControlTableItem::MAX_POSITION_LIMIT};
+// Get custom handlers
+vector<KMR::dxl::ControlTableItem> wFields = {KMR::dxl::ControlTableItem::GOAL_VELOCITY,
+                                              KMR::dxl::ControlTableItem::LED};
 KMR::dxl::Writer* writer = robot.getNewWriter(wFields, ids);
+
+vector<KMR::dxl::ControlTableItem> rFields = {KMR::dxl::ControlTableItem::PRESENT_POSITION,
+                                              KMR::dxl::ControlTableItem::PRESENT_TEMPERATURE};
+KMR::dxl::Reader* reader = robot.getNewReader(rFields, ids);
+
+void writeCommands(vector<float> goalSpeeds, vector<int> leds);
+bool getFeedbacks(vector<float>& fbckPositions, vector<float>& fbckTemperatures);
+
 
 int main()
 {
-    exit(1);
     cout << endl << endl << " ---------- CUSTOM HANDLERS ---------" << endl;
     robot.disableMotors();
 
     // Set the control mode
-    KMR::dxl::ControlMode mode = KMR::dxl::ControlMode::POSITION;
+    KMR::dxl::ControlMode mode = KMR::dxl::ControlMode::SPEED;
     robot.setControlModes(mode);
     sleep(1);
 
@@ -65,14 +74,22 @@ int main()
     robot.enableMotors();    
     
     // Required variables
-    vector<float> goalPositions(nbrMotors, 0);
+    vector<float> goalSpeeds(nbrMotors, 0);
+    vector<int> leds(nbrMotors, 0);
     vector<float> fbckPositions(nbrMotors, 0);
+    vector<float> fbckTemperatures(nbrMotors, 0);
 
     float angle = 0;
+    int ledOn = 0;
     bool forward = 1;
     int ctr = 0;
 
-    robot.setPositions(goalPositions);
+    writeCommands(goalSpeeds, leds);
+    getFeedbacks(fbckPositions, fbckTemperatures);
+
+    exit(1);
+
+    robot.setPositions(goalSpeeds);
     sleep(1);
 
     // Main loop
@@ -91,8 +108,8 @@ int main()
 
         // Send new goal positions
         for (int i=0; i<nbrMotors; i++)
-            goalPositions[i] = angle;
-        robot.setPositions(goalPositions);
+            goalSpeeds[i] = angle;
+        robot.setPositions(goalSpeeds);
 
         // Update the goal angle for next loop
         if (forward) {
@@ -135,5 +152,31 @@ int main()
     robot.setMaxPosition(maxPositions, ids);
     usleep(50*1000);
 
+    // Cleanup of the heap
+    robot.deleteWriter(writer);
+    robot.deleteReader(reader);
+
     cout << "Example finished, exiting" << endl;
+
+
+}
+
+
+void writeCommands(vector<float> goalSpeeds, vector<int> leds)
+{
+    writer->addDataToWrite(goalSpeeds, KMR::dxl::ControlTableItem::GOAL_VELOCITY);
+    writer->addDataToWrite(leds, KMR::dxl::ControlTableItem::LED);
+    writer->syncWrite();
+}
+
+bool getFeedbacks(vector<float>& fbckPositions, vector<float>& fbckTemperatures)
+{
+    bool readSuccess = reader->syncRead();
+    if (readSuccess) {
+        fbckPositions = reader->getReadingResults(KMR::dxl::ControlTableItem::PRESENT_POSITION);
+        fbckTemperatures = reader->getReadingResults(KMR::dxl::ControlTableItem::PRESENT_TEMPERATURE);
+        return true;
+    }
+    else
+        return false;
 }

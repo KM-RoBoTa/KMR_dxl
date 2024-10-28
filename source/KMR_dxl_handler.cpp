@@ -59,6 +59,43 @@ Handler::Handler(vector<ControlTableItem> list_fields, vector<int> ids, vector<i
 }
 
 
+
+/**
+ * @brief       Calculate and store the byte length of data read/written by the handler. \n 
+ *              Also check if the motors are field-compatible (same data lengths required for a given field)
+ */
+void Handler::getDataByteSize()
+{
+    ControlTableItem field;
+    uint8_t length = 0, length_prev = 0;
+
+    m_field_indices = vector<int>(m_fields.size());
+    m_field_lengths = vector<int>(m_fields.size());
+
+    for (int i=0; i<m_fields.size(); i++){
+        field = m_fields[i];
+        
+        for (int j=1; j<m_nbrMotors; j++){
+            length = m_hal->getControlFieldFromModel(m_models[j], field).length;
+            length_prev = m_hal->getControlFieldFromModel(m_models[j], field).length;  
+
+            if(length != length_prev){
+                cout << "Motors " << m_ids[j] << " and " << m_ids[j-1] << " have incompatible field lengths!" << endl;
+                exit(1);
+            }
+        }
+
+        if (m_ids.size() == 1)
+            length = m_hal->getControlFieldFromModel(m_models[0], field).length;  
+
+        m_field_lengths[i] = length;
+        m_field_indices[i] = m_data_byte_size;
+        m_data_byte_size += length;
+    }
+}
+
+
+
 /**
  * @brief       Check if the motors are compatible for a given field: same address for data storing. \n 
  *              For indirect handling, also find the first common address for every motor
@@ -133,40 +170,6 @@ void Handler::setIndirectAddresses()
     }
 }
 
-
-/**
- * @brief       Calculate and store the byte length of data read/written by the handler. \n 
- *              Also check if the motors are field-compatible (same data lengths required for a given field)
- */
-void Handler::getDataByteSize()
-{
-    ControlTableItem field;
-    uint8_t length = 0, length_prev = 0;
-
-    m_field_indices = vector<int> (m_fields.size());
-    m_field_lengths = vector<int> (m_fields.size());
-
-    for (int i=0; i<m_fields.size(); i++){
-        field = m_fields[i];
-        
-        for (int j=1; j<m_nbrMotors; j++){
-            length = m_hal->getControlFieldFromModel(m_models[j], field).length;
-            length_prev = m_hal->getControlFieldFromModel(m_models[j], field).length;  
-
-            if(length != length_prev){
-                cout << "Motors " << m_ids[j] << " and " << m_ids[j-1] << " have incompatible field lengths!" << endl;
-                exit(1);
-            }
-        }
-
-        if (m_ids.size() == 1)
-            length = m_hal->getControlFieldFromModel(m_models[0], field).length;  
-
-        m_field_lengths[i] = length;
-        m_field_indices[i] = m_data_byte_size;
-        m_data_byte_size += length;
-    }
-}
 
 
 void Handler::getConversionVariables()

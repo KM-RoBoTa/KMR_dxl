@@ -79,17 +79,18 @@ void Writer::addDataToWrite(std::vector<T> data, ControlTableItem field)
             current_data = data[i];
 
         // Transform data into its parametrized form and write it into the parametrized data matrix
-        T data = current_data + m_offsets[field_idx][i];  // Go to the same reference as Dynamixel's SDK
+        int idx = getIndex(m_fields, field);
+        T data = current_data + m_offsets[idx][i];  // Go to the same reference as Dynamixel's SDK
 
         int32_t parameter = 0;
-        int32_t absParam = (int32_t) abs((float)data/m_units[field_idx][i]);
+        int32_t absParam = (int32_t) abs((float)data/m_units[idx][i]);
 
         if (data >= 0)
             parameter = absParam;
         else
             parameter = (~absParam) + 1;  // 2's complement for negative values
 
-        populateDataParam(parameter, i, field_idx, field_length);
+        populateDataParam(parameter, i, field_idx, field_length); 
 
         if (field == ControlTableItem::GOAL_POSITION)
             multiturnUpdate(id, (float)current_data);
