@@ -4,11 +4,10 @@
  * @brief           Header file including all motor models config files
  ******************************************************************************
  * @copyright
- * Copyright 2021-2023 Laura Paez Coy and Kamilo Melo                    \n
+ * Copyright 2021-2024 Kamilo Melo        \n
  * This code is under MIT licence: https://opensource.org/licenses/MIT
- * @authors katarina.lichardova@km-robota.com, 03/2024
- * @authors kamilo.melo@km-robota.com, 03/2024
- ******************************************************************************
+ * @authors katarina.lichardova@km-robota.com, 10/2024
+ *****************************************************************************
  */
 
 #ifndef KMR_DXL_MOTOR_MODELS_HPP
@@ -31,17 +30,20 @@
 namespace KMR::dxl
 {
 
-#define MODEL_NBR_MX_28         30
-#define MODEL_NBR_MX_64         311
-#define MODEL_NBR_MX_106        321
-#define MODEL_NBR_XH540_W150    1110
-#define MODEL_NBR_XH540_W270    1100
-#define MODEL_NBR_XM430_W350    1020
-#define MODEL_NBR_XM540_W150    1130
-#define MODEL_NBR_XM540_W270    1120
-#define MODEL_NBR_XW430_T200    1280
-#define MODEL_NBR_XW540_T140    1180
-#define MODEL_NBR_XW540_T260    1170
+// (Note: const int is preferred over #define, which is a preprocessor directive and 
+// thus does not live inside namespaces) 
+
+const int MODEL_NBR_MX_28      = 30;
+const int MODEL_NBR_MX_64      = 311;
+const int MODEL_NBR_MX_106     = 321;
+const int MODEL_NBR_XH540_W150 = 1110;
+const int MODEL_NBR_XH540_W270 = 1100;
+const int MODEL_NBR_XM430_W350 = 1020;
+const int MODEL_NBR_XM540_W150 = 1130;
+const int MODEL_NBR_XM540_W270 = 1120;
+const int MODEL_NBR_XW430_T200 = 1280;
+const int MODEL_NBR_XW540_T140 = 1180;
+const int MODEL_NBR_XW540_T260 = 1170;
 
 }
 

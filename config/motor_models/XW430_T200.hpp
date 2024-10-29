@@ -1,14 +1,13 @@
 /**
  ******************************************************************************
  * @file            XW430_T200.hpp
- * @brief           Header file containing control tables of different motors
+ * @brief           Configuration file of XW430-T200 motors
  ******************************************************************************
  * @copyright
- * Copyright 2021-2023 Laura Paez Coy and Kamilo Melo                    \n
+ * Copyright 2021-2024 Kamilo Melo        \n
  * This code is under MIT licence: https://opensource.org/licenses/MIT
- * @authors katarina.lichardova@km-robota.com, 03/2024
- * @authors kamilo.melo@km-robota.com, 03/2024
- ******************************************************************************
+ * @authors katarina.lichardova@km-robota.com, 10/2024
+ *****************************************************************************
  */
 
 #ifndef KMR_DXL_XW430_T200_HPP
@@ -19,6 +18,9 @@
 namespace KMR::dxl
 {
 
+/**
+ * @brief   Control table of XW430-T200 motors
+ */
 struct XW430_T200_P2 : ControlTable {
     XW430_T200_P2 ()
     {

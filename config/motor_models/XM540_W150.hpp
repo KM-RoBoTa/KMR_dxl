@@ -1,14 +1,13 @@
 /**
  ******************************************************************************
  * @file            XM540_W150.hpp
- * @brief           Header file containing control tables of different motors
+ * @brief           Configuration file of XM540-W150 motors
  ******************************************************************************
  * @copyright
- * Copyright 2021-2023 Laura Paez Coy and Kamilo Melo                    \n
+ * Copyright 2021-2024 Kamilo Melo        \n
  * This code is under MIT licence: https://opensource.org/licenses/MIT
- * @authors katarina.lichardova@km-robota.com, 03/2024
- * @authors kamilo.melo@km-robota.com, 03/2024
- ******************************************************************************
+ * @authors katarina.lichardova@km-robota.com, 10/2024
+ *****************************************************************************
  */
 
 #ifndef KMR_DXL_XM540_W150_HPP
@@ -19,6 +18,9 @@
 namespace KMR::dxl
 {
 
+/**
+ * @brief   Control table of XM540-W150 motors
+ */
 struct XM540_W150_P2 : ControlTable {
     XM540_W150_P2 ()
     {

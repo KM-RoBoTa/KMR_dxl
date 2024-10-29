@@ -4,11 +4,9 @@
  * @brief           Header for KMR_dxl_hal.cpp file
  *****************************************************************************
  * @copyright
- * Copyright 2021-2023 Laura Paez Coy and Kamilo Melo                    \n
+ * Copyright 2021-2024 Kamilo Melo        \n
  * This code is under MIT licence: https://opensource.org/licenses/MIT
- * @authors  Laura.Paez@KM-RoBota.com, 08/2023
- * @authors  Kamilo.Melo@KM-RoBota.com, 08/2023
- * @authors katarina.lichardova@km-robota.com, 08/2023
+ * @authors katarina.lichardova@km-robota.com, 10/2024
  *****************************************************************************
  */
 
@@ -28,10 +26,9 @@ namespace KMR::dxl
 
 /**
  * @brief       Hardware abstraction layer for Dynamixel motors
- * @details     The lowest-level element in the library. The Hal class serves primarily as
+ * @details     The lowest-level element in the library. The Hal class serves as
  *              an abstraction layer, providing high-level functions to get the Dynamixel control
- *              table addresses by creating a control table. \n 
- *              It also parses the project's motors configuration file.
+ *              table addresses and byte sizes
  */
 class Hal {
 public:
@@ -39,32 +36,17 @@ public:
     ~Hal();
     void init(std::vector<int> ids, int nbrMotors, std::vector<int> models);
 
-    // Keep public
-    Field getControlFieldFromModel(int modelNumber, ControlTableItem item);
-    float getPositionOffset(int modelNumber);
-    void updateResetStatus(int id, int status);
-    void setMultiturnMode(int id);
-
-    // TO edit? USED IN HANDLER
-    Motor getMotorFromID(int id);
+    // Handlers initializations helpers
     void addMotorOffsetFromID(int id, uint8_t data_length, std::string field_name);
 
-
-
-
-    // TO DELETE?
-    /*int m_tot_nbr_motors;   // Number of motors used in the robot. TO DELETE
-    Motor* m_motors_list = nullptr;     // List containing all motors' info 
-    std::vector<int> m_all_IDs;  // All motor IDs in the robot
-    Motor_data_field** m_control_table = nullptr;   // Table containing all Dynamixel control values for every model
-    Control_modes* m_controlModesPerModel = nullptr; // List of control modes values for each Dxl model
-
-
-    void get_ID_list_from_motors_list();
-    Motor_data_field getControlParametersFromID(int id, Fields field); 
-
+    // Get hardware information
+    float getPositionOffset(int modelNumber);
+    Field getControlFieldFromModel(int modelNumber, ControlTableItem item);
     Motor getMotorFromID(int id);
-    void addMotorOffsetFromID(int id, uint8_t data, std::string field_name);*/
+    
+    // Multiturn functionalities
+    void setMultiturnMode(int id);
+    void updateResetStatus(int id, int status);
 
 
 private:
@@ -81,17 +63,13 @@ private:
     ControlTable* XW540_T260 = nullptr;
 
     int m_nbrMotors = -1;
-    std::vector<int> m_ids;
-    std::vector<int> m_models;
-	std::vector<Motor> m_motorsList;     // List containing all motors' info
+    std::vector<int> m_ids;             // IDs of all motors
+    std::vector<int> m_models;          // Models of all motors
+	std::vector<Motor> m_motorsList;    // Parameters per specific motor
 
+    // Get hardware information, in private scope
     Field getControlField(ControlTable motor, ControlTableItem item);
     ControlTable getControlTable(int modelNumber);
- 
-
-    // TO DELETE?
-    /*Motor_models getModelFromID(int id);
-    void saveControlValuesToMotors();*/
 };
 
 }

@@ -28,14 +28,14 @@ namespace KMR::dxl
  *          The user needs to create handlers they need (Writers and Readers) for their specific
  *          application, as well as their respective reading/writing functions
  */
-class BaseRobot {
+class MotorHandler {
 public:
     std::vector<int> m_ids;     // List of IDs in the robot
     int m_nbrMotors;
     std::vector<int> m_models; // List of models of the motors
 
-    BaseRobot(std::vector<int> ids, const char *port_name, int baudrate);
-    ~BaseRobot();
+    MotorHandler(std::vector<int> ids, const char *port_name, int baudrate);
+    ~MotorHandler();
 
     // Easy handlers creations
     Writer* getNewWriter(std::vector<ControlTableItem> fields, std::vector<int> ids);
@@ -93,7 +93,6 @@ protected:
     Hal* m_hal = nullptr;
 
     Writer* m_motorEnableWriter = nullptr;
-    Writer* m_controlModeWriter = nullptr;
 
     // Base controls
     Writer* m_positionWriter = nullptr;

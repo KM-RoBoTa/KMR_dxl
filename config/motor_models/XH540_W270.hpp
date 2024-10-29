@@ -1,14 +1,13 @@
 /**
  ******************************************************************************
  * @file            XH540_W270.hpp
- * @brief           Header file containing control tables of different motors
+ * @brief           Configuration file of XH540-W270 motors
  ******************************************************************************
  * @copyright
- * Copyright 2021-2023 Laura Paez Coy and Kamilo Melo                    \n
+ * Copyright 2021-2024 Kamilo Melo        \n
  * This code is under MIT licence: https://opensource.org/licenses/MIT
- * @authors katarina.lichardova@km-robota.com, 03/2024
- * @authors kamilo.melo@km-robota.com, 03/2024
- ******************************************************************************
+ * @authors katarina.lichardova@km-robota.com, 10/2024
+ *****************************************************************************
  */
 
 #ifndef KMR_DXL_XH540_W270_HPP
@@ -19,6 +18,9 @@
 namespace KMR::dxl
 {
 
+/**
+ * @brief   Control table of XH540-W270 motors
+ */
 struct XH540_W270_P2 : ControlTable {
     XH540_W270_P2 ()
     {

@@ -39,7 +39,7 @@ vector<int> ids = {1,2};  // EDIT HERE FOR YOUR MOTOR(s)
 // --------------------------------------------------------------------------- //
 
 int nbrMotors = ids.size();
-KMR::dxl::BaseRobot robot(ids, PORTNAME, BAUDRATE);
+KMR::dxl::MotorHandler robot(ids, PORTNAME, BAUDRATE);
 
 // Get custom handlers
 vector<KMR::dxl::ControlTableItem> wFields = {KMR::dxl::ControlTableItem::GOAL_VELOCITY,

@@ -36,7 +36,7 @@ namespace KMR::dxl
  * @param[in]   baudrate Baudrate of the port handling communication with motors
  * @param[in]   hal Previously initialized Hal object
  */
-BaseRobot::BaseRobot(vector<int> ids, const char *port_name, int baudrate)
+MotorHandler::MotorHandler(vector<int> ids, const char *port_name, int baudrate)
 {
     m_hal = new Hal();
     m_ids = ids;
@@ -56,7 +56,6 @@ BaseRobot::BaseRobot(vector<int> ids, const char *port_name, int baudrate)
     {
         using enum ControlTableItem;
 
-        m_controlModeWriter = getNewWriter(vector<ControlTableItem>{OPERATING_MODE}, m_ids);
         m_motorEnableWriter = getNewWriter(vector<ControlTableItem>{TORQUE_ENABLE}, m_ids);
 
         // Integrated base command handlers
@@ -75,10 +74,9 @@ BaseRobot::BaseRobot(vector<int> ids, const char *port_name, int baudrate)
 /**
  * @brief Destructor
  */
-BaseRobot::~BaseRobot()
+MotorHandler::~MotorHandler()
 {
     // Delete handlers created on heap
-    deleteWriter(m_controlModeWriter);
     deleteWriter(m_motorEnableWriter);
 
     deleteWriter(m_positionWriter); 
@@ -90,9 +88,7 @@ BaseRobot::~BaseRobot()
     deleteReader(m_currentReader);
     deleteReader(m_PWMReader);
 
-    m_controlModeWriter = nullptr;
     m_motorEnableWriter = nullptr;
-
     m_positionWriter = nullptr;
     m_speedWriter = nullptr;
     m_currentWriter = nullptr;
@@ -117,7 +113,7 @@ BaseRobot::~BaseRobot()
  * @param[in]   baudrate Baudrate of the port handling communication with motors
  * @param[in]   protocol_version Protocol version, for the communication (U2D2)
  */
-void BaseRobot::init_comm(const char *port_name, int baudrate, float protocol_version)
+void MotorHandler::init_comm(const char *port_name, int baudrate, float protocol_version)
 {
     portHandler_ = dynamixel::PortHandler::getPortHandler(port_name);
     if (!portHandler_->openPort()) {
@@ -141,7 +137,7 @@ void BaseRobot::init_comm(const char *port_name, int baudrate, float protocol_ve
  * @brief   Ping each motor to validate the communication is working
  * @note    Also populates the models vector, required to initialize Hal
  */
-void BaseRobot::check_comm()
+void MotorHandler::check_comm()
 {
     cout << "Pinging motors...." << endl;
 
@@ -170,7 +166,7 @@ void BaseRobot::check_comm()
  ****************************************************************************/
 
 // Create a new Writer handler (!!! on heap)
-Writer* BaseRobot::getNewWriter(vector<ControlTableItem> fields, vector<int> ids)
+Writer* MotorHandler::getNewWriter(vector<ControlTableItem> fields, vector<int> ids)
 {
     // Get the list of models corresponding to the ids
     vector<int> models(ids.size());
@@ -188,7 +184,7 @@ Writer* BaseRobot::getNewWriter(vector<ControlTableItem> fields, vector<int> ids
 }
 
 // Create a new Reader handler (!!! on heap)
-Reader* BaseRobot::getNewReader(vector<ControlTableItem> fields, vector<int> ids)
+Reader* MotorHandler::getNewReader(vector<ControlTableItem> fields, vector<int> ids)
 {
     // Get the list of models corresponding to the ids
     vector<int> models(ids.size());
@@ -205,14 +201,14 @@ Reader* BaseRobot::getNewReader(vector<ControlTableItem> fields, vector<int> ids
     return reader;
 }
 
-void BaseRobot::deleteWriter(Writer* writer)
+void MotorHandler::deleteWriter(Writer* writer)
 {
     delete writer;
     writer = nullptr; // Security in case of double freeing
 }
 
 
-void BaseRobot::deleteReader(Reader* reader)
+void MotorHandler::deleteReader(Reader* reader)
 {
     delete reader;
     reader = nullptr; // Security in case of double freeing
@@ -227,7 +223,7 @@ void BaseRobot::deleteReader(Reader* reader)
 /**
  * @brief       Enable all the motors
  */
-void BaseRobot::enableMotors()
+void MotorHandler::enableMotors()
 {
     m_motorEnableWriter->addDataToWrite(vector<int>{ENABLE});
     m_motorEnableWriter->syncWrite();
@@ -236,7 +232,7 @@ void BaseRobot::enableMotors()
 /**
  * @brief       Disable all the motors
  */
-void BaseRobot::disableMotors()
+void MotorHandler::disableMotors()
 {
     m_motorEnableWriter->addDataToWrite(vector<int>{DISABLE});
     m_motorEnableWriter->syncWrite();
@@ -253,7 +249,7 @@ void BaseRobot::disableMotors()
  * @note        Make sure the motors had enough time to execute the goal position command before 
  *              calling this function. Failure to do so results in undefined behavior.
  */
-void BaseRobot::resetMultiturnMotors()
+void MotorHandler::resetMultiturnMotors()
 {
     bool needSleep = 0;
     for(int i=0; i<m_nbrMotors; i++) {
@@ -274,12 +270,12 @@ void BaseRobot::resetMultiturnMotors()
     }
 }
 
-void BaseRobot::reboot(int id)
+void MotorHandler::reboot(int id)
 {
     packetHandler_->reboot(portHandler_, id);
 }
 
-void BaseRobot::reboot()
+void MotorHandler::reboot()
 {
     for (int i=0; i<m_nbrMotors; i++)
         packetHandler_->reboot(portHandler_, m_ids[i]);
@@ -293,9 +289,12 @@ void BaseRobot::reboot()
  * @brief       Set the control modes of motors
  * @param[in]   controlModes Control modes to be set to motors
  */
-void BaseRobot::setControlModes(vector<ControlMode> controlModes)
+void MotorHandler::setControlModes(vector<ControlMode> controlModes)
 {
     using enum ControlMode;
+
+    Writer writer(vector<ControlTableItem>{ControlTableItem::OPERATING_MODE}, m_ids, m_models,
+                                            portHandler_, packetHandler_, m_hal, 0);
 
     if (controlModes.size() != m_nbrMotors) {
         cout << "Error! Not all motors have their control modes assigned. Exiting" << endl; 
@@ -333,15 +332,15 @@ void BaseRobot::setControlModes(vector<ControlMode> controlModes)
         }
     }
 
-    m_controlModeWriter->addDataToWrite(controlModes_int);
-    m_controlModeWriter->syncWrite();
+    writer.addDataToWrite(controlModes_int);
+    writer.syncWrite();
 }
 
 /**
  * @brief       Set the control modes of motors
  * @param[in]   controlModes Control modes to be set to motors
  */
-void BaseRobot::setControlModes(ControlMode controlMode)
+void MotorHandler::setControlModes(ControlMode controlMode)
 {
     vector<ControlMode> controlModes(m_nbrMotors, controlMode);
     setControlModes(controlModes);
@@ -353,7 +352,7 @@ void BaseRobot::setControlModes(ControlMode controlMode)
  * @brief       Set the minimum voltage of motors
  * @param[in]   minVoltages Min. allowed voltages in motors
  */                                 
-void BaseRobot::setMinVoltage(vector<float> minVoltages)
+void MotorHandler::setMinVoltage(vector<float> minVoltages)
 {
     Writer writer(vector<ControlTableItem>{ControlTableItem::MIN_VOLTAGE_LIMIT}, m_ids, m_models,
                                             portHandler_, packetHandler_, m_hal, 0);
@@ -366,7 +365,7 @@ void BaseRobot::setMinVoltage(vector<float> minVoltages)
  * @brief       Set the minimum voltage of motors
  * @param[in]   minVoltages Min. allowed voltages in motors
  */                                 
-void BaseRobot::setMinVoltage(float minVoltage)
+void MotorHandler::setMinVoltage(float minVoltage)
 {
     vector<float> minVoltages(m_nbrMotors, minVoltage);
     setMinVoltage(minVoltages);
@@ -377,7 +376,7 @@ void BaseRobot::setMinVoltage(float minVoltage)
  * @brief       Set the minimum voltage of motors
  * @param[in]   minVoltages Min. allowed voltages in motors
  */                                 
-void BaseRobot::setMaxVoltage(vector<float> maxVoltages)
+void MotorHandler::setMaxVoltage(vector<float> maxVoltages)
 {
     Writer writer(vector<ControlTableItem>{ControlTableItem::MAX_VOLTAGE_LIMIT}, m_ids, m_models,
                                             portHandler_, packetHandler_, m_hal, 0);
@@ -390,7 +389,7 @@ void BaseRobot::setMaxVoltage(vector<float> maxVoltages)
  * @brief       Set the minimum voltage of motors
  * @param[in]   minVoltages Min. allowed voltages in motors
  */                                 
-void BaseRobot::setMaxVoltage(float maxVoltage)
+void MotorHandler::setMaxVoltage(float maxVoltage)
 {
     vector<float> maxVoltages(m_nbrMotors, maxVoltage);
     setMaxVoltage(maxVoltages);
@@ -400,7 +399,7 @@ void BaseRobot::setMaxVoltage(float maxVoltage)
  * @brief       Set the minimum position of motors
  * @param[in]   minPositions Min. positions for motors (lower saturation) 
  */                                 
-void BaseRobot::setMinPosition(vector<float> minPositions)
+void MotorHandler::setMinPosition(vector<float> minPositions)
 {
     if (minPositions.size() != m_nbrMotors) {
         cout << "Error! The min. position values do not coincide with the number of motors" << endl;
@@ -418,7 +417,7 @@ void BaseRobot::setMinPosition(vector<float> minPositions)
  * @brief       Set the maximum position of motors
  * @param[in]   maxPositions Max. positions for motors (upper saturation) 
  */                                 
-void BaseRobot::setMaxPosition(vector<float> maxPositions)
+void MotorHandler::setMaxPosition(vector<float> maxPositions)
 {
     if (maxPositions.size() != m_nbrMotors) {
         cout << "Error! The max. position values do not coincide with the number of motors" << endl;
@@ -435,7 +434,7 @@ void BaseRobot::setMaxPosition(vector<float> maxPositions)
 /**
  * @brief   Set the return delay to all motors
  */
-void BaseRobot::setReturnDelayTime(float val)
+void MotorHandler::setReturnDelayTime(float val)
 {
     Writer writer(vector<ControlTableItem>{ControlTableItem::RETURN_DELAY}, m_ids, m_models,
                                             portHandler_, packetHandler_, m_hal, 0);
@@ -446,7 +445,7 @@ void BaseRobot::setReturnDelayTime(float val)
 }
 
 
-void BaseRobot::setMaxSpeed(vector<float> maxSpeeds)
+void MotorHandler::setMaxSpeed(vector<float> maxSpeeds)
 {
     if (maxSpeeds.size() != m_nbrMotors) {
         cout << "Error! The max. speed values do not coincide with the number of motors" << endl;
@@ -467,7 +466,7 @@ void BaseRobot::setMaxSpeed(vector<float> maxSpeeds)
 }
 
 
-void BaseRobot::setMaxCurrent(vector<float> maxCurrents)
+void MotorHandler::setMaxCurrent(vector<float> maxCurrents)
 {
     if (maxCurrents.size() != m_nbrMotors) {
         cout << "Error! The max. current values do not coincide with the number of motors" << endl;
@@ -487,7 +486,7 @@ void BaseRobot::setMaxCurrent(vector<float> maxCurrents)
     writer.syncWrite();    
 }
 
-void BaseRobot::setMaxPWM(vector<float> maxPWMs)
+void MotorHandler::setMaxPWM(vector<float> maxPWMs)
 {
     if (maxPWMs.size() != m_nbrMotors) {
         cout << "Error! The max. PWM values do not coincide with the number of motors" << endl;
@@ -508,31 +507,31 @@ void BaseRobot::setMaxPWM(vector<float> maxPWMs)
 }
 
 
-void BaseRobot::setMinPosition(float minPosition)
+void MotorHandler::setMinPosition(float minPosition)
 {
     vector<float> minPositions(m_nbrMotors, minPosition);
     setMinPosition(minPositions);
 }
 
-void BaseRobot::setMaxPosition(float maxPosition)
+void MotorHandler::setMaxPosition(float maxPosition)
 {
     vector<float> maxPositions(m_nbrMotors, maxPosition);
     setMaxPosition(maxPositions);
 }
 
-void BaseRobot::setMaxSpeed(float maxSpeed)
+void MotorHandler::setMaxSpeed(float maxSpeed)
 {
     vector<float> maxSpeeds(m_nbrMotors, maxSpeed);
     setMaxSpeed(maxSpeeds);
 }
 
-void BaseRobot::setMaxCurrent(float maxCurrent)
+void MotorHandler::setMaxCurrent(float maxCurrent)
 {
     vector<float> maxCurrents(m_nbrMotors, maxCurrent);
     setMaxCurrent(maxCurrents);
 }
 
-void BaseRobot::setMaxPWM(float maxPWM)
+void MotorHandler::setMaxPWM(float maxPWM)
 {
     vector<float> maxPWMs(m_nbrMotors, maxPWM);
     setMaxPWM(maxPWMs);
@@ -543,13 +542,13 @@ void BaseRobot::setMaxPWM(float maxPWM)
 / *                            Base controls
 / ****************************************************************************/
 
-void BaseRobot::setPositions(vector<float> positions)
+void MotorHandler::setPositions(vector<float> positions)
 {
     m_positionWriter->addDataToWrite(positions);
     m_positionWriter->syncWrite();
 }
 
-bool BaseRobot::getPositions(vector<float>& positions)
+bool MotorHandler::getPositions(vector<float>& positions)
 {
     bool readSuccess = m_positionReader->syncRead();
     if (readSuccess) {
@@ -560,13 +559,13 @@ bool BaseRobot::getPositions(vector<float>& positions)
         return false;
 }
 
-void BaseRobot::setSpeeds(vector<float> speeds)
+void MotorHandler::setSpeeds(vector<float> speeds)
 {
     m_speedWriter->addDataToWrite(speeds);
     m_speedWriter->syncWrite();
 }
 
-bool BaseRobot::getSpeeds(vector<float>& speeds)
+bool MotorHandler::getSpeeds(vector<float>& speeds)
 {
     bool readSuccess = m_speedReader->syncRead();
     if (readSuccess) {
@@ -577,13 +576,13 @@ bool BaseRobot::getSpeeds(vector<float>& speeds)
         return false;
 }
 
-void BaseRobot::setCurrents(vector<float> currents)
+void MotorHandler::setCurrents(vector<float> currents)
 {
     m_currentWriter->addDataToWrite(currents);
     m_currentWriter->syncWrite();
 }
 
-bool BaseRobot::getCurrents(vector<float>& currents)
+bool MotorHandler::getCurrents(vector<float>& currents)
 {
     bool readSuccess = m_currentReader->syncRead();
     if (readSuccess) {
@@ -594,13 +593,13 @@ bool BaseRobot::getCurrents(vector<float>& currents)
         return false;
 }
 
-void BaseRobot::setPWMs(vector<float> pwms)
+void MotorHandler::setPWMs(vector<float> pwms)
 {
     m_PWMWriter->addDataToWrite(pwms);
     m_PWMWriter->syncWrite();
 }
 
-bool BaseRobot::getPWMs(vector<float>& pwms)
+bool MotorHandler::getPWMs(vector<float>& pwms)
 {
     bool readSuccess = m_PWMReader->syncRead();
     if (readSuccess) {
@@ -611,7 +610,7 @@ bool BaseRobot::getPWMs(vector<float>& pwms)
         return false;
 }
 
-void BaseRobot::setHybrid(vector<float> positions, vector<float> currents)
+void MotorHandler::setHybrid(vector<float> positions, vector<float> currents)
 {
     m_positionWriter->addDataToWrite(positions);
     m_currentWriter->addDataToWrite(currents);
@@ -620,7 +619,7 @@ void BaseRobot::setHybrid(vector<float> positions, vector<float> currents)
     m_currentWriter->syncWrite();
 }
 
-bool BaseRobot::getHybrid(vector<float>& positions, vector<float>& currents)
+bool MotorHandler::getHybrid(vector<float>& positions, vector<float>& currents)
 {
     bool readPositionSuccess = m_positionReader->syncRead();
     bool readCurrentSuccess = m_currentReader->syncRead();

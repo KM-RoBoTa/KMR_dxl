@@ -1,16 +1,14 @@
 /**
- ******************************************************************************
+ *****************************************************************************
  * @file            KMR_dxl_structures.hpp
- * @brief           Header file containing useful structures definitions
- ******************************************************************************
+ * @brief           File defining the structures used in this library
+ *****************************************************************************
  * @copyright
- * Copyright 2021-2023 Kamilo Melo                    \n
+ * Copyright 2021-2024 Kamilo Melo        \n
  * This code is under MIT licence: https://opensource.org/licenses/MIT
- * @authors katarina.lichardova@km-robota.com,10/2024
- * @authors kamilo.melo@km-robota.com, 10/2024
- ******************************************************************************
+ * @authors katarina.lichardova@km-robota.com, 10/2024
+ *****************************************************************************
  */
-
 
 #ifndef KMR_DXL_STRUCTURES_HPP
 #define KMR_DXL_STRUCTURES_HPP
@@ -27,18 +25,8 @@ const int CTRL_HYBRID       = 5;
 const int CTRL_PWM          = 16;
 
 /**
- * @brief       Exhaustive list of all possible control modes for Dynamixel motors
-  * TO DELETE?
+ * @brief       Hardware abstraction layer for Dynamixel motors
  */
-/*struct Control_modes {
-    uint8_t current_control;
-    uint8_t velocity_control;
-    uint8_t position_control;
-    uint8_t multiturn_control;    
-    uint8_t current_based_position_control;
-    uint8_t PWM_control;
-};*/
-
 enum class ControlMode {
     CURRENT, SPEED, POSITION, MULTITURN, HYBRID, PWM, UNDEF_CTRL
 };
@@ -49,17 +37,16 @@ enum class ControlMode {
  *          and specific to the project (occupied indirect addresses, reset status...)
  */
 struct Motor {
-    int id;
-    int model;
+    int id;                 // ID of the motor
+    int model;              // Model of the motor
 
     // Multiturn variables
-    bool multiturn = 0;
-    int toReset = 0;
-    //Control_modes control_modes;
+    bool multiturn = 0;     // Flag for using multiturn mode
+    int toReset = 0;        // Flag for multiturn requiring a reset
 
     // Allocated indirect memory trackers
-    uint8_t indir_address_offset = 0;
-    uint8_t indir_data_offset = 0;
+    uint8_t indir_address_offset = 0;   // Used indirect memory for indirect addresses
+    uint8_t indir_data_offset = 0;      // Used indirect memory for indirect data
 
     Motor(int id, int model)
     {
@@ -69,7 +56,7 @@ struct Motor {
 };
 
 /**
- * @brief   Enumerate of all data fields in a dynamixel motor
+ * @brief   Enumerate of all data fields in a Dynamixel motor in protocol 2
  */
 enum class ControlTableItem
 {
@@ -90,13 +77,18 @@ enum class ControlTableItem
     NBR_FIELDS, UNDEF_F
 };
 
-
+/**
+ * @brief   Structure of each field in a Dynamixel control table
+ */
 struct Field {
     float unit;
     int length;
     int addr;
 };
 
+/**
+ * @brief   General structure of a Dynamixel control table
+ */
 struct ControlTable {
     Field modelNumber;
     Field modelInfo;

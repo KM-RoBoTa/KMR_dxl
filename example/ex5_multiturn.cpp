@@ -40,7 +40,7 @@ vector<int> ids = {1,2};  // EDIT HERE FOR YOUR MOTOR(s)
 // --------------------------------------------------------------------------- //
 
 int nbrMotors = ids.size();
-KMR::dxl::BaseRobot robot(ids, PORTNAME, BAUDRATE);
+KMR::dxl::MotorHandler robot(ids, PORTNAME, BAUDRATE);
 
 int main()
 {

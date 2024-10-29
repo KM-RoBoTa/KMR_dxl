@@ -4,17 +4,16 @@
  * @brief           Defines the Hal class
  ******************************************************************************
  * @copyright
- * Copyright 2021-2023 Laura Paez Coy and Kamilo Melo                    \n
- * This code is under MIT licence: https://opensource.org/licenses/MIT  
- * @authors  Laura.Paez@KM-RoBota.com, 08/2023
- * @authors  Kamilo.Melo@KM-RoBota.com, 08/2023
- * @authors katarina.lichardova@km-robota.com, 08/2023
- ******************************************************************************
+ * Copyright 2021-2024 Kamilo Melo        \n
+ * This code is under MIT licence: https://opensource.org/licenses/MIT
+ * @authors katarina.lichardova@km-robota.com, 10/2024
+ *****************************************************************************
  */
 
-#include "KMR_dxl_hal.hpp"
 #include <iostream>
 #include <cstdint>
+
+#include "KMR_dxl_hal.hpp"
 
 using namespace std;
 
@@ -22,9 +21,9 @@ namespace KMR::dxl
 
 #define POS_OFFSET_DEFAULT 3.14159265358979323846264338327950288 // M_PI
 {
-    
+
 /**
- * @brief       Constructor for Hal
+ * @brief   Constructor for Hal
  */
 Hal::Hal()
 {
@@ -42,7 +41,7 @@ Hal::Hal()
 }
 
 /**
- * @brief       Destructor for Hal
+ * @brief   Destructor for Hal
  */
 Hal::~Hal()
 {
@@ -59,12 +58,11 @@ Hal::~Hal()
     delete XW540_T260;    
 }
 
-
 /**
- * @brief       Initialize the Hal - called by BaseRobot in its cstr
- * @param[in]   ids List of IDs of all the motors in the robot
- * @param[in]   nbrMotors Number of motors in the robot
- * @param[in]   models List of model numbers of each motor, gotten during the motors ping
+ * @brief   Initialize the Hal - called by MotorHandler in its cstr
+ * @param   ids List of IDs of all the motors in the robot
+ * @param   nbrMotors Number of motors in the robot
+ * @param   models List of model numbers of each motor, gotten during the motors ping
  */
 void Hal::init(vector<int> ids, int nbrMotors, vector<int> models)
 {
@@ -77,6 +75,78 @@ void Hal::init(vector<int> ids, int nbrMotors, vector<int> models)
         m_motorsList.push_back(motor);
     }
 }
+
+
+/*****************************************************************************
+ *                     Query functions from outside
+ ****************************************************************************/
+
+/**
+ * @brief       Get a motor's info structure from motor ID
+ * @param[in]   id ID of the query motor
+ * @retval      The Motor structure of the query motor
+ */
+Motor Hal::getMotorFromID(int id)
+{
+    int motor_idx = getIndex(m_ids, id);
+    Motor motor = m_motorsList[motor_idx];
+
+    return motor;
+}
+
+/**
+ * @brief       Get our custom position offset, so that the 0 angle is in the center
+ * @param[in]   modelNumber Query motor model number
+ * @return      Position offset [rad]
+ */
+float Hal::getPositionOffset(int modelNumber)
+{
+    float offset = 0;
+
+    // Insert any special case here (eg AX-12A in protocol 1)
+    offset = POS_OFFSET_DEFAULT;
+            
+    return offset;
+}
+
+/**
+ * @brief       Get a specific control field corresponding to the input motor model number
+ * @param[in]   modelNumber Query motor model number
+ * @param[in]   item Query field in the control table (ex: GOAL_POSITION)
+ * @return      Control field corresponding to the query
+ */
+Field Hal::getControlFieldFromModel(int modelNumber, ControlTableItem item)
+{
+    ControlTable motor = getControlTable(modelNumber);
+    Field field = getControlField(motor, item);
+
+    return field;
+}
+
+/**
+ * @brief       Update the offsets to access empty indirect addresses for a given motor
+ * @param[in]   id ID of the query motor
+ * @param[in]   data_length Byte length of the data that was just assigned an indirect address
+ * @param[in]   field_name Type of field that was just assigned an indirect address (address or data)
+ */
+void Hal::addMotorOffsetFromID(int id, uint8_t data_length, std::string field_name)
+{
+    int motor_idx = getIndex(m_ids, id);
+
+    if (field_name == "indir_address_offset")
+        m_motorsList[motor_idx].indir_address_offset += data_length;
+    else if (field_name == "indir_data_offset")
+        m_motorsList[motor_idx].indir_data_offset += data_length;
+    else{
+        cout << "Cannot change that motor field!" << endl;
+        exit(1);
+    }
+}
+
+
+/*****************************************************************************
+ *                     Get hardware info, in private scope
+ ****************************************************************************/
 
 /**
  * @brief       Get the control table corresponding to the input motor model number
@@ -117,20 +187,6 @@ ControlTable Hal::getControlTable(int modelNumber)
     }
 
     return motor;
-}
-
-/**
- * @brief       Get a specific control field corresponding to the input motor model number
- * @param[in]   modelNumber Query motor model number
- * @param[in]   item Query field in the control table (ex: GOAL_POSITION)
- * @return      Control field corresponding to the query
- */
-Field Hal::getControlFieldFromModel(int modelNumber, ControlTableItem item)
-{
-    ControlTable motor = getControlTable(modelNumber);
-    Field field = getControlField(motor, item);
-
-    return field;
 }
 
 
@@ -218,66 +274,24 @@ Field Hal::getControlField(ControlTable motor, ControlTableItem item)
     return field;
 }
 
-/**
- * @brief       Get our custom position offset, so that the 0 angle is in the center
- * @param[in]   modelNumber Query motor model number
- * @return      Position offset [rad]
- */
-float Hal::getPositionOffset(int modelNumber)
-{
-    float offset = 0;
-
-    // Insert any special case here (eg AX-12A in protocol 1)
-    offset = POS_OFFSET_DEFAULT;
-            
-    return offset;
-}
-
-
-
 
 /*****************************************************************************
- *                     Query functions from outside
+ *                           Multiturn functions
  ****************************************************************************/
 
 /**
- * @brief       Get a motor's info structure from motor ID
- * @param[in]   id ID of the query motor
- * @retval      The Motor structure of the query motor
+ * @brief       Save the input motor as being in multiturn mode
+ * @param[in]   id ID of the multiturn motor
  */
-Motor Hal::getMotorFromID(int id)
+void Hal::setMultiturnMode(int id)
 {
-    int motor_idx = getIndex(m_ids, id);
-    Motor motor = m_motorsList[motor_idx];
-
-    return motor;
-}
-
-
-/*****************************************************************************
- *                             Misc. functions
- ****************************************************************************/
-
-/**
- * @brief       Update the offsets to access empty indirect addresses for a given motor
- * @param[in]   id ID of the query motor
- * @param[in]   data_length Byte length of the data that was just assigned an indirect address
- * @param[in]   field_name Type of field that was just assigned an indirect address (address or data)
- */
-void Hal::addMotorOffsetFromID(int id, uint8_t data_length, std::string field_name)
-{
-    int motor_idx = getIndex(m_ids, id);
-
-    if (field_name == "indir_address_offset")
-        m_motorsList[motor_idx].indir_address_offset += data_length;
-    else if (field_name == "indir_data_offset")
-        m_motorsList[motor_idx].indir_data_offset += data_length;
-    else{
-        cout << "Cannot change that motor field!" << endl;
+    int idx = getIndex(m_ids, id);
+    if (idx < 0) {
+        cout << "Error! Unknown ID set as a multiturn motor" << endl;
         exit(1);
     }
-
-}
+    m_motorsList[idx].multiturn = true;    
+} 
 
 /**
  * @brief       Update a motor's "to reset" status in multiturn mode
@@ -289,40 +303,5 @@ void Hal::updateResetStatus(int id, int status)
     int idx = getIndex(m_ids, id);
     m_motorsList[idx].toReset = status;
 }
-
-void Hal::setMultiturnMode(int id)
-{
-    int idx = getIndex(m_ids, id);
-    if (idx < 0) {
-        cout << "Error! Unknown ID set as a multiturn motor" << endl;
-        exit(1);
-    }
-    m_motorsList[idx].multiturn = true;    
-}
-
-
-/**
- * @brief       For each motor, save all operating modes control values. \n 
- *              Needed for resetting in multiturn mode
- */
-/*void Hal::saveControlValuesToMotors()
-{
-    int idx, id, model;
-
-    for (int i=0; i<m_tot_nbr_motors; i++){
-        id = m_all_IDs[i];
-        int idx = getIndex(m_ids, id);
-        model = m_motors_list[idx].model;
-
-        m_motors_list[idx].control_modes.current_based_position_control = 
-                            m_controlModesPerModel[model].current_based_position_control;
-        m_motors_list[idx].control_modes.position_control = m_controlModesPerModel[model].position_control;
-        m_motors_list[idx].control_modes.current_control = m_controlModesPerModel[model].current_control;
-        m_motors_list[idx].control_modes.multiturn_control = m_controlModesPerModel[model].multiturn_control;
-        m_motors_list[idx].control_modes.PWM_control = m_controlModesPerModel[model].PWM_control;
-        m_motors_list[idx].control_modes.velocity_control= m_controlModesPerModel[model].velocity_control;
-    }
-}*/
-       
 
 }
