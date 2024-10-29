@@ -14,7 +14,7 @@
 #ifndef KMR_DXL_HPP
 #define KMR_DXL_HPP
 
-#include "KMR_dxl_robot.hpp"
+#include "KMR_dxl_motor_handler.hpp"
 
 
 #endif

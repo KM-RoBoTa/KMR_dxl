@@ -1,33 +1,31 @@
 /**
- ******************************************************************************
+ *****************************************************************************
  * @file            KMR_dxl_handler.hpp
- * @brief           Header for the KMR_dxl_handler.cpp file.
- ******************************************************************************
+ * @brief           Declare the Handler class
+ *****************************************************************************
  * @copyright
- * Copyright 2021-2023 Laura Paez Coy and Kamilo Melo                    \n
+ * Copyright 2021-2024 Kamilo Melo        \n
  * This code is under MIT licence: https://opensource.org/licenses/MIT
- * @authors  Laura.Paez@KM-RoBota.com, 08/2023
- * @authors  Kamilo.Melo@KM-RoBota.com, 08/2023
- * @authors katarina.lichardova@km-robota.com, 08/2023
- ******************************************************************************
+ * @authors katarina.lichardova@km-robota.com, 10/2024
+ *****************************************************************************
  */
 
 #ifndef KMR_DXL_HANDLER_HPP
 #define KMR_DXL_HANDLER_HPP
 
+#include <cstdint>
+
 #include "dynamixel_sdk/dynamixel_sdk.h"
 #include "KMR_dxl_hal.hpp"
 #include "KMR_dxl_utils.hpp"
 
-#include <cstdint>
 
 namespace KMR::dxl
 {
 
-
 /**
- * @brief       Parent class, to be specialized as a Reader or Writer
- * @details		This class is not usable by itself, it is a non-specialized sketelon inherited
+ * @brief       Abstract parent class, to be specialized as a Reader or Writer
+ * @details		This class is not usable by itself, it is a non-specialized skeleton inherited
  * 				by the child classes Reader and Writer. \n
  * 				It contains functionalities to check the viability of sync readers/writers 
  * 				that will be defined in child classes (motor compatibility). \n 
@@ -36,23 +34,23 @@ namespace KMR::dxl
 class Handler
 {
 protected:
-	int m_nbrMotors;
-	std::vector<int> m_ids;				// All IDs handled by this specific handler
-	std::vector<int> m_models;
+	int m_nbrMotors;							// Number of handled motors
+	std::vector<int> m_ids;						// IDs of motors handled by this Handler
+	std::vector<int> m_models;					// Models of the handled motors
 
-	std::vector<ControlTableItem> m_fields;	// All Fields hanlded by this specific handler
-	bool m_isIndirectHandler;			// Boolean: 1 if the handler is indirect, 0 otherwise
+	std::vector<ControlTableItem> m_fields;		// All Fields handled by this specific handler
+	bool m_isIndirectHandler;					// 1 if the handler is indirect, 0 otherwise
 
-	dynamixel::PacketHandler *packetHandler_;
-	dynamixel::PortHandler *portHandler_;
-	Hal* m_hal;
+	dynamixel::PacketHandler *packetHandler_;	// Handler for communication packets
+	dynamixel::PortHandler *portHandler_;		// Handler for the serial port
+	Hal* m_hal;									// Hal object for interface with hardware
 
-	uint8_t m_data_address = -1;		// Address where the data is written/read
-	uint8_t m_data_byte_size = 0;		// Total data byte size handled by the handler	
+	uint8_t m_data_address = -1;				// Address where the data is written/read
+	uint8_t m_data_byte_size = 0;				// Total data byte size handled by the handler	
 
 	// SI-to-parameters conversion variables
-	std::vector<std::vector<float>> m_units;
-	std::vector<std::vector<float>> m_offsets;
+	std::vector<std::vector<float>> m_units;	// Units to convert from SI to parameter
+	std::vector<std::vector<float>> m_offsets;	// SI offsets for custom references
 	
 	Handler(std::vector<ControlTableItem> list_fields, std::vector<int> ids, std::vector<int> models,
 			dynamixel::PacketHandler* packetHandler, dynamixel::PortHandler* portHandler,
@@ -66,10 +64,11 @@ protected:
 
 
 private:	
-	std::vector<int> m_field_indices;
+	std::vector<int> m_field_indices;	// Byte index of the starts of each field 
 	std::vector<int> m_field_lengths;	// Byte size list of fields in the Handler
 
 	// Initialization functions on constructor call
+	
 	void getDataByteSize();
 	void checkMotorCompatibility(ControlTableItem field);
 	void getConversionVariables();

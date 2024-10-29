@@ -1,36 +1,36 @@
 /**
- ******************************************************************************
+ *****************************************************************************
  * @file            KMR_dxl_reader.cpp
- * @brief           Defines the Reader class
- ******************************************************************************
+ * @brief           Define the Reader class
+ *****************************************************************************
  * @copyright
- * Copyright 2021-2023 Laura Paez Coy and Kamilo Melo                    \n
- * This code is under MIT licence: https://opensource.org/licenses/MIT 
- * @authors  Laura.Paez@KM-RoBota.com, 08/2023
- * @authors  Kamilo.Melo@KM-RoBota.com, 08/2023
- * @authors katarina.lichardova@km-robota.com, 08/2023
- ******************************************************************************
+ * Copyright 2021-2024 Kamilo Melo        \n
+ * This code is under MIT licence: https://opensource.org/licenses/MIT
+ * @authors katarina.lichardova@km-robota.com, 10/2024
+ *****************************************************************************
  */
 
-#include "KMR_dxl_reader.hpp"
 #include <algorithm>
 #include <cstdint>
 
+#include "KMR_dxl_reader.hpp"
 
 using namespace std;
 
 namespace KMR::dxl
 {
 
+const int BITS_PER_BYTE = 8;
+
 /**
  * @brief       Constructor for a Reader handler
  * @param[in]   list_fields List of fields to be handled by the reader
  * @param[in]   ids Motors to be handled by the reader
+ * @param[in]   models Models of the motors to be handled by the reader
  * @param[in]   portHandler Object handling port communication
  * @param[in]   packetHandler Object handling packets
- * @param[in]   hal Previouly initialized Hal object
- * @param[in]   forceIndirect Boolean: 1 to force the reader to be indirect address
- *              (has no effect if at least 2 fields)
+ * @param[in]   hal Hal object for interface with hardware
+ * @param[in]   forceIndirect 1 to force the Handler as indirect when only 1 field
  */
 Reader::Reader(vector<ControlTableItem> list_fields, vector<int> ids, vector<int> models,
                 dynamixel::PortHandler *portHandler, dynamixel::PacketHandler *packetHandler,
@@ -61,27 +61,8 @@ Reader::~Reader()
  ****************************************************************************/
 
 /**
- * @brief   Clear the parameters list: no motors added
- */
-void Reader::clearParam()
-{
-    m_groupSyncReader->clearParam();
-}
-
-/**
- * @brief       Add a motor to the list of motors who will read
- * @param[in]   id ID of the motor
- * @retval      bool: true if motor added successfully
- */
-bool Reader::addParam(uint8_t id)
-{
-    bool dxl_addparam_result = m_groupSyncReader->addParam(id);
-    return dxl_addparam_result;
-}
-
-/**
- * @brief       Read the handled fields of input motors
- * @param[in]   ids List of motors whose fields will be read 
+ * @brief   Read the handled fields of all handled motors
+ * @retval  true if read successfully, 0 otherwise
  */
 bool Reader::syncRead()
 {
@@ -110,9 +91,76 @@ bool Reader::syncRead()
 }
 
 
+/** 
+ * @brief       Extract the previously read feedbacks with syncRead() from the internal storage
+ * @note        If the Reader handles only one field, you can use the overload function that does
+ *              not take the field argument
+ * @param[in]   field Field we want the feedbacks from (eg present position)
+ * @return      Vector of feedbacks for the query field, in SI units
+ */
+vector<float> Reader::getReadingResults(ControlTableItem field)
+{
+    int idx = getIndex(m_fields, field);
+    vector<float> results;
+
+    if (idx >= 0)
+        results = m_dataFromMotor[idx];
+    else {
+        cout << "Error! This Reader does not handle the asked field. Exiting" << endl;
+        exit(1);
+    }
+
+    return results;
+}
+
+/** 
+ * @brief       Extract the previously read feedbacks with syncRead() from the internal storage
+ * @note        If the Reader handles more than one field, use the overload function that takes 
+ *              the query field as an argument
+ * @return      Vector of feedbacks, in SI units
+ */
+vector<float> Reader::getReadingResults()
+{
+    if (m_isIndirectHandler) {
+        cout << "[Reader handler] Error! This Handler is indirect (at least 2 fields). "
+        "Use the getReadingResults(ControlTableItem field) overload instead" << endl;
+        exit(1);
+    }
+
+    int idx = 0;  // Direct handler (unique field), so index necessarily equal to 0
+    vector<float> results = m_dataFromMotor[idx];
+
+    return results;
+}
+
+
+
+
+
+
 /**
- * @brief       Check if read data from motors is available
- * @param[in]   ids List of motors whose fields have just been read
+ * @brief   Clear the parameters list: no motors added
+ */
+void Reader::clearParam()
+{
+    m_groupSyncReader->clearParam();
+}
+
+/**
+ * @brief       Add a motor to the list of motors who will read
+ * @param[in]   id ID of the motor
+ * @retval      true if motor added successfully
+ */
+bool Reader::addParam(uint8_t id)
+{
+    bool dxl_addparam_result = m_groupSyncReader->addParam(id);
+    return dxl_addparam_result;
+}
+
+
+/**
+ * @brief   Check if read data from motors is available
+ * @retval  1 if data available, 0 otherwise
  */
 bool Reader::dataAvailable()
 {
@@ -142,7 +190,6 @@ bool Reader::dataAvailable()
 
 /**
  * @brief       The reading being successful, save the read data into the output matrix
- * @param[in]   ids List of motors whose fields have been successfully read
  */
 void Reader::populateOutputMatrix()
 {
@@ -162,7 +209,7 @@ void Reader::populateOutputMatrix()
             uint32_t absValue = 0;
             if (canBeNegative(field)) {
 
-                int shift = field_length*8-1;
+                int shift = field_length * BITS_PER_BYTE - 1;
 
                 switch (field_length)
                 {
@@ -234,35 +281,11 @@ void Reader::populateOutputMatrix()
 }
 
 
-vector<float> Reader::getReadingResults(ControlTableItem field)
-{
-    int idx = getIndex(m_fields, field);
-    vector<float> results;
-
-    if (idx >= 0)
-        results = m_dataFromMotor[idx];
-    else {
-        cout << "Error! This Reader does not handle the asked field. Exiting" << endl;
-        exit(1);
-    }
-
-    return results;
-}
-
-vector<float> Reader::getReadingResults()
-{
-    if (m_isIndirectHandler) {
-        cout << "[Reader handler] Error! This Handler is indirect (at least 2 fields). "
-        "Use the getReadingResults(ControlTableItem field) overload instead" << endl;
-        exit(1);
-    }
-
-    int idx = 0;  // Direct handler (unique field), so index necessarily equal to 0
-    vector<float> results = m_dataFromMotor[idx];
-
-    return results;
-}
-
+/** 
+ * @brief   Check if the field can have negative feedback values
+ * @param   field Query field
+ * @return  1 if feedback values can be negative, 0 otherwise
+ */
 bool Reader::canBeNegative(ControlTableItem field)
 {
     using enum ControlTableItem;

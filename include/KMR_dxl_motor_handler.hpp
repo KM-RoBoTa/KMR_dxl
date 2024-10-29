@@ -1,19 +1,17 @@
 /**
- ******************************************************************************
- * @file            KMR_dxl_robot.hpp
- * @brief           Header for the KMR_dxl_robot.cpp file.
- ******************************************************************************
+ *****************************************************************************
+ * @file            KMR_dxl_motor_handler.hpp
+ * @brief           Declare the MotorHandler class
+ *****************************************************************************
  * @copyright
- * Copyright 2021-2023 Laura Paez Coy and Kamilo Melo                    \n
+ * Copyright 2021-2024 Kamilo Melo        \n
  * This code is under MIT licence: https://opensource.org/licenses/MIT
- * @authors  Laura.Paez@KM-RoBota.com, 08/2023
- * @authors  Kamilo.Melo@KM-RoBota.com, 08/2023
- * @authors katarina.lichardova@km-robota.com, 08/2023
- ******************************************************************************
+ * @authors katarina.lichardova@km-robota.com, 10/2024
+ *****************************************************************************
  */
 
-#ifndef KMR_DXL_ROBOT_HPP
-#define KMR_DXL_ROBOT_HPP
+#ifndef KMR_DXL_MOTOR_HANDLER_HPP
+#define KMR_DXL_MOTOR_HANDLER_HPP
 
 #include "KMR_dxl_writer.hpp"
 #include "KMR_dxl_reader.hpp"
@@ -22,32 +20,38 @@ namespace KMR::dxl
 {
 
 /**
- * @brief   Class that defines a base robot, to be inherited by a robot class in the project
- * @details This class contains base necessities for handling a robot with dynamixel motors. \n 
- *          It provides functions to enable/disable motors, as well as to reset motors in multiturn. \n 
- *          The user needs to create handlers they need (Writers and Readers) for their specific
- *          application, as well as their respective reading/writing functions
+ * @brief   Highest-level class that manages all communication with the motors
+ * @details This class contains everything necessary for handling dynamixel motors. \n 
+ *          On creation, it opens the port, initializes communication, pings and detects motors. \n 
+ *          It provides out-of-the-box many most-used functions, such as enabling/disabling motors,
+ *          setting control modes, setting different limits, sending control commands and getting
+ *          most common feedbacks. \n  
+ *          In case the user wants to create custom readers/writers (for example indirect ones),
+ *          this class provides functions to easily create and destroy them.
  */
 class MotorHandler {
 public:
-    std::vector<int> m_ids;     // List of IDs in the robot
-    int m_nbrMotors;
-    std::vector<int> m_models; // List of models of the motors
+    std::vector<int> m_ids;     // List of all motor IDs
+    int m_nbrMotors;            // Number of motors
+    std::vector<int> m_models;  // Models of the motors
 
     MotorHandler(std::vector<int> ids, const char *port_name, int baudrate);
     ~MotorHandler();
 
     // Easy handlers creations
+    
     Writer* getNewWriter(std::vector<ControlTableItem> fields, std::vector<int> ids);
     Reader* getNewReader(std::vector<ControlTableItem> fields, std::vector<int> ids);
     void deleteWriter(Writer* writer);
     void deleteReader(Reader* reader);
     
     // Enable/disable motor torque
+
     void enableMotors();
     void disableMotors();
 
     // Motor setup
+
     void setControlModes(std::vector<ControlMode> controlModes);  
     void setControlModes(ControlMode controlMode);  
     void setReturnDelayTime(float val); 
@@ -57,9 +61,11 @@ public:
     void setMinVoltage(float minVoltage);   
 
     // Multiturn functions
+
     void resetMultiturnMotors();
 
     // Set limits for different operating modes
+
     void setMinPosition(std::vector<float> minPositions);
     void setMaxPosition(std::vector<float> maxPositions);
     void setMaxSpeed(std::vector<float> maxSpeeds);
@@ -72,6 +78,7 @@ public:
     void setMaxPWM(float maxPWM);
 
     // Base controls
+
     void setPositions(std::vector<float> positions);
     bool getPositions(std::vector<float>& positions);
     void setSpeeds(std::vector<float> speeds);
@@ -84,6 +91,7 @@ public:
     bool getHybrid(std::vector<float>& positions, std::vector<float>& currents);
 
     // Rebooting
+
     void reboot(int id);
     void reboot();
 
@@ -95,6 +103,7 @@ protected:
     Writer* m_motorEnableWriter = nullptr;
 
     // Base controls
+    
     Writer* m_positionWriter = nullptr;
     Writer* m_speedWriter = nullptr;
     Writer* m_currentWriter = nullptr;

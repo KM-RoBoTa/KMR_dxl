@@ -10,7 +10,7 @@ set(CMAKE_CXX_FLAGS_RELEASE_INIT "-Wall")
 
 # Source files
 add_library(${PROJECT_NAME} 
-            source/KMR_dxl_robot.cpp
+            source/KMR_dxl_motor_handler.cpp
             source/KMR_dxl_handler.cpp
             source/KMR_dxl_reader.cpp
             source/KMR_dxl_writer.cpp

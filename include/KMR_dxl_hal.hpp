@@ -1,7 +1,7 @@
 /**
  *****************************************************************************
  * @file            KMR_dxl_hal.hpp
- * @brief           Header for KMR_dxl_hal.cpp file
+ * @brief           Declare the Hal class
  *****************************************************************************
  * @copyright
  * Copyright 2021-2024 Kamilo Melo        \n
@@ -37,14 +37,17 @@ public:
     void init(std::vector<int> ids, int nbrMotors, std::vector<int> models);
 
     // Handlers initializations helpers
+
     void addMotorOffsetFromID(int id, uint8_t data_length, std::string field_name);
 
     // Get hardware information
+
     float getPositionOffset(int modelNumber);
     Field getControlFieldFromModel(int modelNumber, ControlTableItem item);
     Motor getMotorFromID(int id);
     
     // Multiturn functionalities
+    
     void setMultiturnMode(int id);
     void updateResetStatus(int id, int status);
 

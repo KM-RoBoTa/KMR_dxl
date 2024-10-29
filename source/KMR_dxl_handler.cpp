@@ -1,35 +1,42 @@
 /**
- ******************************************************************************
+ *****************************************************************************
  * @file            KMR_dxl_handler.cpp
- * @brief           Defines the Handler class
- ******************************************************************************
+ * @brief           Define the Handler class
+ *****************************************************************************
  * @copyright
- * Copyright 2021-2023 Laura Paez Coy and Kamilo Melo                    \n
- * This code is under MIT licence: https://opensource.org/licenses/MIT 
- * @authors  Laura.Paez@KM-RoBota.com, 08/2023
- * @authors  Kamilo.Melo@KM-RoBota.com, 08/2023
- * @authors katarina.lichardova@km-robota.com, 08/2023
- ******************************************************************************
+ * Copyright 2021-2024 Kamilo Melo        \n
+ * This code is under MIT licence: https://opensource.org/licenses/MIT
+ * @authors katarina.lichardova@km-robota.com, 10/2024
+ *****************************************************************************
  */
 
 #include "KMR_dxl_handler.hpp"
 #include <algorithm>
 #include <cstdint>
 
-#define INDIR_OFFSET                2
-#define PARAM_OFFSET                1
-
 using namespace std;
 
 namespace KMR::dxl
 {
 
+const uint8_t INDIR_OFFSET = 2;
+const uint8_t PARAM_OFFSET = 1;
 
 /*
  *****************************************************************************
  *                                Initializations
  ****************************************************************************/
 
+/** 
+ * @brief       Constructor for Handler
+ * @param[in]   list_fields Fields handled by this Handler
+ * @param[in]   ids Motors handled by this Handler
+ * @param[in]   models Models of the handled motors
+ * @param[in]   packetHandler Handler of the communication packets
+ * @param[in]   portHandler Handler of the serial port
+ * @param[in]   hal Hal object for interface with hardware
+ * @param[in]   forceIndirect 1 to force the Handler as indirect when only 1 field
+ */
 Handler::Handler(vector<ControlTableItem> list_fields, vector<int> ids, vector<int> models,
                  dynamixel::PacketHandler* packetHandler, dynamixel::PortHandler* portHandler,
                  Hal* hal, bool forceIndirect)
@@ -60,7 +67,7 @@ Handler::Handler(vector<ControlTableItem> list_fields, vector<int> ids, vector<i
 
 /**
  * @brief       Calculate and store the byte length of data read/written by the handler. \n 
- *              Also check if the motors are field-compatible (same data lengths required for a given field)
+ *              Also check if the motors are field-compatible (same data lengths for a given field)
  */
 void Handler::getDataByteSize()
 {
@@ -93,9 +100,8 @@ void Handler::getDataByteSize()
 }
 
 
-
 /**
- * @brief       Check if the motors are compatible for a given field: same address for data storing. \n 
+ * @brief       Check if the motors are compatible for a given field: same address for data storing. \n
  *              For indirect handling, also find the first common address for every motor
  * @param[in]   field Control field that the handler is taking care of
  */
@@ -134,16 +140,18 @@ void Handler::checkMotorCompatibility(ControlTableItem field)
 
     m_data_address = address + biggest_data_offset;
 
-    // Now that we have the guarantee that all indirect data begin at the same address and we found the first 
-    // available common address for all motors for indirect handling, update their offset (already assigned memory)
+    // Now that we have the guarantee that all indirect data begin at the same address and
+    // that we found the first available common address for all motors for indirect handling,
+    // update their offset (already assigned memory)
     if (m_isIndirectHandler) {
         for (int i=0; i<m_ids.size();i++)
-            m_hal->addMotorOffsetFromID(m_ids[i], (uint8_t) (biggest_data_offset + m_data_byte_size), "indir_data_offset");
+            m_hal->addMotorOffsetFromID(m_ids[i], (uint8_t)(biggest_data_offset + m_data_byte_size),
+                                        "indir_data_offset");
     }
 }
 
 /**
- * @brief       Set the indirect addresses: link the direct field address to an indirect address
+ * @brief   Set the indirect addresses: link the direct field address to an indirect address
  */
 void Handler::setIndirectAddresses()
 {
@@ -151,7 +159,8 @@ void Handler::setIndirectAddresses()
 
     for (int k=0; k<m_nbrMotors; k++){
         int id = m_ids[k];
-        uint8_t indir_address_start = m_hal->getControlFieldFromModel(m_models[k], ControlTableItem::INDIR_ADD_1).addr;
+        uint8_t indir_address_start = m_hal->getControlFieldFromModel(m_models[k],
+                                        ControlTableItem::INDIR_ADD_1).addr;
 
         for (int i=0; i<m_fields.size(); i++){
             Field field = m_hal->getControlFieldFromModel(m_models[k], m_fields.at(i));
@@ -159,9 +168,8 @@ void Handler::setIndirectAddresses()
             for (int j=0; j<field.length; j++) {
                 uint8_t dxl_error = 0;  
                 int dxl_comm_result = packetHandler_->write2ByteTxRx(portHandler_, id, 
-                                                                indir_address_start + m_hal->getMotorFromID(id).indir_address_offset,
-                                                                field.addr + param_address_offset, 
-                                                                &dxl_error);
+                                    indir_address_start + m_hal->getMotorFromID(id).indir_address_offset,
+                                    field.addr + param_address_offset, &dxl_error);
                 if (dxl_comm_result != COMM_SUCCESS)
                     cout << packetHandler_->getTxRxResult(dxl_comm_result) << endl;
 
@@ -175,7 +183,9 @@ void Handler::setIndirectAddresses()
 }
 
 
-
+/**
+ * @brief   Get the conversion variables (units and offsets) between the SI units and parameters
+ */
 void Handler::getConversionVariables()
 {
     int nbrFields = m_fields.size();
@@ -206,9 +216,6 @@ void Handler::getConversionVariables()
     }
 } 
 
-
-
-
 /*
  *****************************************************************************
  *                        Security checking functions
@@ -227,9 +234,10 @@ void Handler::checkFieldValidity(ControlTableItem field)
 }
 
 /**
- * @brief       Get the index for reading/writing a certain field in a m_data_byte_size array
- * @param[in]   field Query control field
- * @retval      Index of the field to be written/read
+ * @brief      Get the index for reading/writing a certain field in a m_data_byte_size array
+ * @param[in]  field Query control field
+ * @param[out] field_idx [Output] Index of the query field
+ * @param[out] field_length [Output] Byte length of the query field
  */
 void Handler::getFieldPosition(ControlTableItem field, int& field_idx, int& field_length)
 {

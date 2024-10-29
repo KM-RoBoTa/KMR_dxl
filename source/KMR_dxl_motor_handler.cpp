@@ -16,7 +16,7 @@
 #include <iostream>
 #include <unistd.h>  // Provides sleep function for linux
 
-#include "KMR_dxl_robot.hpp"
+#include "KMR_dxl_motor_handler.hpp"
 
 using namespace std;
 
@@ -27,7 +27,6 @@ namespace KMR::dxl
 #define ENABLE                      1
 #define DISABLE                     0
 
-// Multiturn
 
 /**
  * @brief       Constructor for BaseRobot
