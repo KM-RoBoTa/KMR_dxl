@@ -52,7 +52,7 @@ int main()
 
     // Set max currents
     vector<float> maxPWMs = {100, 40};  // %
-    robot.setMaxPWM(maxPWMs, ids);
+    robot.setMaxPWM(maxPWMs);
     usleep(50*1000);
     robot.enableMotors();        
 
@@ -105,7 +105,7 @@ int main()
     // Reset the limits
     for (int i=0; i<nbrMotors; i++)
         maxPWMs[i] = 100;
-    robot.setMaxPWM(maxPWMs, ids);
+    robot.setMaxPWM(maxPWMs);
     usleep(50*1000);
 
     cout << "Example finished, exiting" << endl;

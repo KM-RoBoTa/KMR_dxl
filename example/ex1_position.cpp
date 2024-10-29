@@ -54,9 +54,9 @@ int main()
     // Set min/max positions
     vector<float> minPositions = {-M_PI, -2*M_PI/3};
     vector<float> maxPositions = {+M_PI, +M_PI/2};
-    robot.setMinPosition(minPositions, ids);
+    robot.setMinPosition(minPositions);
     usleep(50*1000);
-    robot.setMaxPosition(maxPositions, ids);
+    robot.setMaxPosition(maxPositions);
     usleep(50*1000);
     robot.enableMotors();    
     
@@ -126,9 +126,9 @@ int main()
         minPositions[i] = -M_PI;
         maxPositions[i] = +M_PI;
     }
-    robot.setMinPosition(minPositions, ids);
+    robot.setMinPosition(minPositions);
     usleep(50*1000);
-    robot.setMaxPosition(maxPositions, ids);
+    robot.setMaxPosition(maxPositions);
     usleep(50*1000);
 
     cout << "Example finished, exiting" << endl;

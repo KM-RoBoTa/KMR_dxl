@@ -400,20 +400,14 @@ void BaseRobot::setMaxVoltage(float maxVoltage)
  * @brief       Set the minimum position of motors
  * @param[in]   minPositions Min. positions for motors (lower saturation) 
  */                                 
-void BaseRobot::setMinPosition(vector<float> minPositions, vector<int> ids)
+void BaseRobot::setMinPosition(vector<float> minPositions)
 {
-    // Get the list of models corresponding to the ids
-    vector<int> models(ids.size());
-    for (int i=0; i<ids.size(); i++) {
-        int idx = getIndex(m_ids, ids[i]);
-        if (idx < 0) {
-            cout << "Error! Unknown ID during Writer creation. Exiting" << endl;
-            exit(1);
-        }
-        models[i] = m_models[i];
+    if (minPositions.size() != m_nbrMotors) {
+        cout << "Error! The min. position values do not coincide with the number of motors" << endl;
+        exit(1);
     }
     
-    Writer writer(vector<ControlTableItem>{ControlTableItem::MIN_POSITION_LIMIT}, ids, models,
+    Writer writer(vector<ControlTableItem>{ControlTableItem::MIN_POSITION_LIMIT}, m_ids, m_models,
                                             portHandler_, packetHandler_, m_hal, 0);
 
     writer.addDataToWrite(minPositions);
@@ -424,20 +418,14 @@ void BaseRobot::setMinPosition(vector<float> minPositions, vector<int> ids)
  * @brief       Set the maximum position of motors
  * @param[in]   maxPositions Max. positions for motors (upper saturation) 
  */                                 
-void BaseRobot::setMaxPosition(vector<float> maxPositions, vector<int> ids)
+void BaseRobot::setMaxPosition(vector<float> maxPositions)
 {
-    // Get the list of models corresponding to the ids
-    vector<int> models(ids.size());
-    for (int i=0; i<ids.size(); i++) {
-        int idx = getIndex(m_ids, ids[i]);
-        if (idx < 0) {
-            cout << "Error! Unknown ID during Writer creation. Exiting" << endl;
-            exit(1);
-        }
-        models[i] = m_models[i];
+    if (maxPositions.size() != m_nbrMotors) {
+        cout << "Error! The max. position values do not coincide with the number of motors" << endl;
+        exit(1);
     }
 
-    Writer writer(vector<ControlTableItem>{ControlTableItem::MAX_POSITION_LIMIT}, ids, models,
+    Writer writer(vector<ControlTableItem>{ControlTableItem::MAX_POSITION_LIMIT}, m_ids, m_models,
                                                 portHandler_, packetHandler_, m_hal, 0);
 
     writer.addDataToWrite(maxPositions);
@@ -458,24 +446,20 @@ void BaseRobot::setReturnDelayTime(float val)
 }
 
 
-void BaseRobot::setMaxSpeed(vector<float> maxSpeeds, vector<int> ids)
+void BaseRobot::setMaxSpeed(vector<float> maxSpeeds)
 {
-    // Get the list of models corresponding to the ids
-    vector<int> models(ids.size());
-    for (int i=0; i<ids.size(); i++) {
+    if (maxSpeeds.size() != m_nbrMotors) {
+        cout << "Error! The max. speed values do not coincide with the number of motors" << endl;
+        exit(1);
+    }
+    for (int i=0; i<m_nbrMotors; i++) {
         if (maxSpeeds[i] < 0) {
             cout << "Error! Max speed limit set as negative. Exiting" << endl;
             exit(1);
         }
-        int idx = getIndex(m_ids, ids[i]);
-        if (idx < 0) {
-            cout << "Error! Unknown ID during Writer creation. Exiting" << endl;
-            exit(1);
-        }
-        models[i] = m_models[i];
     }
 
-    Writer writer(vector<ControlTableItem>{ControlTableItem::VELOCITY_LIMIT}, ids, models,
+    Writer writer(vector<ControlTableItem>{ControlTableItem::VELOCITY_LIMIT}, m_ids, m_models,
                                             portHandler_, packetHandler_, m_hal, 0);
 
     writer.addDataToWrite(maxSpeeds);
@@ -483,54 +467,76 @@ void BaseRobot::setMaxSpeed(vector<float> maxSpeeds, vector<int> ids)
 }
 
 
-void BaseRobot::setMaxCurrent(vector<float> maxCurrents, vector<int> ids)
+void BaseRobot::setMaxCurrent(vector<float> maxCurrents)
 {
-    // Get the list of models corresponding to the ids
-    vector<int> models(ids.size());
-    for (int i=0; i<ids.size(); i++) {
+    if (maxCurrents.size() != m_nbrMotors) {
+        cout << "Error! The max. current values do not coincide with the number of motors" << endl;
+        exit(1);
+    }
+    for (int i=0; i<m_nbrMotors; i++) {
         if (maxCurrents[i] < 0) {
             cout << "Error! Max current limit set as negative. Exiting" << endl;
             exit(1);
         }
-        int idx = getIndex(m_ids, ids[i]);
-        if (idx < 0) {
-            cout << "Error! Unknown ID during Writer creation. Exiting" << endl;
-            exit(1);
-        }
-        models[i] = m_models[i];
     }
 
-    Writer writer(vector<ControlTableItem>{ControlTableItem::CURRENT_LIMIT}, ids, models,
+    Writer writer(vector<ControlTableItem>{ControlTableItem::CURRENT_LIMIT}, m_ids, m_models,
                                             portHandler_, packetHandler_, m_hal, 0);
 
     writer.addDataToWrite(maxCurrents);
     writer.syncWrite();    
 }
 
-void BaseRobot::setMaxPWM(vector<float> maxPWMs, vector<int> ids)
+void BaseRobot::setMaxPWM(vector<float> maxPWMs)
 {
-    // Get the list of models corresponding to the ids
-    vector<int> models(ids.size());
-    for (int i=0; i<ids.size(); i++) {
+    if (maxPWMs.size() != m_nbrMotors) {
+        cout << "Error! The max. PWM values do not coincide with the number of motors" << endl;
+        exit(1);
+    }
+    for (int i=0; i<m_nbrMotors; i++) {
         if (maxPWMs[i] < 0) {
             cout << "Error! Max PWM limit set as negative. Exiting" << endl;
             exit(1);
         }
-        int idx = getIndex(m_ids, ids[i]);
-        if (idx < 0) {
-            cout << "Error! Unknown ID during Writer creation. Exiting" << endl;
-            exit(1);
-        }
-        models[i] = m_models[i];
     }
 
-    Writer writer(vector<ControlTableItem>{ControlTableItem::PWM_LIMIT}, ids, models,
+    Writer writer(vector<ControlTableItem>{ControlTableItem::PWM_LIMIT}, m_ids, m_models,
                                         portHandler_, packetHandler_, m_hal, 0);
 
     writer.addDataToWrite(maxPWMs);
     writer.syncWrite();   
 }
 
+
+void BaseRobot::setMinPosition(float minPosition)
+{
+    vector<float> minPositions(m_nbrMotors, minPosition);
+    setMinPosition(minPositions);
+}
+
+void BaseRobot::setMaxPosition(float maxPosition)
+{
+    vector<float> maxPositions(m_nbrMotors, maxPosition);
+    setMaxPosition(maxPositions);
+}
+
+void BaseRobot::setMaxSpeed(float maxSpeed)
+{
+    vector<float> maxSpeeds(m_nbrMotors, maxSpeed);
+    setMaxSpeed(maxSpeeds);
+}
+
+void BaseRobot::setMaxCurrent(float maxCurrent)
+{
+    vector<float> maxCurrents(m_nbrMotors, maxCurrent);
+    setMaxCurrent(maxCurrents);
+}
+
+void BaseRobot::setMaxPWM(float maxPWM)
+{
+    vector<float> maxPWMs(m_nbrMotors, maxPWM);
+    setMaxPWM(maxPWMs);
+}
 
 
 /******************************************************************************

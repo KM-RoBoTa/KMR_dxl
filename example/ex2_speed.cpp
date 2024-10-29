@@ -55,7 +55,7 @@ int main()
     // Set max speeds
     // Max limit of second motor < goal speed => second motor will not move
     vector<float> maxSpeeds = {2*M_PI, +2*M_PI/3};  
-    robot.setMaxSpeed(maxSpeeds, ids);
+    robot.setMaxSpeed(maxSpeeds);
     usleep(50*1000);
     robot.enableMotors();        
 
@@ -109,7 +109,7 @@ int main()
     // Reset the limits
     for (int i=0; i<nbrMotors; i++)
         maxSpeeds[i] = +2*M_PI;
-    robot.setMaxSpeed(maxSpeeds, ids);
+    robot.setMaxSpeed(maxSpeeds);
     usleep(50*1000);
 
     cout << "Example finished, exiting" << endl;

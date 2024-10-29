@@ -30,10 +30,9 @@ namespace KMR::dxl
  */
 class BaseRobot {
 public:
-    int *scanned_motor_models = nullptr;  // Dynamixel-defined model numbers of motors in the robot
-    std::vector<int> m_ids; // List of IDs in the robot
+    std::vector<int> m_ids;     // List of IDs in the robot
     int m_nbrMotors;
-    std::vector<int> m_models; // List of IDs in the robot
+    std::vector<int> m_models; // List of models of the motors
 
     BaseRobot(std::vector<int> ids, const char *port_name, int baudrate);
     ~BaseRobot();
@@ -61,11 +60,16 @@ public:
     void resetMultiturnMotors();
 
     // Set limits for different operating modes
-    void setMinPosition(std::vector<float> minPositions, std::vector<int> ids);
-    void setMaxPosition(std::vector<float> maxPositions, std::vector<int> ids);
-    void setMaxSpeed(std::vector<float> maxSpeeds, std::vector<int> ids);
-    void setMaxCurrent(std::vector<float> maxCurrents, std::vector<int> ids);
-    void setMaxPWM(std::vector<float> maxPWMs, std::vector<int> ids);
+    void setMinPosition(std::vector<float> minPositions);
+    void setMaxPosition(std::vector<float> maxPositions);
+    void setMaxSpeed(std::vector<float> maxSpeeds);
+    void setMaxCurrent(std::vector<float> maxCurrents);
+    void setMaxPWM(std::vector<float> maxPWMs);
+    void setMinPosition(float minPosition);
+    void setMaxPosition(float maxPosition);
+    void setMaxSpeed(float maxSpeed);
+    void setMaxCurrent(float maxCurrent);
+    void setMaxPWM(float maxPWM);
 
     // Base controls
     void setPositions(std::vector<float> positions);
@@ -103,9 +107,6 @@ protected:
 
     void init_comm(const char *port_name, int baudrate, float protocol_version);
     void check_comm();
-    
-    /*void setMultiturnControl_singleMotor(int id, Motor motor);
-    void setPositionControl_singleMotor(int id, Motor motor);*/
 };
 
 }

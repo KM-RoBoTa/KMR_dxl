@@ -53,7 +53,7 @@ int main()
 
     // Set max currents
     vector<float> maxCurrents = {0.3, 0.2};  
-    robot.setMaxCurrent(maxCurrents, ids);
+    robot.setMaxCurrent(maxCurrents);
     usleep(50*1000);
     robot.enableMotors();        
 
@@ -106,7 +106,7 @@ int main()
     // Reset the limits
     for (int i=0; i<nbrMotors; i++)
         maxCurrents[i] = 6.5;
-    robot.setMaxCurrent(maxCurrents, ids);
+    robot.setMaxCurrent(maxCurrents);
     usleep(50*1000);
 
     cout << "Example finished, exiting" << endl;
