@@ -88,7 +88,7 @@ bool Reader::syncRead()
     clearParam();    
 
     // Add the input motors to the reading list
-    for (int i=0; i<m_ids.size(); i++){
+    for (int i=0; i<m_nbrMotors; i++){
         bool dxl_addparam_result = addParam(m_ids[i]);
         if (dxl_addparam_result != true) {
             cout << "Adding parameters failed for ID = " << m_ids[i] << endl;
@@ -116,7 +116,7 @@ bool Reader::syncRead()
  */
 bool Reader::dataAvailable()
 {
-    // Check if groupsyncread data of Dyanamixel is available
+    // Check if groupsyncread data of Dynamixel is available
     int field_idx = 0, field_length = 0;
     uint8_t offset = 0;
 

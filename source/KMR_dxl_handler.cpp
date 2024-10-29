@@ -48,7 +48,6 @@ Handler::Handler(vector<ControlTableItem> list_fields, vector<int> ids, vector<i
         m_isIndirectHandler = false;
         checkMotorCompatibility(list_fields[0]);
     }
-
     else {
         m_isIndirectHandler = true;
         checkMotorCompatibility(ControlTableItem::INDIR_DATA_1);
@@ -57,7 +56,6 @@ Handler::Handler(vector<ControlTableItem> list_fields, vector<int> ids, vector<i
 
     getConversionVariables();
 }
-
 
 
 /**
@@ -125,8 +123,14 @@ void Handler::checkMotorCompatibility(ControlTableItem field)
         }
     }
 
-    if (m_ids.size() == 1)
+    if (m_ids.size() == 1) {
         address = m_hal->getControlFieldFromModel(m_models[0], field).addr;
+        if (m_isIndirectHandler) {
+            int id = m_ids[0];
+            if (m_hal->getMotorFromID(id).indir_data_offset > biggest_data_offset)
+                biggest_data_offset = m_hal->getMotorFromID(id).indir_data_offset;
+        }
+    }
 
     m_data_address = address + biggest_data_offset;
 
@@ -150,7 +154,7 @@ void Handler::setIndirectAddresses()
         uint8_t indir_address_start = m_hal->getControlFieldFromModel(m_models[k], ControlTableItem::INDIR_ADD_1).addr;
 
         for (int i=0; i<m_fields.size(); i++){
-            Field field = m_hal->getControlFieldFromModel(m_models[i], m_fields.at(i));
+            Field field = m_hal->getControlFieldFromModel(m_models[k], m_fields.at(i));
 
             for (int j=0; j<field.length; j++) {
                 uint8_t dxl_error = 0;  

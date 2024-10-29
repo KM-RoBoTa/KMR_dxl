@@ -26,7 +26,7 @@
 
 #define BAUDRATE        1000000
 #define PORTNAME        "/dev/ttyUSB0"
-#define INCREMENT       0.02
+#define GOAL_SPEED      2*M_PI/2
 #define MAX_CTR         2000
 #define CTRL_PERIOD_US  5000
 
@@ -47,11 +47,12 @@ vector<KMR::dxl::ControlTableItem> wFields = {KMR::dxl::ControlTableItem::GOAL_V
 KMR::dxl::Writer* writer = robot.getNewWriter(wFields, ids);
 
 vector<KMR::dxl::ControlTableItem> rFields = {KMR::dxl::ControlTableItem::PRESENT_POSITION,
-                                              KMR::dxl::ControlTableItem::PRESENT_TEMPERATURE};
+                                              KMR::dxl::ControlTableItem::PRESENT_TEMPERATURE,
+                                              KMR::dxl::ControlTableItem::PRESENT_VELOCITY};
 KMR::dxl::Reader* reader = robot.getNewReader(rFields, ids);
 
 void writeCommands(vector<float> goalSpeeds, vector<int> leds);
-bool getFeedbacks(vector<float>& fbckPositions, vector<float>& fbckTemperatures);
+bool getFeedbacks(vector<float>& fbckPositions, vector<float>& fbckTemperatures, vector<float>& fbckSpeeds);
 
 
 int main()
@@ -63,14 +64,6 @@ int main()
     KMR::dxl::ControlMode mode = KMR::dxl::ControlMode::SPEED;
     robot.setControlModes(mode);
     sleep(1);
-
-    // Set min/max positions
-    vector<float> minPositions = {-M_PI, -2*M_PI/3};
-    vector<float> maxPositions = {+M_PI, +M_PI/2};
-    robot.setMinPosition(minPositions, ids);
-    usleep(50*1000);
-    robot.setMaxPosition(maxPositions, ids);
-    usleep(50*1000);
     robot.enableMotors();    
     
     // Required variables
@@ -78,56 +71,45 @@ int main()
     vector<int> leds(nbrMotors, 0);
     vector<float> fbckPositions(nbrMotors, 0);
     vector<float> fbckTemperatures(nbrMotors, 0);
+    vector<float> fbckSpeeds(nbrMotors, 0);
 
-    float angle = 0;
+    float speed = 0;
     int ledOn = 0;
     bool forward = 1;
     int ctr = 0;
 
-    writeCommands(goalSpeeds, leds);
-    getFeedbacks(fbckPositions, fbckTemperatures);
-
-    exit(1);
-
-    robot.setPositions(goalSpeeds);
-    sleep(1);
-
     // Main loop
     while (ctr < MAX_CTR) {
-        // Get feedback
+        // Get feedback and print it
         timespec start = time_s();
-        robot.getPositions(fbckPositions);
+        getFeedbacks(fbckPositions, fbckTemperatures, fbckSpeeds);
 
-        cout << "Positions: "; 
-        for (int i=0; i<nbrMotors; i++) {
-            cout << fbckPositions[i] << " rad";
-            if (i != (nbrMotors-1))
-                cout << ", ";
-        }
         cout << endl;
+        for (int i=0; i<nbrMotors; i++) {
+            cout << "Motor " << ids[i] << ": speed = " << fbckSpeeds[i] << " rad/s, position = "
+            << fbckPositions[i] << " rad, temperature = " << fbckTemperatures[i] << " °C" << endl;
+        }
 
-        // Send new goal positions
-        for (int i=0; i<nbrMotors; i++)
-            goalSpeeds[i] = angle;
-        robot.setPositions(goalSpeeds);
+        if (ctr > MAX_CTR/2)
+            forward = 0;
 
         // Update the goal angle for next loop
         if (forward) {
-            angle += INCREMENT;
-
-            if (angle > M_PI) {
-                angle = M_PI;
-                forward = false;
-            }
+            ledOn = 1;
+            speed = GOAL_SPEED;
         }
         else {
-            angle -= INCREMENT;
-
-            if (angle < -M_PI) {
-                angle = -M_PI;
-                forward = true;
-            }
+            ledOn = 0;
+            speed = -GOAL_SPEED;
         }
+
+        // Send new goal positions
+        for (int i=0; i<nbrMotors; i++) {
+            goalSpeeds[i] = speed;
+            leds[i] = ledOn;
+        }
+
+        writeCommands(goalSpeeds, leds);
 
         // Increment counter and set the control loop to 5ms
         ctr++;
@@ -142,23 +124,11 @@ int main()
 
     robot.disableMotors();
 
-    // Reset the limits
-    for (int i=0; i<nbrMotors; i++) {
-        minPositions[i] = -M_PI;
-        maxPositions[i] = +M_PI;
-    }
-    robot.setMinPosition(minPositions, ids);
-    usleep(50*1000);
-    robot.setMaxPosition(maxPositions, ids);
-    usleep(50*1000);
-
     // Cleanup of the heap
     robot.deleteWriter(writer);
     robot.deleteReader(reader);
 
     cout << "Example finished, exiting" << endl;
-
-
 }
 
 
@@ -169,12 +139,13 @@ void writeCommands(vector<float> goalSpeeds, vector<int> leds)
     writer->syncWrite();
 }
 
-bool getFeedbacks(vector<float>& fbckPositions, vector<float>& fbckTemperatures)
+bool getFeedbacks(vector<float>& fbckPositions, vector<float>& fbckTemperatures, vector<float>& fbckSpeeds)
 {
     bool readSuccess = reader->syncRead();
     if (readSuccess) {
         fbckPositions = reader->getReadingResults(KMR::dxl::ControlTableItem::PRESENT_POSITION);
         fbckTemperatures = reader->getReadingResults(KMR::dxl::ControlTableItem::PRESENT_TEMPERATURE);
+        fbckSpeeds = reader->getReadingResults(KMR::dxl::ControlTableItem::PRESENT_VELOCITY);       
         return true;
     }
     else
