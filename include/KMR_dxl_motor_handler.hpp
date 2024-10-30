@@ -45,39 +45,38 @@ public:
     void deleteWriter(Writer* writer);
     void deleteReader(Reader* reader);
     
-    // Enable/disable motor torque
+    // Enable/disable motor torque and rebooting
 
     void enableMotors();
     void disableMotors();
+    void reboot(int id);
+    void reboot();
 
     // Motor setup
 
     void setControlModes(std::vector<ControlMode> controlModes);  
     void setControlModes(ControlMode controlMode);  
     void setReturnDelayTime(float val); 
-    void setMaxVoltage(std::vector<float> maxVoltages);  
-    void setMaxVoltage(float maxVoltage);  
     void setMinVoltage(std::vector<float> maxVoltages);   
     void setMinVoltage(float minVoltage);   
+    void setMaxVoltage(std::vector<float> maxVoltages);  
+    void setMaxVoltage(float maxVoltage);  
 
-    // Multiturn functions
-
-    void resetMultiturnMotors();
 
     // Set limits for different operating modes
 
     void setMinPosition(std::vector<float> minPositions);
-    void setMaxPosition(std::vector<float> maxPositions);
-    void setMaxSpeed(std::vector<float> maxSpeeds);
-    void setMaxCurrent(std::vector<float> maxCurrents);
-    void setMaxPWM(std::vector<float> maxPWMs);
     void setMinPosition(float minPosition);
+    void setMaxPosition(std::vector<float> maxPositions);
     void setMaxPosition(float maxPosition);
+    void setMaxSpeed(std::vector<float> maxSpeeds);
     void setMaxSpeed(float maxSpeed);
+    void setMaxCurrent(std::vector<float> maxCurrents);
     void setMaxCurrent(float maxCurrent);
+    void setMaxPWM(std::vector<float> maxPWMs);
     void setMaxPWM(float maxPWM);
 
-    // Base controls
+    // Control and feedback commands
 
     void setPositions(std::vector<float> positions);
     bool getPositions(std::vector<float>& positions);
@@ -90,10 +89,9 @@ public:
     void setHybrid(std::vector<float> positions, std::vector<float> currents);
     bool getHybrid(std::vector<float>& positions, std::vector<float>& currents);
 
-    // Rebooting
+    // Multiturn
 
-    void reboot(int id);
-    void reboot();
+    void resetMultiturnMotors();
 
 protected:
     dynamixel::PortHandler   *portHandler_ = nullptr;
