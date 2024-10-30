@@ -4,10 +4,6 @@ project(KMR_dxl)
 # Set C++ standard
 set(CMAKE_CXX_STANDARD 20)
 
-# Compiler flags
-set(CMAKE_CXX_FLAGS_DEBUG_INIT "-Wall")
-set(CMAKE_CXX_FLAGS_RELEASE_INIT "-Wall")
-
 # Source files
 add_library(${PROJECT_NAME} 
             source/KMR_dxl_motor_handler.cpp
@@ -17,6 +13,9 @@ add_library(${PROJECT_NAME}
             source/KMR_dxl_hal.cpp
             source/KMR_dxl_utils.cpp
             )
+
+# Compiler flags
+target_compile_options(${PROJECT_NAME}  PRIVATE -Wall -Wno-sign-compare)
 
 include (GNUInstallDirs)
 set(MY_PUBLIC_HEADERS
@@ -73,7 +72,7 @@ add_executable(ex4_pwm example/ex4_pwm.cpp)
 target_link_libraries(ex4_pwm KMR_dxl)
 add_executable(ex5_multiturn example/ex5_multiturn.cpp)
 target_link_libraries(ex5_multiturn KMR_dxl)
-#add_executable(ex6_custom_handlers example/ex6_custom_handlers.cpp)
-#target_link_libraries(ex6_custom_handlers KMR_dxl)
+#add_executable(ex6_hybrid example/ex6_hybrid.cpp)
+#target_link_libraries(ex6_hybrid KMR_dxl)
 add_executable(ex7_custom_handlers example/ex7_custom_handlers.cpp)
 target_link_libraries(ex7_custom_handlers KMR_dxl)

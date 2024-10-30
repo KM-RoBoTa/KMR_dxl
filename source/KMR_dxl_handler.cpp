@@ -64,7 +64,6 @@ Handler::Handler(vector<ControlTableItem> list_fields, vector<int> ids, vector<i
     getConversionVariables();
 }
 
-
 /**
  * @brief       Calculate and store the byte length of data read/written by the handler. \n 
  *              Also check if the motors are field-compatible (same data lengths for a given field)

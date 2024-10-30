@@ -1,5 +1,8 @@
 # Change Log
 All notable changes to this library will be documented in this file.
 
-## [1.0.0] - 2023-22-09
+## [1.0.0] - 2023-09-22
 First finished version of the library.
+
+## [2.0.0] - 2024-10-30
+Second version of the library. Breaking changes, incompatible with 1st version.

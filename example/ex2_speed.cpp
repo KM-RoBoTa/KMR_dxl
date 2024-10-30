@@ -70,7 +70,6 @@ int main()
     vector<float> fbckSpeeds(nbrMotors, 0);
 
     float speed = GOAL_SPEED1;
-    bool forward = 1;
     int ctr = 0;
 
     while (ctr < MAX_CTR) {

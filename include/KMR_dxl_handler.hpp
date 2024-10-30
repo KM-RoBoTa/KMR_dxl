@@ -55,6 +55,7 @@ protected:
 	Handler(std::vector<ControlTableItem> list_fields, std::vector<int> ids, std::vector<int> models,
 			dynamixel::PacketHandler* packetHandler, dynamixel::PortHandler* portHandler,
 			Hal* hal, bool forceIndirect);
+	virtual ~Handler() = default;				// Dstr needs to be virtual to avoid undef. behavior
 
 	void checkFieldValidity(ControlTableItem field);
 	void getFieldPosition(ControlTableItem field, int &field_idx, int &field_length);

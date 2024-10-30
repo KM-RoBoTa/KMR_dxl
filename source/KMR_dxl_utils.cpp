@@ -1,14 +1,13 @@
 /**
  ******************************************************************************
- * @file            writer.hpp
- * @brief           Header for the writer.cpp file
+ * @file            KMR_dxl_utils.cpp
+ * @brief           Useful miscellaneous functions
  ******************************************************************************
  * @copyright
- * Copyright 2021-2023 Laura Paez Coy and Kamilo Melo                    \n
+ * Copyright 2021-2024 Kamilo Melo        \n
  * This code is under MIT licence: https://opensource.org/licenses/MIT
- * @authors  katarina.lichardova@km-robota.com, 09/2024
- * @authors  kamilo.melo@km-robota.com, 09/2024
- ******************************************************************************
+ * @authors katarina.lichardova@km-robota.com, 10/2024
+ *****************************************************************************
  */
 
 #include <cmath>
@@ -17,15 +16,23 @@
 
 #include "KMR_dxl_utils.hpp"
 
-
 using namespace std;
 
-
+/**
+ * @brief       Convert degrees to radians
+ * @param[in]   deg Angle in degrees
+ * @return      Angle in radians
+ */
 float deg2rad(float deg)
 {
     return (deg * M_PI / 180.0);
 }
 
+/**
+ * @brief       Convert radians to degrees
+ * @param[in]   rad Angle in radians
+ * @return      Angle in degrees
+ */
 float rad2deg(float rad)
 {
     return (rad * 180 / M_PI);
@@ -69,7 +76,11 @@ double get_delta_us(struct timespec t2, struct timespec t1)
     return(td.tv_sec*1000000 + td.tv_nsec/1000);
 }
 
-
+/**
+ * @brief   Convert an int to hex to be able to print it
+ * @param   dec Integer in decimal
+ * @return  String in hex
+ */
 std::string convertToHex(int dec) 
 {
     std::stringstream ss;
