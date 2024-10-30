@@ -1,16 +1,21 @@
 /**
- *****************************************************************************
- * @file            ex1_position.cpp
- * @brief           Example for position control
- * @details         This example is designed for 2 motors to showcase the effect of setting
- *                  the min and max positions.
- *                  Those motors can be any model, in protocol 2.
- *****************************************************************************
+ ********************************************************************************************
+ * @file    ex7_custom_handlers.cpp
+ * @brief   Example for custom handlers
+ * @details Concept of the example:
+ *          - Speed control. Motors rotate positively in the first half of the program, then 
+ *          negatively
+ *          - When going forward, we want to set the LED on
+ *          => custom Writer handler that writes into GOAL_VELOCITY and LED fields
+ * 
+ *          - At each step, we get the speed, position and temperature feedbacks
+ *          => custom Reader handler that reads from those 3 fields
+ ********************************************************************************************
  * @copyright
  * Copyright 2021-2024 Kamilo Melo \n
  * This code is under MIT licence: https://opensource.org/licenses/MIT
  * @authors katarina.lichardova@km-robota.com, 10/2024
- *****************************************************************************
+ ********************************************************************************************
  */
 
 #include <unistd.h>
@@ -51,6 +56,7 @@ vector<KMR::dxl::ControlTableItem> rFields = {KMR::dxl::ControlTableItem::PRESEN
                                               KMR::dxl::ControlTableItem::PRESENT_VELOCITY};
 KMR::dxl::Reader* reader = robot.getNewReader(rFields, ids);
 
+// Create functions to write/read with the custom handlers
 void writeCommands(vector<float> goalSpeeds, vector<int> leds);
 bool getFeedbacks(vector<float>& fbckPositions, vector<float>& fbckTemperatures, vector<float>& fbckSpeeds);
 

@@ -1,16 +1,20 @@
 /**
- *****************************************************************************
- * @file            ex1_position.cpp
- * @brief           Example for position control
- * @details         This example is designed for 2 motors to showcase the effect of setting
- *                  the min and max positions.
- *                  Those motors can be any model, in protocol 2.
- *****************************************************************************
+ ********************************************************************************************
+ * @file    ex1_position.cpp
+ * @brief   Example for position control
+ * @details This example is designed for 2 motors to showcase the effect of setting
+ *          the min and max positions. \n
+ *          Those motors can be any model, in protocol 2 (IDs 1 and 2 by default). \n \n
+ *          The motors' goal positions oscillate during -pi and +pi throughout the 
+ *          program. However, the second's motor limits are set at lower values, which
+ *          results in the second motor not being able to execute the full motion due to 
+ *          these constraints.
+ ********************************************************************************************
  * @copyright
  * Copyright 2021-2024 Kamilo Melo \n
  * This code is under MIT licence: https://opensource.org/licenses/MIT
  * @authors katarina.lichardova@km-robota.com, 10/2024
- *****************************************************************************
+ ********************************************************************************************
  */
 
 #include <unistd.h>

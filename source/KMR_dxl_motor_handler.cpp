@@ -111,10 +111,8 @@ MotorHandler::~MotorHandler()
 void MotorHandler::init_comm(const char *port_name, int baudrate, float protocol_version)
 {
     portHandler_ = dynamixel::PortHandler::getPortHandler(port_name);
-    if (!portHandler_->openPort()) {
-        cout << "Failed to open the motors port!" <<endl;
+    if (!portHandler_->openPort())
         exit(1);
-    }
     else
         cout<< "Succeeded to open the motors port!" <<endl;
 

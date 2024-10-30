@@ -1,11 +1,11 @@
 /**
  *****************************************************************************
- * @file            ex_multiturn.cpp
- * @brief           Example for multiturn control
- * @details         The motors are controlled in multiturn position control.
- *                  At first, they will turn positively (counterclockwise), then 
- *                  negatively (clockwise), while resetting when necessary.
- *                  Please note the goal position adjustements in the code
+ * @file    ex5_multiturn.cpp
+ * @brief   Example for multiturn control
+ * @details The motors are controlled in multiturn position control.
+ *          At first, they will turn positively (counterclockwise), then 
+ *          negatively (clockwise), while resetting when necessary.
+ *          Please note the goal position adjustements in the code
  *****************************************************************************
  * @copyright
  * Copyright 2021-2024 Kamilo Melo \n

@@ -1,16 +1,24 @@
 /**
- *****************************************************************************
- * @file            ex1_position.cpp
- * @brief           Example for position control
- * @details         This example is designed for 2 motors to showcase the effect of setting
- *                  the min and max positions.
- *                  Those motors can be any model, in protocol 2.
- *****************************************************************************
+ ********************************************************************************************
+ * @file    ex4_pwm.cpp
+ * @brief   Example for PWM control
+ * @details This example is designed for 2 motors to showcase the effect of setting a max.
+ *          PWM lower than the goal PWM. \n
+ *          Those motors can be any model, in protocol 2 (IDs 1 and 2 by default). \n \n
+ * 
+ *          At first, the motors are commanded with a positive PWM. Since both motors' limits
+ *          are set higher than this command, both motors execute it, resulting in a positive
+ *          rotation. \n 
+ *          During the second half, the motors are commanded with a negative PWM with a 
+ *          higher absolute value than in the previous phase. However, since the second motor's
+ *          limit is lower than the command, the second motor ignores the new command and thus 
+ *          continues applying the command from the first part.
+ ********************************************************************************************
  * @copyright
  * Copyright 2021-2024 Kamilo Melo \n
  * This code is under MIT licence: https://opensource.org/licenses/MIT
  * @authors katarina.lichardova@km-robota.com, 10/2024
- *****************************************************************************
+ ********************************************************************************************
  */
 
 #include <unistd.h>
@@ -26,8 +34,8 @@
 
 #define BAUDRATE        1000000
 #define PORTNAME        "/dev/ttyUSB0"
-#define GOAL_PWM1       50
-#define GOAL_PWM2       -30
+#define GOAL_PWM1       30
+#define GOAL_PWM2       -50
 #define MAX_CTR         2000
 #define CTRL_PERIOD_US  5000
 
@@ -56,7 +64,7 @@ int main()
     usleep(50*1000);
     robot.enableMotors();        
 
-    float pwm = GOAL_PWM1; // A
+    float pwm = GOAL_PWM1;
     int ctr = 0;
 
     vector<float> goalPWMs(nbrMotors, pwm);

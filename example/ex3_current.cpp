@@ -1,10 +1,7 @@
 /**
  *****************************************************************************
- * @file            ex1_position.cpp
- * @brief           Example for position control
- * @details         This example is designed for 2 motors to showcase the effect of setting
- *                  the min and max positions.
- *                  Those motors can be any model, in protocol 2.
+ * @file            ex3_current.cpp
+ * @brief           Example for current control
  *****************************************************************************
  * @copyright
  * Copyright 2021-2024 Kamilo Melo \n
@@ -26,8 +23,8 @@
 
 #define BAUDRATE        1000000
 #define PORTNAME        "/dev/ttyUSB0"
-#define GOAL_CURRENT1   0.2
-#define GOAL_CURRENT2   -0.2
+#define GOAL_CURRENT1   -0.2
+#define GOAL_CURRENT2   -0.3
 #define MAX_CTR         2000
 #define CTRL_PERIOD_US  5000
 
