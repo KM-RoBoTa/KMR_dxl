@@ -53,6 +53,7 @@ Reader::Reader(vector<ControlTableItem> list_fields, vector<int> ids, vector<int
 Reader::~Reader()
 {
     delete m_groupSyncReader;
+    m_groupSyncReader = nullptr;
 }
 
 /*

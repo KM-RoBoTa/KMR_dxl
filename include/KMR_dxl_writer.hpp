@@ -53,7 +53,7 @@ private:
 // Templates need to be defined in hpp
 
 /**
- * @brief       Add data to the list to be sent later with syncWrite
+ * @brief       Add data to the list to be sent later with syncWrite()
  * @note        If the Writer object handles only one field, you can use the overload
  *              function that does not need the field argument
  * @param[in]   data Data to be sent to all motors handled by this object (eg, new goal positions),
@@ -99,7 +99,7 @@ void Writer::addDataToWrite(std::vector<T> data, ControlTableItem field)
 }
 
 /**
- * @brief       Add data to the list to be sent later with syncWrite
+ * @brief       Add data to the list to be sent later with syncWrite()
  * @note        If the Writer object handles more than a single field, you need to use the 
  *              overload of this function
  * @param[in]   data Data to be sent to all motors handled by this object (eg, new goal positions),

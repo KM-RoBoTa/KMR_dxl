@@ -10,21 +10,7 @@ For not implemented functionalities, as well as for the creation of custom reade
 In addition to a full documentation, this library also provides several examples to illustrate its use.
 
 
-## Working concept
-
-
-
-Instead of having to manually create Dynamixel's GroupSyncWrite and GroupSyncRead objects and inputting the required addresses and byte lengths of their control fields, everything is done through this library's KMR::dxl::Reader and KMR::dxl::Writer classes.
-
-The KMR::dxl::BaseRobot class provides a basis to be inherited by a Robot class specific to the project. BaseRobot contains general-use functions such as enabling/disabling motors and resetting them in multiturn control mode. <br /> 
-The user needs to create custom Reader and Writer objects in their child Robot class, handling the fields they need, as well as their reading/writing functions. Those functions are very straightforward to implement.
-
-This library is written in C++. <br />  
-
-
-
 ## Links
-
 - Repository: https://github.com/KM-RoBoTa/KMR_dxl
 - How to [setup](setup.md)
 - How to [use](use.md)
@@ -58,3 +44,7 @@ This code is under MIT licence: https://opensource.org/licenses/MIT
 - XW430-T200
 - XW540-T260
 - XW540-T140
+
+Note: the documentation explains how to add a model into the library
+
+[Writer](@ref KMR::dxl::Writer)

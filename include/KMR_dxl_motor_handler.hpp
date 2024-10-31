@@ -93,7 +93,7 @@ public:
 
     void resetMultiturnMotors();
 
-protected:
+private:
     dynamixel::PortHandler   *portHandler_ = nullptr;
     dynamixel::PacketHandler *packetHandler_ = nullptr;
     Hal* m_hal = nullptr;

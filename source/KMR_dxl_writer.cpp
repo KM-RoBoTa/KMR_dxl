@@ -55,6 +55,9 @@ Writer::~Writer()
     for (int i=0; i<m_ids.size(); i++)
         delete[] m_dataParam[i];
     delete[] m_dataParam;
+
+    m_groupSyncWriter = nullptr;
+    m_dataParam = nullptr;
 }
 
 
@@ -91,7 +94,7 @@ void Writer::populateDataParam(int32_t data, int motor_idx, int field_idx, int f
 
 
 /**
- * @brief   Send the previously prepared data with addDataToWrite to motors
+ * @brief   Send the previously prepared data with addDataToWrite() to motors
  */
 void Writer::syncWrite()
 {

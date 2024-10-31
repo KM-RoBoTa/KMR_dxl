@@ -161,7 +161,7 @@ void MotorHandler::check_comm()
 /**
  * @brief   Create a new Writer object
  * @note    The new Writer is created on the heap.
- *          Make sure to use the provided MotorHandler::deleteWriter() method to clean the memory
+ *          Make sure to use the provided deleteWriter() method to clean the memory
  * @param   fields Control table fields to be handled by the new writer 
  * @param   ids IDs of motors to be handled by the new writer
  * @return  New Writer object
@@ -186,7 +186,7 @@ Writer* MotorHandler::getNewWriter(vector<ControlTableItem> fields, vector<int> 
 /**
  * @brief   Create a new Reader object
  * @note    The new Reader is created on the heap.
- *          Make sure to use the provided MotorHandler::deleteReader() method to clean the memory
+ *          Make sure to use the provided deleteReader() method to clean the memory
  * @param   fields Control table fields to be handled by the new reader 
  * @param   ids IDs of motors to be handled by the new reader
  * @return  New Reader object
@@ -284,7 +284,7 @@ void MotorHandler::reboot()
  * @note        If all motors have the same control mode, you can use the overload function
  * @param[in]   controlModes Control modes to be set to motors
  */
-void MotorHandler::setControlModes(vector<ControlMode> controlModes)
+void MotorHandler::setControlModes(std::vector<ControlMode> controlModes)
 {
     using enum ControlMode;
 
@@ -360,7 +360,7 @@ void MotorHandler::setReturnDelayTime(float val)
  * @brief       Set the minimum voltages to all motors
  * @param[in]   minVoltages Min. allowed voltages in motors [V]
  */                                 
-void MotorHandler::setMinVoltage(vector<float> minVoltages)
+void MotorHandler::setMinVoltage(std::vector<float> minVoltages)
 {
     Writer writer(vector<ControlTableItem>{ControlTableItem::MIN_VOLTAGE_LIMIT}, m_ids, m_models,
                                             portHandler_, packetHandler_, m_hal, 0);
@@ -383,7 +383,7 @@ void MotorHandler::setMinVoltage(float minVoltage)
  * @brief       Set the maximum voltage to all motors
  * @param[in]   maxVoltages Max. allowed voltages in motors [V]
  */                                 
-void MotorHandler::setMaxVoltage(vector<float> maxVoltages)
+void MotorHandler::setMaxVoltage(std::vector<float> maxVoltages)
 {
     Writer writer(vector<ControlTableItem>{ControlTableItem::MAX_VOLTAGE_LIMIT}, m_ids, m_models,
                                             portHandler_, packetHandler_, m_hal, 0);
@@ -412,7 +412,7 @@ void MotorHandler::setMaxVoltage(float maxVoltage)
  * @note        If all motors have the same min. position, you can use the overload
  * @param[in]   minPositions Min. positions for motors [rad]
  */                                 
-void MotorHandler::setMinPosition(vector<float> minPositions)
+void MotorHandler::setMinPosition(std::vector<float> minPositions)
 {
     if (minPositions.size() != m_nbrMotors) {
         cout << "Error! The min. position values do not coincide with the number of motors" << endl;
@@ -441,7 +441,7 @@ void MotorHandler::setMinPosition(float minPosition)
  * @note        If all motors have the same max. position, you can use the overload
  * @param[in]   maxPositions Max. positions for motors [rad]
  */                                 
-void MotorHandler::setMaxPosition(vector<float> maxPositions)
+void MotorHandler::setMaxPosition(std::vector<float> maxPositions)
 {
     if (maxPositions.size() != m_nbrMotors) {
         cout << "Error! The max. position values do not coincide with the number of motors" << endl;
@@ -470,7 +470,7 @@ void MotorHandler::setMaxPosition(float maxPosition)
  * @note        If all motors have the same max. speed, you can use the overload
  * @param[in]   maxSpeeds Max. absolute speeds for all motors [rad/s]
  */        
-void MotorHandler::setMaxSpeed(vector<float> maxSpeeds)
+void MotorHandler::setMaxSpeed(std::vector<float> maxSpeeds)
 {
     if (maxSpeeds.size() != m_nbrMotors) {
         cout << "Error! The max. speed values do not coincide with the number of motors" << endl;
@@ -506,7 +506,7 @@ void MotorHandler::setMaxSpeed(float maxSpeed)
  * @note        If all motors have the same max. current, you can use the overload
  * @param[in]   maxCurrents Max. absolute currents for all motors [A]
  */     
-void MotorHandler::setMaxCurrent(vector<float> maxCurrents)
+void MotorHandler::setMaxCurrent(std::vector<float> maxCurrents)
 {
     if (maxCurrents.size() != m_nbrMotors) {
         cout << "Error! The max. current values do not coincide with the number of motors" << endl;
@@ -541,7 +541,7 @@ void MotorHandler::setMaxCurrent(float maxCurrent)
  * @note        If all motors have the same max. PWM, you can use the overload
  * @param[in]   maxPWMs Max. absolute PWMs for all motors [%]
  */   
-void MotorHandler::setMaxPWM(vector<float> maxPWMs)
+void MotorHandler::setMaxPWM(std::vector<float> maxPWMs)
 {
     if (maxPWMs.size() != m_nbrMotors) {
         cout << "Error! The max. PWM values do not coincide with the number of motors" << endl;
@@ -580,7 +580,7 @@ void MotorHandler::setMaxPWM(float maxPWM)
  * @brief       Set the positions of all motors
  * @param[in]   positions Goal positions of all motors [rad]
  */ 
-void MotorHandler::setPositions(vector<float> positions)
+void MotorHandler::setPositions(std::vector<float> positions)
 {
     m_positionWriter->addDataToWrite(positions);
     m_positionWriter->syncWrite();
@@ -591,7 +591,7 @@ void MotorHandler::setPositions(vector<float> positions)
  * @param[out]  positions [Output] Vector to hold the feedback positions [rad]
  * @return      1 if reading was successful, 0 otherwise
  */
-bool MotorHandler::getPositions(vector<float>& positions)
+bool MotorHandler::getPositions(std::vector<float>& positions)
 {
     bool readSuccess = m_positionReader->syncRead();
     if (readSuccess) {
@@ -606,7 +606,7 @@ bool MotorHandler::getPositions(vector<float>& positions)
  * @brief       Set the speeds of all motors
  * @param[in]   speeds Goal speeds of all motors [rad/s]
  */ 
-void MotorHandler::setSpeeds(vector<float> speeds)
+void MotorHandler::setSpeeds(std::vector<float> speeds)
 {
     m_speedWriter->addDataToWrite(speeds);
     m_speedWriter->syncWrite();
@@ -617,7 +617,7 @@ void MotorHandler::setSpeeds(vector<float> speeds)
  * @param[out]  speeds [Output] Vector to hold the feedback speeds [rad/s]
  * @return      1 if reading was successful, 0 otherwise
  */
-bool MotorHandler::getSpeeds(vector<float>& speeds)
+bool MotorHandler::getSpeeds(std::vector<float>& speeds)
 {
     bool readSuccess = m_speedReader->syncRead();
     if (readSuccess) {
@@ -632,7 +632,7 @@ bool MotorHandler::getSpeeds(vector<float>& speeds)
  * @brief       Set the currents of all motors
  * @param[in]   currents Goal currents of all motors [A]
  */ 
-void MotorHandler::setCurrents(vector<float> currents)
+void MotorHandler::setCurrents(std::vector<float> currents)
 {
     m_currentWriter->addDataToWrite(currents);
     m_currentWriter->syncWrite();
@@ -643,7 +643,7 @@ void MotorHandler::setCurrents(vector<float> currents)
  * @param[out]  currents [Output] Vector to hold the feedback currents [A]
  * @return      1 if reading was successful, 0 otherwise
  */
-bool MotorHandler::getCurrents(vector<float>& currents)
+bool MotorHandler::getCurrents(std::vector<float>& currents)
 {
     bool readSuccess = m_currentReader->syncRead();
     if (readSuccess) {
@@ -658,7 +658,7 @@ bool MotorHandler::getCurrents(vector<float>& currents)
  * @brief       Set the PWMs of all motors
  * @param[in]   pwms Goal PWMs of all motors [%]
  */ 
-void MotorHandler::setPWMs(vector<float> pwms)
+void MotorHandler::setPWMs(std::vector<float> pwms)
 {
     m_PWMWriter->addDataToWrite(pwms);
     m_PWMWriter->syncWrite();
@@ -669,7 +669,7 @@ void MotorHandler::setPWMs(vector<float> pwms)
  * @param[out]  pwms [Output] Vector to hold the feedback pwms [%]
  * @return      1 if reading was successful, 0 otherwise
  */
-bool MotorHandler::getPWMs(vector<float>& pwms)
+bool MotorHandler::getPWMs(std::vector<float>& pwms)
 {
     bool readSuccess = m_PWMReader->syncRead();
     if (readSuccess) {
@@ -681,7 +681,7 @@ bool MotorHandler::getPWMs(vector<float>& pwms)
 }
 
 
-void MotorHandler::setHybrid(vector<float> positions, vector<float> currents)
+void MotorHandler::setHybrid(std::vector<float> positions, std::vector<float> currents)
 {
     m_positionWriter->addDataToWrite(positions);
     m_currentWriter->addDataToWrite(currents);
@@ -690,7 +690,7 @@ void MotorHandler::setHybrid(vector<float> positions, vector<float> currents)
     m_currentWriter->syncWrite();
 }
 
-bool MotorHandler::getHybrid(vector<float>& positions, vector<float>& currents)
+bool MotorHandler::getHybrid(std::vector<float>& positions, std::vector<float>& currents)
 {
     bool readPositionSuccess = m_positionReader->syncRead();
     bool readCurrentSuccess = m_currentReader->syncRead();

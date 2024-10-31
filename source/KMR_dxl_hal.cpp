@@ -56,6 +56,19 @@ Hal::~Hal()
     delete XW430_T200;
     delete XW540_T140;
     delete XW540_T260;    
+
+    // Protection against accidental double freeing
+    MX_28 = nullptr;
+    MX_64 = nullptr;
+    MX_106 = nullptr;
+    XH540_W150 = nullptr;
+    XH540_W270 = nullptr;
+    XM430_W350 = nullptr;
+    XM540_W150 = nullptr;
+    XM540_W270 = nullptr;
+    XW430_T200 = nullptr;
+    XW540_T140 = nullptr;
+    XW540_T260 = nullptr;
 }
 
 /**
