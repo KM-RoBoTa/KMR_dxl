@@ -1,8 +1,9 @@
 # C++ wrapper around Dynamixel's library for protocol 2 motors
 
 > [!warning]
-> This library has been refactored to increase optimization and ease-of-use. This version 2.0.0 is **not** compatible with code written for version 1.0.0.
-> The old library version can be found on the branch "1.0.0.", although it is recommended to use this new version
+> This library has been refactored to increase optimization and ease-of-use. <br /> 
+> This version 2.0.0 is **not** compatible with code written for version 1.0.0. <br /> 
+> The old library version can be found on the branch "v1.0.0", although it is recommended to use this new version
 
 This library is a C++ wrapper around Dynamixel's SDK library for **protocol 2** motors, written for Linux, currently supporting x86 and armv7l processor architectures. <br /> 
 It uses SI units, the only exception being temperature expressed in °C instead of Kelvins.
@@ -16,8 +17,8 @@ To get the most complete documentation, it is recommended to regenerate the doxy
 
 ## Links
 - Repository: https://github.com/KM-RoBoTa/KMR_dxl
-- How to [setup](setup.md)
-- How to [use](use_git.md)
+- How to [setup](docs/markdown_sources/setup.md)
+- How to [use](docs/markdown_sources/use_git.md)
 
 ## About
 
