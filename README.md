@@ -17,7 +17,7 @@ To get the most complete documentation, it is recommended to regenerate the doxy
 
 ## Links
 - Repository: https://github.com/KM-RoBoTa/KMR_dxl
-- How to [setup](docs/markdown_sources/setup.md)
+- How to [setup](docs/markdown_sources/setup_git.md)
 - How to [use](docs/markdown_sources/use_git.md)
 
 ## About
