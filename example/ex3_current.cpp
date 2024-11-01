@@ -23,8 +23,8 @@
 
 #define BAUDRATE        1000000
 #define PORTNAME        "/dev/ttyUSB0"
-#define GOAL_CURRENT1   -0.2
-#define GOAL_CURRENT2   -0.3
+#define GOAL_CURRENT1   0.2
+#define GOAL_CURRENT2   -0.2
 #define MAX_CTR         2000
 #define CTRL_PERIOD_US  5000
 
@@ -49,7 +49,7 @@ int main()
     robot.enableMotors();
 
     // Set max currents
-    vector<float> maxCurrents = {0.3, 0.2};  
+    vector<float> maxCurrents = {0.2, 0.15};  
     robot.setMaxCurrent(maxCurrents);
     usleep(50*1000);
     robot.enableMotors();        

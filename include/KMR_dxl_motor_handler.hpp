@@ -86,8 +86,8 @@ public:
     bool getCurrents(std::vector<float>& currents);
     void setPWMs(std::vector<float> pwms);
     bool getPWMs(std::vector<float>& pwms);
-    void setHybrid(std::vector<float> positions, std::vector<float> currents);
-    bool getHybrid(std::vector<float>& positions, std::vector<float>& currents);
+    //void setHybrid(std::vector<float> positions, std::vector<float> currents);
+    //bool getHybrid(std::vector<float>& positions, std::vector<float>& currents);
 
     // Multiturn
 

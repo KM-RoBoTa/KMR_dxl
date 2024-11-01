@@ -1,4 +1,4 @@
-use# How to use
+# How to use
 
 The library lives in the KMR::dxl namespace. 
 
@@ -9,7 +9,7 @@ Dynamixel libraries define the motor angles as indicated in black in the followi
 
 ![](../img/motor_new.png)
 
-with the angle position being in the interval $ [ 0; 2\pi] $ rad. <br /> 
+with the angle position being in the interval $[ 0; 2\pi]$ rad. <br /> 
 This library uses the redefined angles as indicated in blue, in the interval  $] - \pi, +\pi[$ rad, with the 0 position being in the center of the motor.
 
 
@@ -23,7 +23,7 @@ Additionally, it automatically detects their models. In tandem with its hardware
 Out of the box, the motor handler comes with the most common functions, such as enabling/disabling motors, setting control modes, sending control commands or getting common feedbacks. The exhaustive list of those functions will be described later. 
 
 In the background, the motor handler has created instances of this library's custom Writer and Reader classes. Those classes contain respectively a Dynamixel's GroupSyncWrite and GroupSyncRead object, as well as additional functionalities such as automatic units-to-parameter conversions, automatic direct and indirect address assignments and motor compability checks. <br />
-So for example, the function to assign control modes uses in the background a Writer object that works with the KMR::dxl::ControlTableItem::OPERATING_MODE field. But what happens if the user wants to write/read to fields that are not handled by a premade function, such as reading temperature, or wants a single handler to work with several fields through indirect addresses?
+So for example, the function to assign control modes uses in the background a Writer object that works with the ```KMR::dxl::ControlTableItem::OPERATING_MODE``` field. But what happens if the user wants to write/read to fields that are not handled by a premade function, such as reading temperature, or wants a single handler to work with several fields through indirect addresses?
 
 In this case, the user can create custom writers or readers by using functions provided by the MotorHandler class to create (and destroy) those custom handlers very easily. <br />
 The user has to write functions that will use those custom handlers, but it is very quick and straightforward. <br />
@@ -94,10 +94,10 @@ Provided examples 1 through 4 are designed for 2 motors in order to illustrate t
 ### Multiturn
 This library deals with multiturn mode in a custom way. 
 
-By default, dynamixel motors support 256 revolutions in each direction before saturating. In order to avoid this problem, the library is designed to reboot a motor as soon as it gets over $ 2\pi $ rad, which resets its position between $ [ -2\pi; 2\pi] $, practically allowing an infinite number of revolutions. 
+By default, dynamixel motors support 256 revolutions in each direction before saturating. In order to avoid this problem, the library is designed to reboot a motor as soon as it gets over $2\pi$ rad, which resets its position between $[ -2\pi; 2\pi]$, practically allowing an infinite number of revolutions. 
 
-In the background, as soon as a motor receives a position command with an absolute value higher than $ 2\pi $ rad, an internal flag requesting a reset is raised. At the start of each loop, the user needs to invoke MotorHandler::resetMultiturnMotors(), which reboots all motors with a raised flag. Those motors are thus re-centered in $ [ -2\pi; 2\pi] $ rad. This means 2 things:
-- A user needs to send *exactly 1* command value over $ 2\pi $ rad to a motor in order to raise its flag. On the next control loop, the goal position needs to be re-centered in $ [ -2\pi; 2\pi] $ rad so that it's compatible with the freshly rebooted motor
+In the background, as soon as a motor receives a position command with an absolute value higher than $2\pi$ rad, an internal flag requesting a reset is raised. At the start of each loop, the user needs to invoke MotorHandler::resetMultiturnMotors(), which reboots all motors with a raised flag. Those motors are thus re-centered in $[ -2\pi; 2\pi]$ rad. This means 2 things:
+- A user needs to send *exactly 1* command value over $2\pi$ rad to a motor in order to raise its flag. On the next control loop, the goal position needs to be re-centered in $[ -2\pi; 2\pi]$ rad so that it's compatible with the freshly rebooted motor
 - The user needs to give enough time to the motors to execute the position command before calling MotorHandler::resetMultiturnMotors(). <br />
 **ATTENTION**: if the motors are rebooted before they could execute the whole movement, it results in undefined behavior. This is why it is recommended to call the function at the start of the control loop.
 

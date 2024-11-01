@@ -680,7 +680,8 @@ bool MotorHandler::getPWMs(std::vector<float>& pwms)
         return false;
 }
 
-
+// Hybrid command mode, to be finished
+/*
 void MotorHandler::setHybrid(std::vector<float> positions, std::vector<float> currents)
 {
     m_positionWriter->addDataToWrite(positions);
@@ -702,7 +703,7 @@ bool MotorHandler::getHybrid(std::vector<float>& positions, std::vector<float>& 
     }
     else 
         return false;
-}
+}*/
 
 /*
 *****************************************************************************

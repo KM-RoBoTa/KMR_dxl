@@ -88,7 +88,7 @@ mkdir build && cd build
 cmake ../
 make
 ```
-This will generate the static library ```libKMR_dxl.a``` in the "build" folder, as well as several executable examples. If doxygen and Graphviz are installed, it will also generate local documentation in ```KMR_dxl/docs/generated_docs/html/index.html```.
+This will generate the static library ```libKMR_dxl.a``` in the "build" folder, as well as several executable examples. If doxygen and Graphviz are installed, it will also generate local doxygen documentation in ```KMR_dxl/docs/generated_docs/html/index.html```.
 
 ## Include in a project
 It is very straightforward to include this library in a project. <br /> 
