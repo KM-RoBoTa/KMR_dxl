@@ -1,5 +1,4 @@
-# How to setup {#setup}
-[TOC]
+# How to setup
 
 ## Dependencies
 This library is dependent on the following libraries:
@@ -127,4 +126,4 @@ To add a motor model to the library, follow those steps:
     - In the method ```Hal::getControlTable```, add the case for the new model
 
 
-Next: how to [use](use.md)
+Next: how to [use](use_git.md)

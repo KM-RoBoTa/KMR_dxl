@@ -1,5 +1,4 @@
-# How to use {#how-to-use}
-[TOC]
+# How to use
 
 The library lives in the KMR::dxl namespace. 
 
@@ -8,10 +7,10 @@ The library lives in the KMR::dxl namespace.
 The angles of the motors have been redefined in this library so that they feel more natural.  <br /> 
 Dynamixel libraries define the motor angles as indicated in black in the following image:
 
-![](motor_new.png)
+![](../img/motor_new.png)
 
-with the angle position being in the interval \f$ [ 0; 2\pi] \f$ rad. <br /> 
-This library uses the redefined angles as indicated in blue, in the interval  \f$] - \pi, +\pi[\f$ rad, with the 0 position being in the center of the motor.
+with the angle position being in the interval $[ 0; 2\pi]$ rad. <br /> 
+This library uses the redefined angles as indicated in blue, in the interval  $] - \pi, +\pi[$ rad, with the 0 position being in the center of the motor.
 
 
 ## Highest-level manager: the MotorHandler class
@@ -24,7 +23,7 @@ Additionally, it automatically detects their models. In tandem with its hardware
 Out of the box, the motor handler comes with the most common functions, such as enabling/disabling motors, setting control modes, sending control commands or getting common feedbacks. The exhaustive list of those functions will be described later. 
 
 In the background, the motor handler has created instances of this library's custom Writer and Reader classes. Those classes contain respectively a Dynamixel's GroupSyncWrite and GroupSyncRead object, as well as additional functionalities such as automatic units-to-parameter conversions, automatic direct and indirect address assignments and motor compability checks. <br />
-So for example, the function to assign control modes uses in the background a Writer object that works with the KMR::dxl::ControlTableItem::OPERATING_MODE field. But what happens if the user wants to write/read to fields that are not handled by a premade function, such as reading temperature, or wants a single handler to work with several fields through indirect addresses?
+So for example, the function to assign control modes uses in the background a Writer object that works with the ```KMR::dxl::ControlTableItem::OPERATING_MODE``` field. But what happens if the user wants to write/read to fields that are not handled by a premade function, such as reading temperature, or wants a single handler to work with several fields through indirect addresses?
 
 In this case, the user can create custom writers or readers by using functions provided by the MotorHandler class to create (and destroy) those custom handlers very easily. <br />
 The user has to write functions that will use those custom handlers, but it is very quick and straightforward. <br />
@@ -43,7 +42,7 @@ KMR::dxl::MotorHandler motorHandler(ids, PORTNAME, BAUDRATE);
 
 ## Provided functions
 
-As mentioned above, the MotorHandler class provides common functions. The complete list of those functions can be found on the class page [documentation](@ref KMR::dxl::MotorHandler).
+As mentioned above, the MotorHandler class provides common functions. It is recommended to check the complete list of those functions on the doxygen version of this documentation.
 
 Almost none of those functions take motor identifiers as arguments. This is because **all of those functions work with all motors** inputted in the class constructor. Which means, for example when inputting the control modes to motors with the function ```MotorHandler::setControlModes(std::vector< ControlMode > controlModes)```, it is expected that the size of the vector ```controlModes``` is equal to the number of motors. The values in the argument vector are distributed to the motors in the same order as the motor IDs were inputted in the constructor. 
 
@@ -95,10 +94,10 @@ Provided examples 1 through 4 are designed for 2 motors in order to illustrate t
 ### Multiturn
 This library deals with multiturn mode in a custom way. 
 
-By default, dynamixel motors support 256 revolutions in each direction before saturating. In order to avoid this problem, the library is designed to reboot a motor as soon as it gets over \f$ 2\pi \f$ rad, which resets its position between \f$ [ -2\pi; 2\pi] \f$, practically allowing an infinite number of revolutions. 
+By default, dynamixel motors support 256 revolutions in each direction before saturating. In order to avoid this problem, the library is designed to reboot a motor as soon as it gets over $2\pi$ rad, which resets its position between $[ -2\pi; 2\pi]$, practically allowing an infinite number of revolutions. 
 
-In the background, as soon as a motor receives a position command with an absolute value higher than \f$ 2\pi \f$ rad, an internal flag requesting a reset is raised. At the start of each loop, the user needs to invoke MotorHandler::resetMultiturnMotors(), which reboots all motors with a raised flag. Those motors are thus re-centered in \f$ [ -2\pi; 2\pi] \f$ rad. This means 2 things:
-- A user needs to send *exactly 1* command value over \f$ 2\pi \f$ rad to a motor in order to raise its flag. On the next control loop, the goal position needs to be re-centered in \f$ [ -2\pi; 2\pi] \f$ rad so that it's compatible with the freshly rebooted motor
+In the background, as soon as a motor receives a position command with an absolute value higher than $2\pi$ rad, an internal flag requesting a reset is raised. At the start of each loop, the user needs to invoke MotorHandler::resetMultiturnMotors(), which reboots all motors with a raised flag. Those motors are thus re-centered in $[ -2\pi; 2\pi]$ rad. This means 2 things:
+- A user needs to send *exactly 1* command value over $2\pi$ rad to a motor in order to raise its flag. On the next control loop, the goal position needs to be re-centered in $[ -2\pi; 2\pi]$ rad so that it's compatible with the freshly rebooted motor
 - The user needs to give enough time to the motors to execute the position command before calling MotorHandler::resetMultiturnMotors(). <br />
 **ATTENTION**: if the motors are rebooted before they could execute the whole movement, it results in undefined behavior. This is why it is recommended to call the function at the start of the control loop.
 

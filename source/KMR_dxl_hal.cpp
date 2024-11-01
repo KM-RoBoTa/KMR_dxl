@@ -4,459 +4,89 @@
  * @brief           Defines the Hal class
  ******************************************************************************
  * @copyright
- * Copyright 2021-2023 Laura Paez Coy and Kamilo Melo                    \n
- * This code is under MIT licence: https://opensource.org/licenses/MIT  
- * @authors  Laura.Paez@KM-RoBota.com, 08/2023
- * @authors  Kamilo.Melo@KM-RoBota.com, 08/2023
- * @authors katarina.lichardova@km-robota.com, 08/2023
- ******************************************************************************
+ * Copyright 2021-2024 Kamilo Melo        \n
+ * This code is under MIT licence: https://opensource.org/licenses/MIT
+ * @authors katarina.lichardova@km-robota.com, 10/2024
+ *****************************************************************************
  */
 
-#include "KMR_dxl_hal.hpp"
-#include "yaml-cpp/yaml.h"
 #include <iostream>
 #include <cstdint>
 
+#include "KMR_dxl_hal.hpp"
+
 using namespace std;
 
-
-namespace YAML
-{
-
-/**
- * @brief       Overload YAML::Node.as to be usable with our Data_node structure: \n
- *              Convert YAML::Node to Data_node
- * @param[in]   node YAML:Node read by the YAML parser
- * @param[out]  data_node Instance of Data_node to store the info gotten from node
- */
-template <>
-struct convert<KMR::dxl::Data_node>
-{
-
-    static bool decode(const Node &node, KMR::dxl::Data_node &data_node)
-    {
-
-        data_node.field_name = node["field"].as<std::string>();
-        data_node.address = node["address"].as<int>();
-        data_node.length = node["length"].as<int>();
-        data_node.unit = node["unit"].as<float>();
-
-        return true;
-    }
-};
-
-/**
- * @brief       Overload YAML::Node.as to be usable with our Motor_node structure: \n
- *              Convert YAML::Node to Motor_node
- * @param[in]   node YAML:Node read by the YAML parser
- * @param[out]  motor_node Instance of Motor_node to store the info gotten from node
- */
-template <>
-struct convert<KMR::dxl::Motor_node>
-{
-
-    static bool decode(const Node &node, KMR::dxl::Motor_node &motor_node)
-    {
-        motor_node.id = node["ID"].as<int>();
-        motor_node.model_name = node["model"].as<string>();
-        motor_node.multiturn = node["multiturn"].as<int>();
-        return true;
-    }
-};
-
-
-/**
- * @brief       Overload YAML::Node.as to be usable with our Control_modes structure: \n
- *              Convert YAML::Node to Control_modes
- * @param[in]   node YAML:Node read by the YAML parser
- * @param[out]  motor_node Instance of Control_modes to contain the info gotten from node
- */
-template <>
-struct convert<KMR::dxl::Control_modes>
-{
-
-    static bool decode(const Node &node, KMR::dxl::Control_modes &control_modes)
-    {
-
-        control_modes.current_control = (uint8_t) node["current_control"].as<int>();
-        control_modes.current_based_position_control = (uint8_t) node["current_based_position_control"].as<int>();
-        control_modes.multiturn_control = (uint8_t) node["multiturn_control"].as<int>();
-        control_modes.velocity_control = (uint8_t) node["velocity_control"].as<int>();
-        control_modes.position_control = (uint8_t) node["position_control"].as<int>();
-        control_modes.PWM_control = (uint8_t) node["PWM_control"].as<int>();
-
-        return true;
-    }
-};
-
-}
-
 namespace KMR::dxl
+
+#define POS_OFFSET_DEFAULT 3.14159265358979323846264338327950288 // M_PI
 {
-    
+
 /**
- * @brief       Constructor for Hal
+ * @brief   Constructor for Hal
  */
 Hal::Hal()
 {
-    m_tot_nbr_motors = -1;
-    m_control_table = new Motor_data_field *[NBR_MODELS];
-    for (int i = 0; i < NBR_MODELS; i++)
-        m_control_table[i] = new Motor_data_field[NBR_FIELDS];
-
-    m_controlModesPerModel = new Control_modes[NBR_MODELS];
+    MX_28 = new MX_28_P2();
+    MX_64 = new MX_64_P2();
+    MX_106 = new MX_106_P2();
+    XH540_W150 = new XH540_W150_P2();
+    XH540_W270 = new XH540_W270_P2();
+    XM430_W350 = new XM430_W350_P2();
+    XM540_W150 = new XM540_W150_P2();
+    XM540_W270 = new XM540_W270_P2();
+    XW430_T200 = new XW430_T200_P2();
+    XW540_T140 = new XW540_T140_P2();
+    XW540_T260 = new XW540_T260_P2();
 }
 
 /**
- * @brief       Destructor for Hal
+ * @brief   Destructor for Hal
  */
 Hal::~Hal()
 {
-    /*delete[] m_controlModesPerModel;
+    delete MX_28;
+    delete MX_64;
+    delete MX_106;
+    delete XH540_W150;
+    delete XH540_W270;
+    delete XM430_W350;
+    delete XM540_W150;
+    delete XM540_W270;
+    delete XW430_T200;
+    delete XW540_T140;
+    delete XW540_T260;    
 
-    for (int i=0; i<NBR_MODELS; i++)
-        delete[] m_control_table[i];
-    delete[] m_control_table;
-    
-    free(m_motors_list);*/
+    // Protection against accidental double freeing
+    MX_28 = nullptr;
+    MX_64 = nullptr;
+    MX_106 = nullptr;
+    XH540_W150 = nullptr;
+    XH540_W270 = nullptr;
+    XM430_W350 = nullptr;
+    XM540_W150 = nullptr;
+    XM540_W270 = nullptr;
+    XW430_T200 = nullptr;
+    XW540_T140 = nullptr;
+    XW540_T260 = nullptr;
 }
 
 /**
- * @brief       Initialize the hal: parse motor config file and create the control table. 
- *              To call immediately after the constructor   
- * @param[in]   motor_config_file Configuration file of the motors in the project
- * @return      Vector of all motor IDs 
+ * @brief   Initialize the Hal - called by MotorHandler in its cstr
+ * @param   ids List of IDs of all the motors in the robot
+ * @param   nbrMotors Number of motors in the robot
+ * @param   models List of model numbers of each motor, gotten during the motors ping
  */
-vector<int> Hal::init(char *motor_config_file, char* path_to_KMR_dxl)
+void Hal::init(vector<int> ids, int nbrMotors, vector<int> models)
 {
-    // Parse the motor config specific to the current project
-    parse_motor_config(motor_config_file);
+    m_nbrMotors = nbrMotors;
+    m_ids = ids;
+    m_models =  models;
 
-    // Create the control table for all models
-    populate_control_table(path_to_KMR_dxl);
-
-    // Extract the list of motor IDs
-    get_ID_list_from_motors_list();
-
-    // Save operating modes values to motors
-    saveControlValuesToMotors();
-
-    return m_all_IDs;
-}
-
-
-/*****************************************************************************
- *                   Creation of the control table
- ****************************************************************************/
-
-/**
- * @brief       Populate the control table's data fields for all motor models in the project
- * @param[in]   path_to_KMR_dxl Path from the working directory (build) to this library's folder
- */
-void Hal::populate_control_table(char* path_to_KMR_dxl)
-{
-    Data_node data_node;
-    Motor_data_field motor_data_field;
-    Fields col;
-
-    // For each motor model, open its config file and populate the control table
-    for (int i = 0; i < m_unique_motor_models_list.size(); i++)
-    {
-        string config_file = (string)path_to_KMR_dxl + (string)"/config/motor_models/"
-                             + m_unique_motor_models_list[i];
-
-        // Open the yaml config file
-        YAML::Node config = YAML::LoadFile(config_file);
-        cout << "[KMR::dxl] Motor model file open: " << config_file << endl;
-
-        // Read and convert the first line to get the motor model name
-        string motor_model_string = config["model_name"].as<string>();
-        Motor_models motor_model = string2Motors_models(motor_model_string);
-
-        // Read the values to set control modes
-        Control_modes control_modes = config["operating_modes"][0].as<Control_modes>();
-        m_controlModesPerModel[motor_model] = control_modes;
-
-        // Read the motor_data nodes: get the name, address, length and unit of each data field
-        for (int j = 0; j < config["motor_data"].size(); j++)
-        {
-            data_node = config["motor_data"][j].as<Data_node>();
-
-            // Convert the read node into our structures
-            col = string2Fields(data_node.field_name);
-            dataNode2Motor_data_field(data_node, motor_data_field);
-
-            // Populate the control table
-            m_control_table[motor_model][col] = motor_data_field;
-        }
+    for (int i=0; i<m_nbrMotors; i++) {
+        Motor motor(m_ids[i], m_models[i]);
+        m_motorsList.push_back(motor);
     }
-}
-
-/*****************************************************************************
- *          Conversions from nodes/strings to our structures/enumerates
- ****************************************************************************/
-
-/**
- * @brief       Convert a string to Motors_models enumerate
- * @attention   This function needs to be updated if new motor model added, as well as the enum
- * @param[in]   str String to be converted into the enumerate value
- * @retval      Motors_models enumerate value
- */
-Motor_models Hal::string2Motors_models(const string &str)
-{
-    if (str == "MX_64R")
-        return MX_64R;
-    else if(str == "MX_106")
-        return MX_106;
-    else if(str == "MX_28")
-        return MX_28;
-    else if (str == "XH540_W150")
-        return XH540_W150;
-    else if (str == "XH540_W270")
-        return XH540_W270;
-    else if (str == "XM430_W350")
-        return XM430_W350;
-    else if (str == "XM540_W150")
-        return XM540_W150;
-    else if (str == "XM540_W270")
-        return XM540_W270;
-    else if (str == "XW430_T200")
-        return XW430_T200;
-    else if (str == "XW540_T260")
-        return XW540_T260;
-    else if (str == "XW540_T140")
-        return XW540_T140;
-    else {
-        cout << "Unknown model!" << endl;
-        exit(1);
-        return UNDEF_M;
-    }
-}
-
-/**
- * @brief       Convert a string to Fields enumerate
- * @param[in]   str String to be converted into the enumerate value
- * @retval      Fields enumerate value
- */
-Fields Hal::string2Fields(const string &str)
-{
-    if (str == "MODEL_NBR")
-        return MODEL_NBR;
-    else if (str == "MODEL_INFO")
-        return MODEL_INFO;
-    else if (str == "FIRMWARE")
-        return FIRMWARE;
-    else if (str == "ID")
-        return ID;
-    else if (str == "BAUDRATE")
-        return BAUDRATE;
-    else if (str == "RETURN_DELAY")
-        return RETURN_DELAY;
-    else if (str == "DRIVE_MODE")
-        return DRIVE_MODE;
-    else if (str == "RETURN_DELAY")
-        return RETURN_DELAY;
-    else if (str == "OP_MODE")
-        return OP_MODE;
-    else if (str == "SHADOW_ID")
-        return SHADOW_ID;
-    else if (str == "PROTOCOL")
-        return PROTOCOL;
-    else if (str == "HOMING_OFFSET")
-        return HOMING_OFFSET;
-    else if (str == "MOVE_THRESHOLD")
-        return MOVE_THRESHOLD;
-    else if (str == "TEMP_LIMIT")
-        return TEMP_LIMIT;
-    else if (str == "MAX_VOLT_LIMIT")
-        return MAX_VOLT_LIMIT;
-    else if (str == "MIN_VOLT_LIMIT")
-        return MIN_VOLT_LIMIT;
-    else if (str == "PWM_LIMIT")
-        return PWM_LIMIT;
-    else if (str == "CURRENT_LIMIT")
-        return CURRENT_LIMIT;
-    else if (str == "ACC_LIMIT")
-        return ACC_LIMIT;
-    else if (str == "VEL_LIMIT")
-        return VEL_LIMIT;
-    else if (str == "MAX_POS_LIMIT")
-        return MAX_POS_LIMIT;
-    else if (str == "MIN_POS_LIMIT")
-        return MIN_POS_LIMIT;
-    else if (str == "SHUTDOWN")
-        return SHUTDOWN;
-    else if (str == "TRQ_ENABLE")
-        return TRQ_ENABLE;
-    else if (str == "LED")
-        return LED;
-    else if (str == "STATUS_RETURN")
-        return STATUS_RETURN;
-    else if (str == "REGISTERED")
-        return REGISTERED;
-    else if (str == "HARDWARE_ERROR")
-        return HARDWARE_ERROR;
-    else if (str == "VEL_I_GAIN")
-        return VEL_I_GAIN;
-    else if (str == "VEL_P_GAIN")
-        return VEL_P_GAIN;
-    else if (str == "POS_D_GAIN")
-        return POS_D_GAIN;
-    else if (str == "POS_I_GAIN")
-        return POS_I_GAIN;
-    else if (str == "POS_P_GAIN")
-        return POS_P_GAIN;
-    else if (str == "FF_2ND_GAIN")
-        return FF_2ND_GAIN;
-    else if (str == "FF_1ST_GAIN")
-        return FF_1ST_GAIN;
-    else if (str == "BUS_WATCHDOG")
-        return BUS_WATCHDOG;
-    else if (str == "GOAL_PWM")
-        return GOAL_PWM;
-    else if (str == "GOAL_CURRENT")
-        return GOAL_CURRENT;
-    else if (str == "GOAL_VELOCITY")
-        return GOAL_VELOCITY;
-    else if (str == "PROFILE_ACC")
-        return PROFILE_ACC;
-    else if (str == "PROFILE_VEL")
-        return PROFILE_VEL;
-    else if (str == "GOAL_POS")
-        return GOAL_POS;
-    else if (str == "REALTIME_TICK")
-        return REALTIME_TICK;
-    else if (str == "MOVING")
-        return MOVING;
-    else if (str == "MOVING_STATUS")
-        return MOVING_STATUS;
-    else if (str == "PRESENT_PWM")
-        return PRESENT_PWM;
-    else if (str == "PRESENT_CURRENT")
-        return PRESENT_CURRENT;
-    else if (str == "PRESENT_VEL")
-        return PRESENT_VEL;
-    else if (str == "PRESENT_POS")
-        return PRESENT_POS;
-    else if (str == "VEL_TRAJECTORY")
-        return VEL_TRAJECTORY;
-    else if (str == "POS_TRAJECTORY")
-        return POS_TRAJECTORY;
-    else if (str == "PRESENT_INPUT_VOLT")
-        return PRESENT_INPUT_VOLT;
-    else if (str == "PRESENT_TEMP")
-        return PRESENT_TEMP;
-    else if (str == "INDIR_ADD_1")
-        return INDIR_ADD_1;
-    else if (str == "INDIR_DATA_1")
-        return INDIR_DATA_1;
-    else if (str == "INDIR_ADD_2")
-        return INDIR_ADD_2;
-    else if (str == "INDIR_DATA_2")
-        return INDIR_DATA_2;
-    else
-        return UNDEF_F;
-}
-
-/**
- * @brief       Convert a Data_node instance to a Motor_data_field instance
- * @param[in]   data_node Data_node instance to be converted
- * @param[out]  motor_data_field Motor_data_field instance to store the info from the node
- */
-void Hal::dataNode2Motor_data_field(Data_node &data_node, Motor_data_field &motor_data_field)
-{
-    motor_data_field.address = (std::uint8_t)data_node.address;
-    motor_data_field.length = (std::uint8_t)data_node.length;
-    motor_data_field.unit = data_node.unit;
-}
-
-/**
- * @brief       Convert a Motor_node instance to a Motor instance
- * @param[in]   motor_node Motor_node instance to be converted
- * @param[out]  motor Motor instance to store the info from the node
- */
-void Hal::motorNode2Motor(Motor_node &motor_node, Motor &motor)
-{
-    motor.id = motor_node.id;
-    motor.model = string2Motors_models(motor_node.model_name);
-    motor.multiturn = motor_node.multiturn;
-}
-
-
-/*****************************************************************************
- *                Parsing of project-specific config files
- ****************************************************************************/
-
-/**
- * @brief       Parse the motor configuration file and populate the list of motors
- * @param[in]   config_file Yaml config file for the motors in the robot
- */
-void Hal::parse_motor_config(char *config_file)
-{
-    Motor_node motor_node;
-    Motor motor;
-
-    // Open the yaml config file
-    YAML::Node config = YAML::LoadFile(config_file);
-    cout << "[KMR::dxl] Project motor config file open: " << config_file << endl;
-
-    // Read and convert the first line to get the number of motors in the robot
-    m_tot_nbr_motors = config["nbr_motors"].as<int>();
-    if (m_tot_nbr_motors != config["motors"].size()) {
-        cout << "[KMR::dxl] ERROR in the number of motors in the config file!!" << endl;
-        exit(1);
-    }
-
-    // Create the list of motors (NB: had to use malloc because the struct. does not have a constructor)
-    m_motors_list = (Motor *)malloc(m_tot_nbr_motors * sizeof(Motor));
-
-    // Read the motors nodes: get the ID, model and multiturn mode for each motor
-    for (int i = 0; i < config["motors"].size(); i++)
-    {
-        motor_node = config["motors"][i].as<Motor_node>();
-
-        // Convert the read node and update the list of used models
-        motorNode2Motor(motor_node, motor);
-        update_unique_models_list(motor_node.model_name);
-
-        // Populate the list of motors
-        m_motors_list[i] = motor;
-    }
-}
-
-/**
- * @brief       Create the list of unique motor models used in the robot
- * @param[in]   motor_model_string Model of the currently querried motor
- */
-void Hal::update_unique_models_list(string motor_model_string)
-{
-    string filename = motor_model_string + (string) ".yaml";
-    bool model_in_list = false;
-
-    for (int i = 0; i < m_unique_motor_models_list.size(); i++)
-    {
-        if (m_unique_motor_models_list[i] == filename)
-        {
-            model_in_list = true;
-            break;
-        }
-    }
-
-    if (model_in_list == false)
-        m_unique_motor_models_list.push_back(filename);
-}
-
-
-
-/**
- * @brief       Extract the list of all motor IDs from the motors list
- */
-void Hal::get_ID_list_from_motors_list()
-{
-    m_all_IDs = vector<int> (m_tot_nbr_motors);
-
-    for (int i = 0; i < m_tot_nbr_motors; i++)
-        m_all_IDs[i] = m_motors_list[i].id;
 }
 
 
@@ -465,82 +95,46 @@ void Hal::get_ID_list_from_motors_list()
  ****************************************************************************/
 
 /**
- * @brief       Get control parameters of a specific control field from motor ID
- * @note        Vital function
- * @param[in]   id ID of the query motor
- * @param[in]   field Control field of the query
- * @retval      Control parameters of the query field
- */
-Motor_data_field Hal::getControlParametersFromID(int id, Fields field)
-{
-    Motor_models model = getModelFromID(id);
-    Motor_data_field params = m_control_table[model][field];
-
-    return params;
-}
-
-/**
- * @brief       Get motor model from motor ID
- * @param[in]   id ID of the query motor
- * @retval      Model of the query motor
- */
-Motor_models Hal::getModelFromID(int id)
-{
-    Motor_models motor_model = UNDEF_M;
-
-    for (int i = 0; i < m_tot_nbr_motors; i++)
-    {
-        if (m_motors_list[i].id == id)
-        {
-            motor_model = m_motors_list[i].model;
-            break;
-        }
-    }
-
-    if (motor_model != UNDEF_M)
-        return motor_model;
-    else {
-        cout << "Error in getting the model from ID!" << endl;
-        exit(1);
-    }
-}
-
-/**
- * @brief       Get a motor's list index from its ID
- * @param[in]   id ID of the query motor
- * @retval      Index of the query motor
- */
-int Hal::getMotorsListIndexFromID(int id)
-{
-    int i;
-    for (i=0; i < m_tot_nbr_motors; i++)
-    {
-        if (m_motors_list[i].id == id)
-        {
-            break;
-        }
-    }
-
-    return i;
-}
-
-/**
  * @brief       Get a motor's info structure from motor ID
  * @param[in]   id ID of the query motor
  * @retval      The Motor structure of the query motor
  */
 Motor Hal::getMotorFromID(int id)
 {
-    int motor_idx = getMotorsListIndexFromID(id);
-    Motor motor = m_motors_list[motor_idx];
+    int motor_idx = getIndex(m_ids, id);
+    Motor motor = m_motorsList[motor_idx];
 
     return motor;
 }
 
+/**
+ * @brief       Get our custom position offset, so that the 0 angle is in the center
+ * @param[in]   modelNumber Query motor model number
+ * @return      Position offset [rad]
+ */
+float Hal::getPositionOffset(int modelNumber)
+{
+    float offset = 0;
 
-/*****************************************************************************
- *                             Misc. functions
- ****************************************************************************/
+    // Insert any special case here (eg AX-12A in protocol 1)
+    offset = POS_OFFSET_DEFAULT;
+            
+    return offset;
+}
+
+/**
+ * @brief       Get a specific control field corresponding to the input motor model number
+ * @param[in]   modelNumber Query motor model number
+ * @param[in]   item Query field in the control table (ex: GOAL_POSITION)
+ * @return      Control field corresponding to the query
+ */
+Field Hal::getControlFieldFromModel(int modelNumber, ControlTableItem item)
+{
+    ControlTable motor = getControlTable(modelNumber);
+    Field field = getControlField(motor, item);
+
+    return field;
+}
 
 /**
  * @brief       Update the offsets to access empty indirect addresses for a given motor
@@ -550,19 +144,167 @@ Motor Hal::getMotorFromID(int id)
  */
 void Hal::addMotorOffsetFromID(int id, uint8_t data_length, std::string field_name)
 {
-    int motor_idx = getMotorsListIndexFromID(id);
+    int motor_idx = getIndex(m_ids, id);
 
-    if (field_name == "indir_address_offset"){
-        m_motors_list[motor_idx].indir_address_offset += data_length;
-    }
+    if (field_name == "indir_address_offset")
+        m_motorsList[motor_idx].indir_address_offset += data_length;
     else if (field_name == "indir_data_offset")
-        m_motors_list[motor_idx].indir_data_offset += data_length;
+        m_motorsList[motor_idx].indir_data_offset += data_length;
     else{
         cout << "Cannot change that motor field!" << endl;
         exit(1);
     }
-
 }
+
+
+/*****************************************************************************
+ *                     Get hardware info, in private scope
+ ****************************************************************************/
+
+/**
+ * @brief       Get the control table corresponding to the input motor model number
+ * @param[in]   modelNumber Query motor model number
+ * @return      Control table corresponding to the query motor
+ */
+ControlTable Hal::getControlTable(int modelNumber)
+{
+    ControlTable motor;
+
+    switch (modelNumber) {
+    case MODEL_NBR_MX_28: 
+        motor = *MX_28; break;
+    case MODEL_NBR_MX_64:
+        motor = *MX_64; break;
+    case MODEL_NBR_MX_106:
+        motor = *MX_106; break;
+    case MODEL_NBR_XH540_W150:
+        motor = *XH540_W150; break;
+    case MODEL_NBR_XH540_W270:
+        motor = *XH540_W270; break;
+    case MODEL_NBR_XM430_W350:
+        motor = *XM430_W350; break;
+    case MODEL_NBR_XM540_W150:
+        motor = *XM540_W150; break;
+    case MODEL_NBR_XM540_W270:
+        motor = *XM540_W270; break;
+    case MODEL_NBR_XW430_T200:
+        motor = *XW430_T200; break;
+    case MODEL_NBR_XW540_T140:
+        motor = *XW540_T140; break;
+    case MODEL_NBR_XW540_T260:
+        motor = *XW540_T260; break;
+
+    default:
+        cout << "Error: this model is unknown! Exiting" << endl;
+        exit(1);
+    }
+
+    return motor;
+}
+
+
+/**
+ * @brief       Extract a specific control field from the input control table
+ * @param[in]   motor Control table of the query motor, previously gotten with getControlTable()
+ * @param[in]   item Query field in the control table (ex: GOAL_POSITION)
+ * @return      Control field corresponding to the query
+ */
+Field Hal::getControlField(ControlTable motor, ControlTableItem item)
+{
+    Field field;
+
+    switch (item) {
+    case ControlTableItem::MODEL_NBR:               field = motor.modelNumber;              break;
+    case ControlTableItem::MODEL_INFO:              field = motor.modelInfo;                break;
+    case ControlTableItem::FIRMWARE:                field = motor.firmwareVersion;          break;
+    case ControlTableItem::ID:                      field = motor.id;                       break;
+    case ControlTableItem::BAUDRATE:                field = motor.baudrate;                 break;
+    case ControlTableItem::RETURN_DELAY:            field = motor.returnDelayTime;          break;
+    case ControlTableItem::DRIVE_MODE:              field = motor.driveMode;                break;
+    case ControlTableItem::OPERATING_MODE:          field = motor.operatingMode;            break;
+    case ControlTableItem::SHADOW_ID:               field = motor.secondaryId;              break;
+    case ControlTableItem::PROTOCOL:                field = motor.protocolVersion;          break;
+    case ControlTableItem::HOMING_OFFSET:           field = motor.homingOffset;             break;
+    case ControlTableItem::MOVING_THRESHOLD:        field = motor.movingThreshold;          break;
+    case ControlTableItem::TEMPERATURE_LIMIT:       field = motor.temperatureLimit;         break;
+    case ControlTableItem::MAX_VOLTAGE_LIMIT:       field = motor.maxVoltageLimit;          break;
+    case ControlTableItem::MIN_VOLTAGE_LIMIT:       field = motor.minVoltageLimit;          break;
+    case ControlTableItem::PWM_LIMIT:               field = motor.PWM_limit;                break;
+    case ControlTableItem::CURRENT_LIMIT:           field = motor.currentLimit;             break;
+    case ControlTableItem::ACCELERATION_LIMIT:      field = motor.accelerationLimit;        break;
+    case ControlTableItem::VELOCITY_LIMIT:          field = motor.velocityLimit;            break;
+    case ControlTableItem::MAX_POSITION_LIMIT:      field = motor.maxPositionLimit;         break;
+    case ControlTableItem::MIN_POSITION_LIMIT:      field = motor.minPositionLimit;         break;
+    case ControlTableItem::SHUTDOWN:                field = motor.shutdown;                 break;
+
+
+    case ControlTableItem::TORQUE_ENABLE:           field = motor.torqueEnable;             break; 
+    case ControlTableItem::LED:                     field = motor.LED;                      break;
+    case ControlTableItem::STATUS_RETURN:           field = motor.statusReturnLevel;        break;
+    case ControlTableItem::REGISTERED:              field = motor.registered;               break;
+    case ControlTableItem::HARDWARE_ERROR:          field = motor.hardwareErrorStatus;      break;
+    case ControlTableItem::VELOCITY_I_GAIN:         field = motor.velocity_I_gain;          break;
+    case ControlTableItem::VELOCITY_P_GAIN:         field = motor.velocity_P_gain;          break;
+    case ControlTableItem::POSITION_D_GAIN:         field = motor.position_D_gain;          break;
+    case ControlTableItem::POSITION_P_GAIN:         field = motor.position_P_gain;          break;
+    case ControlTableItem::POSITION_I_GAIN:         field = motor.position_I_gain;          break;
+    case ControlTableItem::FF_2ND_GAIN:             field = motor.feedforward_2_gain;       break;
+    case ControlTableItem::FF_1ST_GAIN:             field = motor.feedforward_1_gain;       break;
+    case ControlTableItem::BUS_WATCHDOG:            field = motor.busWatchdog;              break;
+    case ControlTableItem::GOAL_PWM:                field = motor.goalPWM;                  break;
+    case ControlTableItem::GOAL_CURRENT:            field = motor.goalCurrent;              break;
+    case ControlTableItem::GOAL_VELOCITY:           field = motor.goalVelocity;             break;
+    case ControlTableItem::PROFILE_ACCELERATION:    field = motor.profileAcceleration;      break;
+    case ControlTableItem::PROFILE_VELOCITY:        field = motor.profileVelocity;          break;
+    case ControlTableItem::GOAL_POSITION:           field = motor.goalPosition;             break;
+    case ControlTableItem::REALTIME_TICK:           field = motor.realtimeTick;             break;
+    case ControlTableItem::MOVING:                  field = motor.moving;                   break;
+    case ControlTableItem::MOVING_STATUS:           field = motor.movingStatus;             break;
+    case ControlTableItem::PRESENT_PWM:             field = motor.presentPWM;               break;
+    case ControlTableItem::PRESENT_CURRENT:         field = motor.presentCurrent;           break;
+    case ControlTableItem::PRESENT_VELOCITY:        field = motor.presentVelocity;          break;
+    case ControlTableItem::PRESENT_POSITION:        field = motor.presentPosition;          break;
+    case ControlTableItem::VELOCITY_TRAJECTORY:     field = motor.velocityTrajectory;       break;
+    case ControlTableItem::POSITION_TRAJECTORY:     field = motor.positionTrajectory;       break;
+    case ControlTableItem::PRESENT_VOLTAGE:         field = motor.presentVoltage;           break;
+    case ControlTableItem::PRESENT_TEMPERATURE:     field = motor.presentTemperature;       break;
+
+    case ControlTableItem::INDIR_ADD_1:             field = motor.indirectAddress1;         break;
+    case ControlTableItem::INDIR_DATA_1:            field = motor.indirectData1;            break;
+    case ControlTableItem::INDIR_ADD_2:             field = motor.indirectAddress2;         break;
+    case ControlTableItem::INDIR_DATA_2:            field = motor.indirectData2;            break;
+
+    default:
+        cout << "Error: this field is unknown! Exiting" << endl;
+        exit(1);
+    }    
+
+    if (field.length == UNDEF) {
+        cout << "Error: this field does not exist for this motor or protocol!" << endl;
+        exit(1);
+    }
+
+    return field;
+}
+
+
+/*****************************************************************************
+ *                           Multiturn functions
+ ****************************************************************************/
+
+/**
+ * @brief       Save the input motor as being in multiturn mode
+ * @param[in]   id ID of the multiturn motor
+ */
+void Hal::setMultiturnMode(int id)
+{
+    int idx = getIndex(m_ids, id);
+    if (idx < 0) {
+        cout << "Error! Unknown ID set as a multiturn motor" << endl;
+        exit(1);
+    }
+    m_motorsList[idx].multiturn = true;    
+} 
 
 /**
  * @brief       Update a motor's "to reset" status in multiturn mode
@@ -571,33 +313,8 @@ void Hal::addMotorOffsetFromID(int id, uint8_t data_length, std::string field_na
  */
 void Hal::updateResetStatus(int id, int status)
 {
-    int idx = getMotorsListIndexFromID(id);
-    m_motors_list[idx].toReset = status;
+    int idx = getIndex(m_ids, id);
+    m_motorsList[idx].toReset = status;
 }
-
-
-/**
- * @brief       For each motor, save all operating modes control values. \n 
- *              Needed for resetting in multiturn mode
- */
-void Hal::saveControlValuesToMotors()
-{
-    int idx, id, model;
-
-    for (int i=0; i<m_tot_nbr_motors; i++){
-        id = m_all_IDs[i];
-        idx = getMotorsListIndexFromID(id);
-        model = m_motors_list[idx].model;
-
-        m_motors_list[idx].control_modes.current_based_position_control = 
-                            m_controlModesPerModel[model].current_based_position_control;
-        m_motors_list[idx].control_modes.position_control = m_controlModesPerModel[model].position_control;
-        m_motors_list[idx].control_modes.current_control = m_controlModesPerModel[model].current_control;
-        m_motors_list[idx].control_modes.multiturn_control = m_controlModesPerModel[model].multiturn_control;
-        m_motors_list[idx].control_modes.PWM_control = m_controlModesPerModel[model].PWM_control;
-        m_motors_list[idx].control_modes.velocity_control= m_controlModesPerModel[model].velocity_control;
-    }
-}
-       
 
 }
