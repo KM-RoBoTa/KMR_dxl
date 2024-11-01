@@ -68,12 +68,52 @@ int main()
     vector<float> goalPositions(nbrMotors, 0);
     vector<float> fbckPositions(nbrMotors, 0);
 
+    cout << endl << endl << " ---------- Showcase of ignored commands when above set limits ---------" << endl;
+    sleep(3);
+    robot.setPositions(goalPositions);
+    sleep(1);
+    goalPositions[0] = -M_PI;
+    goalPositions[1] = -M_PI;
+    robot.setPositions(goalPositions);
+    cout << "Going to -PI" << endl;
+    sleep(2);
+
+    goalPositions[0] = -2*M_PI/3;
+    goalPositions[1] = -2*M_PI/3;
+    robot.setPositions(goalPositions);
+    cout << "Going to -2*PI/3" << endl;
+    sleep(2);
+
+    goalPositions[0] = 0;
+    goalPositions[1] = 0;
+    robot.setPositions(goalPositions);
+    cout << "Going to 0" << endl;
+    sleep(2);
+
+    goalPositions[0] = M_PI;
+    goalPositions[1] = M_PI;
+    robot.setPositions(goalPositions);
+    cout << "Going to PI" << endl;
+    sleep(2);
+
+    goalPositions[0] = M_PI/2;
+    goalPositions[1] = M_PI/2;
+    robot.setPositions(goalPositions);
+    cout << "Going to PI/2" << endl;
+    sleep(2);
+
+    goalPositions[0] = 0;
+    goalPositions[1] = 0;
+    robot.setPositions(goalPositions);
+    cout << "Going to 0" << endl;
+    sleep(2);
+
+
+    cout << endl << endl << " ---------- Smooth position command, also with set limits ---------" << endl;
+    sleep(3);
     float angle = 0;
     bool forward = 1;
     int ctr = 0;
-
-    robot.setPositions(goalPositions);
-    sleep(1);
 
     // Main loop
     while (ctr < MAX_CTR) {

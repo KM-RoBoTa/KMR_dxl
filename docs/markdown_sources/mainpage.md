@@ -23,7 +23,6 @@ KM-RoBoTa SA's KMR_dxl library to facilitate Dynamixel control.
 Library written by Katarina Lichardova: katarina.lichardova@km-robota.com
 
 based on code from:
-- Laura Paez: laura.paez@km-robota.com
 - Kamilo Melo: kamilo.melo@km-robota.com
 
 ### Copyright

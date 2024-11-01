@@ -10,237 +10,274 @@ Dynamixel libraries define the motor angles as indicated in black in the followi
 
 ![](../img/motor_new.png)
 
-with the angle position being in the interval $]0, 2\pi[$ rad. <br /> 
-This library uses the redefined angles as indicated in blue, in the interval  $] - \pi, +\pi[$ rad, with the 0 position being in the center of the motor.
+with the angle position being in the interval \f$ [ 0; 2\pi] \f$ rad. <br /> 
+This library uses the redefined angles as indicated in blue, in the interval  \f$] - \pi, +\pi[\f$ rad, with the 0 position being in the center of the motor.
 
-# I. Initializations
-## Step 1: Write a motor configuration file
 
-The first thing that needs to be done is to create a yaml configuration file of the motors used in the projet. <br /> 
-Let's assume the robot has 4 motors with IDs {1, 2, 3, 4}, all of model MX_64R. Motors 1 and 3 are in multiturn mode, while the 2 others are not. <br /> 
-The motor configuration file will look as follows:
+## Highest-level manager: the MotorHandler class
 
-```yaml
-# motors_config.yaml
-nbr_motors: 4    
-motors: 
-  - ID: 1
-    model: MX_64R
-    multiturn: 1
-  - ID: 2
-    model: MX_64R
-    multiturn: 0
-  - ID: 3
-    model: MX_64R
-    multiturn: 1
-  - ID: 4
-    model: MX_64R
-    multiturn: 0
-```
+The MotorHandler class is the highest-level class that manages all communication with the motors. This library requires a single MotorHandler object to be created, and everything will go through it. <br />
 
-The multiturn mode corresponds to the "extended position control" in dynamixel's SDK. It's a position control allowing 255 turns in each direction before the input value saturates. In order to avoid saturation and thus, to allow motors turning indefinitely, this library resets a motor after it does more than a full turn relative to its starting 0 position. <br /> 
-After the reset, the motor thus detects its position as being between -180° and +180° again.  
+On object creation, a MotorHandler object opens the port, initializes communication and pings the motors to make sure they respond correctly. <br />
+Additionally, it automatically detects their models. In tandem with its hardware interface layer (hal), the motor handler thus has all the necessary low-level information such as adresses and unit conversions, which means the user does not need to take care of it.
 
-In addition to setting the "multiturn" configuration in the yaml file correctly, the motors themselves must of course be configured for the correct operation mode.
+Out of the box, the motor handler comes with the most common functions, such as enabling/disabling motors, setting control modes, sending control commands or getting common feedbacks. The exhaustive list of those functions will be described later. 
 
-*Note*: the "multiturn" configuration must always be present in the yaml file, even if it's not used in any motor. Just set it to 0 for each motor.
+In the background, the motor handler has created instances of this library's custom Writer and Reader classes. Those classes contain respectively a Dynamixel's GroupSyncWrite and GroupSyncRead object, as well as additional functionalities such as automatic units-to-parameter conversions, automatic direct and indirect address assignments and motor compability checks. <br />
+So for example, the function to assign control modes uses in the background a Writer object that works with the KMR::dxl::ControlTableItem::OPERATING_MODE field. But what happens if the user wants to write/read to fields that are not handled by a premade function, such as reading temperature, or wants a single handler to work with several fields through indirect addresses?
 
-## Step 2: Initialize hal
+In this case, the user can create custom writers or readers by using functions provided by the MotorHandler class to create (and destroy) those custom handlers very easily. <br />
+The user has to write functions that will use those custom handlers, but it is very quick and straightforward. <br />
+Custom handlers will be explained later in this documentation.
 
-The second step is to initialize a KMR::dxl::Hal object in the project's main file. <br /> 
-This allows to make sure the motors configuration files are correct, as well as to create the hidden control tables used to abstract the hardware layer:
+It is very straightforward to create a MotorHandler object:
 
 ```cpp
-// In main.cpp
-KMR::dxl::Hal hal;
+#define BAUDRATE        1000000
+#define PORTNAME        "/dev/ttyUSB0"
 
-char path_to_motor_config[] = "../config/motors_config.yaml"; // EDIT HERE: Path from your project's executable to your motors config file
-char path_to_KMR_dxl[] = "../KMR_dxl";                        // EDIT HERE: Path from your project's executable to the library folder
-
-std::vector<int> all_ids = hal.init(path_to_motor_config, path_to_KMR_dxl);
+// IDs of all motors
+std::vector<int> ids = {1, 2};
+KMR::dxl::MotorHandler motorHandler(ids, PORTNAME, BAUDRATE);
 ```
 
-# II. Create your Robot class
+## Provided functions
 
-## KMR::dxl::BaseRobot
+As mentioned above, the MotorHandler class provides common functions. The complete list of those functions can be found on the class page [documentation](@ref KMR::dxl::MotorHandler).
 
-The constructor of the library's ```BaseRobot``` class takes the following arguments:
+Almost none of those functions take motor identifiers as arguments. This is because **all of those functions work with all motors** inputted in the class constructor. Which means, for example when inputting the control modes to motors with the function ```MotorHandler::setControlModes(std::vector< ControlMode > controlModes)```, it is expected that the size of the vector ```controlModes``` is equal to the number of motors. The values in the argument vector are distributed to the motors in the same order as the motor IDs were inputted in the constructor. 
+
+Reusing the code as above for the constructor example, the first value in the ```controlModes``` vector would be assigned to motor with ID 1, while the second will go to the motor with ID 2.
+
+> [!warning]
+> In order to avoid repetitive checks at every time step, most functions **do not** check if the size of the argument vector is equal to the number of motors. It is up to the user to make sure they match.
+
+Many of provided functions have an overload. <br />
+As just explained, the functions taking a vector as argument assign each value in the vector to the corresponding motor. However, in the case where every motor takes the same input value, the overload simplifies things by only taking that value as an argument, and subsequently distributes it to every motor. <br />
+For example, when controlling all motors via speed control, one can simply use:
 ```cpp
-/**
- * @brief       Constructor for BaseRobot
- * @param[in]   all_ids List of IDs of all the motors in the robot
- * @param[in]   port_name Name of the port handling the communication with motors
- * @param[in]   baudrate Baudrate of the port handling communication with motors
- * @param[in]   hal Previously initialized Hal object
- */
-BaseRobot::BaseRobot(vector<int> all_ids, const char *port_name, int baudrate, Hal hal)
+#define BAUDRATE        1000000
+#define PORTNAME        "/dev/ttyUSB0"
+
+std::vector<int> ids = {1, 2}; // IDs of all motors
+KMR::dxl::MotorHandler motorHandler(ids, PORTNAME, BAUDRATE);
+
+motorHandler.disableMotors();  // The operating mode is written to the EEPROM,
+                               // so need to disable first
+
+// Set control mode
+KMR::dxl::ControlMode mode = KMR::dxl::ControlMode::SPEED;
+motorHandler.setControlModes(mode); // Same mode distributed to all motors
+sleep(1);                           // Sleep to make sure the info was written
+                                    // to the EEPROM correctly
+motorHandler.enableMotors();        // Reenable the torques 
 ```
-which means any custom class inheriting ```BaseRobot``` needs to have those arguments as well. 
 
-On construction, it takes care of opening the communication port with the motors, and pings them all. If a motor fails to respond, the program is stopped.
+## Control modes, setting respective limits and examples
 
-```BaseRobot``` also provides the most commonly used setup functions, such as: 
-- enabling and disabling motors with ```enableMotors``` and ```disableMotors```, as well as their id-specific versions
-- set minimal and maximal angle limits with ```setMinPosition``` and ```setMaxPosition```
-- set minimal and maximal voltage limits with ```setMinVoltage``` and ```setMaxVoltage```
-- set the return times of the motors with ```setAllDelay``` 
+The current-based position control mode, called Hybrid in this library, is not finished yet.  <br />
+The rest are implemented and ready to use, as well as their respective limit-setting functions. However, it appears the motors' driver deals with limits in a counterintuitive manner.
 
-> **Reminder** <br> 
-> Before writing in the EEPROM memory, the motors need to be disabled.
+### Limits
+
+In all modes where the user can set limits (position, current, speed, PWM), the limit setting works in a counterintuitive, and **potentially dangerous** manner.
+
+If a motor receives a command over the set limit (for example, a speed command higher than the value set with setMaxSpeed()), one would expect said command would be saturated and set equal to the limit before being applied by the motor. <br />
+*This is not what happens*. If the motor receives a command higher than the set limit, its driver simply ignores it and applies the previous valid command it received. <br />
+This means care needs to be taken to make sure any command sent to a motor is lower or equal to the set limits so that it does not get ignored.
+
+> [!warning]
+> This library does **not** take care of saturating commands so that they are valid. It is up to the user
+
+Provided examples 1 through 4 are designed for 2 motors in order to illustrate this. The first motor serves as a ground truth, perfectly executing commands that are always lower than its limits. The second motor's limits are set on purpose at times higher than the command in order to showcase those commands being ignored.  
 
 
-## Step 3: Declare Robot
+### Multiturn
+This library deals with multiturn mode in a custom way. 
 
-The project's Robot class needs to inherit KMR::dxl::BaseRobot, which results in this class declaration: 
+By default, dynamixel motors support 256 revolutions in each direction before saturating. In order to avoid this problem, the library is designed to reboot a motor as soon as it gets over \f$ 2\pi \f$ rad, which resets its position between \f$ [ -2\pi; 2\pi] \f$, practically allowing an infinite number of revolutions. 
+
+In the background, as soon as a motor receives a position command with an absolute value higher than \f$ 2\pi \f$ rad, an internal flag requesting a reset is raised. At the start of each loop, the user needs to invoke MotorHandler::resetMultiturnMotors(), which reboots all motors with a raised flag. Those motors are thus re-centered in \f$ [ -2\pi; 2\pi] \f$ rad. This means 2 things:
+- A user needs to send *exactly 1* command value over \f$ 2\pi \f$ rad to a motor in order to raise its flag. On the next control loop, the goal position needs to be re-centered in \f$ [ -2\pi; 2\pi] \f$ rad so that it's compatible with the freshly rebooted motor
+- The user needs to give enough time to the motors to execute the position command before calling MotorHandler::resetMultiturnMotors(). <br />
+**ATTENTION**: if the motors are rebooted before they could execute the whole movement, it results in undefined behavior. This is why it is recommended to call the function at the start of the control loop.
+
+The example 5 illustrates the multiturn mode.
+
+## Custom 
+
+As mentioned earlier, in case the user needs to create custom Writer and Reader handlers, the MotorHandler class offers functions to create and destroy those handlers very easily. 
+
+> [!note]
+> This library supports having several indirect address handlers for a given motor. It keeps track of the allocated indirect memory for each motor, and thus assigns to each indirect handler an available indirect memory without creating conflicts. The user does not need to keep track of this
+
+### Custom Writers
+
+A custom Writer can be created by calling the MotorHandler::getNewWriter function. This function takes 2 arguments, the list of control fields and the motor ids the Writer will handle.
+
+
+
+
+> [!caution]
+> The Writer object is created on the heap, which means the memory needs to be cleaned to avoid memory leak. To cleanly destroy the object, simply call MotorHandler::deleteWriter();
 
 ```cpp
-// robot.hpp
-class Robot : public KMR::dxl::BaseRobot {
-    ....
-};
+#define BAUDRATE        1000000
+#define PORTNAME        "/dev/ttyUSB0"
+
+using namespace std;
+
+vector<int> ids = {1,2};
+
+KMR::dxl::MotorHandler motorHandler(ids, PORTNAME, BAUDRATE);
+
+// Create a custom Writer with only 1 field
+// (which results in a direct handler)
+vector<KMR::dxl::ControlTableItem> wTempFields =
+    {KMR::dxl::ControlTableItem::TEMPERATURE_LIMIT};
+KMR::dxl::Writer* tempWriter = motorHandler.getNewWriter(wTempFields, ids);
+
+// Create a custom Writer handling goal velocity and LED
+// (which results in an indirect handler) 
+vector<KMR::dxl::ControlTableItem> wIndirectFields =
+        {KMR::dxl::ControlTableItem::GOAL_VELOCITY,
+        KMR::dxl::ControlTableItem::LED};
+KMR::dxl::Writer* indirectWriter = motorHandler.getNewWriter(wIndirectFields, ids);
+
+// Do stuff
+
+// Free memory
+motorHandler.deleteWriter(tempWriter);
+motorHandler.deleteWriter(indirectWriter);
 ```
-and this constructor:
+
+A writing function using the new Writer object needs to be created. It consists of 2 parts:
+- Adding data we want to write into the handler's internal storage through Writer::addDataToWrite()
+- Then sending that data with Writer::syncWrite()
+
+Keeping the same example:
 
 ```cpp
-// robot.cpp
-Robot::Robot(vector<int> all_ids, const char *port_name, int baudrate, KMR::dxl::Hal hal)
-: KMR::dxl::BaseRobot(all_ids, port_name, baudrate, hal)
+// Writing function for the temperature limit writer
+void writeTemperatureLimit(vector<float> temperatureLimits)
 {
-    ...
+    // The temperature Writer handles only 1 field, so no need to precise 
+    // to which field this data goes
+    tempWriter->addDataToWrite(temperatureLimits);
+    tempWriter->syncWrite();
+}
+
+// Writing function for the indirect writer
+void writeCommands(vector<float> goalSpeeds, vector<int> leds)
+{
+    // This Writer handles 2 fields, so the user needs to precise to
+    // which field each data vector goes
+    writer->addDataToWrite(goalSpeeds, KMR::dxl::ControlTableItem::GOAL_VELOCITY);
+    writer->addDataToWrite(leds, KMR::dxl::ControlTableItem::LED);
+    writer->syncWrite();
 }
 ```
-## Step 4: Writer handlers
 
-To create a handler that sends data to the motors (example: goal positions, LED control), a KMR::dxl::Writer object is used. <br /> 
-It can be declared as a private member of Robot:
+
+### Custom Readers
+
+Readers work conceptually in the exact same manner as Writers.
+
+A custom Reader can be created by calling the MotorHandler::getNewReader function. This function takes 2 arguments, the list of control fields and the motor ids the Reader will handle.
+
+> [!caution]
+> The Reader object is created on the heap, which means the memory needs to be cleaned to avoid memory leak. To cleanly destroy the object, simply call MotorHandler::deleteReader();
 
 ```cpp
-// robot.hpp
-class Robot : public KMR::dxl::BaseRobot {
-private:
-    KMR::dxl::Writer *m_writer = nullptr;
-};
+#define BAUDRATE        1000000
+#define PORTNAME        "/dev/ttyUSB0"
+
+using namespace std;
+
+vector<int> ids = {1,2};
+
+KMR::dxl::MotorHandler motorHandler(ids, PORTNAME, BAUDRATE);
+
+// Create a custom Reader with only 1 field
+// (which results in a direct handler)
+vector<KMR::dxl::ControlTableItem> wTempFields =
+    {KMR::dxl::ControlTableItem::PRESENT_TEMPERATURE};
+KMR::dxl::Reader* tempReader = motorHandler.getNewReader(wTempFields, ids);
+
+// Create a custom Reader handling present velocity and LED
+// (which results in an indirect handler) 
+vector<KMR::dxl::ControlTableItem> wIndirectFields =
+        {KMR::dxl::ControlTableItem::PRESENT_VELOCITY,
+        KMR::dxl::ControlTableItem::LED};
+KMR::dxl::Reader* indirectReader = motorHandler.getNewReader(wIndirectFields, ids);
+
+// Do stuff
+
+// Free memory
+motorHandler.deleteReader(tempReader);
+motorHandler.deleteReader(indirectReader);
 ```
 
-and initialized in Robot's constructor:
-```cpp
-m_writer = new KMR::dxl::Writer(writer_fields, ids, portHandler_, packetHandler_, m_hal, 0);
-```
-The "writer_fields" is the list of field(s) that will be handled by this specific Writer object. Since this library uses the protocol 2 of dynamixel's SDK, a single Writer can handle several control fields, resulting in an indirect address writing - but this is handled by the library automatically.
+A reading function using the new Reader object needs to be created. It consists of 2 parts:
+- First getting the feedback from the motors with Reader::syncRead()
+- Then extracting the feedback data from the internal storage with Reader::getReadingResults(). Note: all feedback data are floats
 
-The fields themselves are enumerated in KMR::dxl::Fields and correspond to control fields found in Dynamixels' control tables, as in https://emanual.robotis.com/docs/en/dxl/mx/mx-64-2/#control-table <br />  
-For example, if we wish to have a Writer handler that sends goal positions and LED status commands to motors, the Writer definition becomes:
+Keeping the same example:
 
 ```cpp
-vector<KMR::dxl::Fields> writer_fields = {KMR::dxl::GOAL_POS, KMR::dxl::LED};
-m_writer = new KMR::dxl::Writer(writer_fields, ids, portHandler_, packetHandler_, m_hal, 0);
-```
-
-Finally, the last element we need to use the Writer is the function that actually sends the data to motors. The creation of this function is very straightforward.
-
-The method KMR::dxl::Writer::addDataToWrite allows to save data that need to be sent to motors into the Writer's private attribute table. Then, once all the data is updated, it is sent with the method KMR::dxl::Writer::syncWrite. <br />  
-Keeping the same Writer example, a public method can be defined inside Robot: 
-
-```cpp
-// robot.cpp
-void Robot::writeData(vector<float> angles, vector<int> LED_vals, vector<int> ids)
+// Reading function for the present temperature Reader
+bool readTemperature(vector<float>& fbckTemperatures)
 {
-    m_writer->addDataToWrite(angles, KMR::dxl::GOAL_POS, ids);
-    m_writer->addDataToWrite(LED_vals, KMR::dxl::LED, ids);
+    // Read feedback from the motors
+    bool readSuccess = tempReader->syncRead();
 
-    m_writer->syncWrite(ids);
-}
-```
-
-This public method Robot::writeData can be for example called from the main when new control values are received from the controller.
-
-## Step 5: Reader handlers
-
-In order to fetch data from the motors' sensors (for example current position and temperature), a KMR::dxl::Reader object is required. It works extremely similarly to its Writer counterpart.
-
-When writing the read function, one needs to be careful about the order in which the control fields were written when declaring the Reader. <br /> 
-The method KMR::dxl::Reader::syncRead stores the data received from motors into the Reader's attribute table "m_dataFromMotor", organized like this:
-
-|          | field1 | field2 | .... | field_n |
-|----------|--------|--------|------|---------|
-| id[0]    |        |        |      |         |
-| ...      |        |        |      |         |
-| id[last] |        |        |      |         |
-
-
-As such, if for example we wanted a Reader that reads present position and LED status, the declaration would be:
-```cpp
-vector<KMR::dxl::Fields> reader_fields = {KMR::dxl::PRESENT_POS, KMR::dxl::LED};
-m_reader = new KMR::dxl::Reader(reader_fields, handlers_ids, portHandler_, packetHandler_, m_hal, 0);
-```
-
-which means the present position data will be saved in the first column of "m_dataFromMotor" and the LED status in the second. <br /> 
-As such, the reading function is:
-```cpp
-// robot.cpp
-void Robot::readData(vector<int> ids, vector<float>& fbck_angles, vector<float>& fbck_leds)
-{
-    m_reader->syncRead(ids);
-
-    for (int i=0; i<ids.size(); i++) {
-        fbck_angles[i] = m_reader->m_dataFromMotor[i][0];
-        fbck_leds[i] = m_reader->m_dataFromMotor[i][1];
+    // The temperature Reader handles only 1 field, so no need to precise 
+    // from which field we're extracting data
+    if (readSuccess) {
+        fbckTemperatures = tempReader->getReadingResults();
+        return true;
     }
+    else
+        return false;
+}
 
+// Reading function for the indirect reader
+bool readFeedback(vector<float>& fbckSpeeds, vector<float>& fbckLeds)
+{
+    // Read feedback from the motors
+    bool readSuccess = indirectReader->syncRead();
+
+    // This Reader handles 2 fields, so the user needs to precise
+    // from which field we're extracting
+    if (readSuccess) {
+        fbckSpeeds = indirectReader->getReadingResults(
+                    KMR::dxl::ControlTableItem::PRESENT_VELOCITY);
+        fbckLeds = indirectReader->getReadingResults(KMR::dxl::ControlTableItem::LED);    
+        return true;
+    }
+    else
+        return false;
 }
 ```
 
-## Note: multiturn reset
-The public method KMR::dxl::BaseRobot::resetMultiturnMotors resets the motors flagged as in need of a reset. It is inherited by the Robot class, and needs to be called only if the project contains multiturn motors. 
-
-It is up to the user where they want to call it. A good idea is to call it at the start of each control loop, before reading the sensor values. <br /> 
-If wished, one can also add it for example at the end of the writing functions.
-
-> **Warning** <br> 
-> If the resetMultiturnMotors method is called at the end of the writing method, make sure the motors had enough time to execute the movement before calling the reset, such as by adding a short sleep time. If they are reset before they could execute the whole movement, it results in undefined behavior.
+The example 7 showcases how to use custom handlers.
 
 
-# III. Create a Robot object
+## Examples summary
 
-Keeping the previous examples, a very basic project could look like this:
-```cpp
-// main.cpp
+The examples are designed for 2 motors in protocol 2, with IDs 1 and 2, of any supported model.  <br />
+The executables are created on library compilation, and can be found in the ```KMR_dxl/build``` folder.
 
-KMR::dxl::Hal hal;
+In almost each example, the first motor shows a perfect execution of commands which are always lower than the set limits, while the second motor's limits are at times set higher than the command on purpose to show the commands being ignored.
 
-char path_to_motor_config[] = "../config/motors_config.yaml";
-char path_to_KMR_dxl[] = "../KMR_dxl";
+The examples included are as follows:
 
-std::vector<int> all_ids = hal.init(path_to_motor_config, path_to_KMR_dxl);
-int nbrMotors = all_ids.size();
-
-// Create robot instance
-int baudrate = 1000000;
-Robot robot(all_ids, "/dev/ttyUSB0", baudrate, hal);
-
-// Feedback tables
-vector<float> fbck_angles(nbrMotors);
-vector<float> fbck_leds(nbrMotors);
-vector<float> goal_angles(nbrMotors);
-vector<float> goal_leds(nbrMotors);
-
-// Start the loop
-robot.enableMotors();
-
-while(1) {
-    // Only needed if there are multiturn motors
-    robot.resetMultiturnMotors();
-
-    robot.readData(all_ids, fbck_angles, fbck_leds);
-
-    /* Send the feedback values to the controller and get the new
-    goal values into goal_angles and goal_leds */
-
-    robot.writeData(goal_angles, goal_leds, all_ids);
-
-    sleep(1);
-}
-``` 
-
-> **Warning** <br> 
-> Unfortunately, reading in Dynamixel motors is extremely slow, 1000 times slower than writing (~15us versus ~15ms). The control loop needs to be designed accordingly 
+| Example             | Description                  | Custom handlers used? |
+|---------------------|------------------------------|-----------------------|
+| ex1_position        | Position control showcase    | No                    |
+| ex2_speed           | Speed control showcase       | No                    |
+| ex3_current         | Current control showcase     | No                    |
+| ex4_pwm             | PWM control showcase         | No                    |
+| ex5_multiturn       | Multiturn showcase           | No                    |
+| ex6_hybrid          | Reserved                     | -                     |
+| ex7_custom_handlers | Custom handlers use showcase | Yes                   |
