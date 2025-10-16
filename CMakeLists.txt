@@ -19,22 +19,47 @@ target_compile_options(${PROJECT_NAME}  PRIVATE -Wall -Wno-sign-compare)
 
 include (GNUInstallDirs)
 set(MY_PUBLIC_HEADERS
-    "include/KMR_dxl.hpp"
-)
-set(MY_PRIVATE_HEADERS
-    "include/*.hpp"
+    include/KMR_dxl.hpp
+    include/KMR_dxl_hal.hpp
+    include/KMR_dxl_handler.hpp
+    include/KMR_dxl_motor_handler.hpp
+    include/KMR_dxl_reader.hpp
+    include/KMR_dxl_writer.hpp
+    include/KMR_dxl_utils.hpp    
+    config/KMR_dxl_motor_models.hpp    
+    config/KMR_dxl_structures.hpp    
+    config/motor_models/MX_28.hpp        
+    config/motor_models/MX_64.hpp
+    config/motor_models/MX_106.hpp
+    config/motor_models/XH540_W150.hpp
+    config/motor_models/XH540_W270.hpp
+    config/motor_models/XM430_W350.hpp
+    config/motor_models/XM540_W150.hpp
+    config/motor_models/XM540_W270.hpp
+    config/motor_models/XW430_T200.hpp
+    config/motor_models/XW540_T140.hpp
+    config/motor_models/XW540_T260.hpp
 )
 
-#set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER ${MY_PUBLIC_HEADERS} PRIVATE_HEADER ${MY_PRIVATE_HEADERS})
-#install(TARGETS ${PROJECT_NAME}
-#        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
-#        PRIVATE_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
-#)
-set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER ${MY_PUBLIC_HEADERS})
+
+set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADER "${MY_PUBLIC_HEADERS}")
 install(TARGETS ${PROJECT_NAME}
         PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
-        #PRIVATE_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}
 )
+
+# uninstall target
+# Set input and output files to generate Doxyfile
+set(UNINSTALL_IN ${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in)
+set(UNINSTALL_OUT ${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake)
+
+
+if(NOT TARGET uninstall)
+    #configure_file(${UNINSTALL_IN} ${UNINSTALL_OUT} @ONLY)
+
+    #add_custom_target(uninstall
+    #COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
+endif()
+
 
 # Directories containing header files
 target_include_directories(${PROJECT_NAME}  PUBLIC include config)
@@ -42,7 +67,7 @@ target_include_directories(${PROJECT_NAME}  PUBLIC include config)
 # Locations of the used libraries
 target_link_directories(${PROJECT_NAME}  PUBLIC /usr/local/lib)
 
-# Link the used libraries: dynamixel and yaml-cpp
+# Link the used libraries: dynamixel
 if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "x86_64")
     message(STATUS "Processor used: " ${CMAKE_SYSTEM_PROCESSOR})
     target_link_libraries(${PROJECT_NAME}  dxl_x64_cpp)
@@ -76,3 +101,12 @@ target_link_libraries(ex5_multiturn KMR_dxl)
 #target_link_libraries(ex6_hybrid KMR_dxl)
 add_executable(ex7_custom_handlers example/ex7_custom_handlers.cpp)
 target_link_libraries(ex7_custom_handlers KMR_dxl)
+
+
+#cmake -DCMAKE_BUILD_TYPE=Release ../
+
+message(STATUS "Source dir: " ${CMAKE_CURRENT_SOURCE_DIR})
+message(STATUS "Binaries: " ${CMAKE_BINARY_DIR})
+message(STATUS "In: " ${UNINSTALL_IN})
+message(STATUS "Out: " ${UNINSTALL_OUT})
+
